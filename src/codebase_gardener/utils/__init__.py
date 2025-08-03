@@ -9,4 +9,68 @@ This module provides common utilities including:
 - Logging configuration and structured logging
 """
 
-__all__ = []
+from .error_handling import (
+    # Base exceptions
+    CodebaseGardenerError,
+    ConfigurationError,
+    ModelError,
+    ModelLoadingError,
+    ModelInferenceError,
+    ParsingError,
+    TreeSitterError,
+    StorageError,
+    VectorStoreError,
+    DirectorySetupError,
+    NetworkError,
+    ProjectError,
+    TrainingError,
+    
+    # Retry decorators
+    retry_with_backoff,
+    model_retry,
+    network_retry,
+    storage_retry,
+    
+    # Error handling decorators
+    handle_errors,
+    graceful_fallback,
+    log_errors,
+    
+    # Utility functions
+    format_error_for_user,
+    is_retryable_error,
+    get_error_context,
+)
+
+__all__ = [
+    # Base exceptions
+    "CodebaseGardenerError",
+    "ConfigurationError",
+    "ModelError",
+    "ModelLoadingError",
+    "ModelInferenceError",
+    "ParsingError",
+    "TreeSitterError",
+    "StorageError",
+    "VectorStoreError",
+    "DirectorySetupError",
+    "NetworkError",
+    "ProjectError",
+    "TrainingError",
+    
+    # Retry decorators
+    "retry_with_backoff",
+    "model_retry",
+    "network_retry",
+    "storage_retry",
+    
+    # Error handling decorators
+    "handle_errors",
+    "graceful_fallback",
+    "log_errors",
+    
+    # Utility functions
+    "format_error_for_user",
+    "is_retryable_error",
+    "get_error_context",
+]

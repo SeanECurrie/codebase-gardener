@@ -53,6 +53,9 @@ dependencies = [
     "pydantic-settings>=2.1.0",
     "structlog>=23.2.0",
     
+    # Error handling and retry logic
+    "tenacity>=8.2.0",
+    
     # Utilities
     "click>=8.1.0",
     "rich>=13.7.0",
