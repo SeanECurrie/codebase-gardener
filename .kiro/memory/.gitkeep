@@ -1,0 +1,5 @@
+# Memory Files Directory
+
+This directory stores task memory files that document implementation decisions, lessons learned, and patterns established during development.
+
+Memory files should be committed to version control to maintain project continuity and knowledge sharing across the development team.
