@@ -9,4 +9,26 @@ This module handles:
 - Project-specific vector store management
 """
 
-__all__ = []
+from .parser import (
+    CodeElement,
+    CodeStructure,
+    ParseError,
+    ParseResult,
+    SupportedLanguage,
+    TreeSitterParser,
+    create_parser_for_file,
+    get_supported_extensions,
+    is_supported_file,
+)
+
+__all__ = [
+    "CodeElement",
+    "CodeStructure", 
+    "ParseError",
+    "ParseResult",
+    "SupportedLanguage",
+    "TreeSitterParser",
+    "create_parser_for_file",
+    "get_supported_extensions",
+    "is_supported_file",
+]
