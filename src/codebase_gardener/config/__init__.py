@@ -1,19 +1,35 @@
 """
-Configuration management for Codebase Gardener.
+Configuration and logging package for Codebase Gardener.
 
-This module provides centralized configuration management using Pydantic
-for validation and environment variable support. All application settings
-are defined here and can be overridden via environment variables with
-the CODEBASE_GARDENER_ prefix.
+This package provides centralized configuration management and structured logging
+for the entire application.
 """
 
-from codebase_gardener.config.settings import Settings, get_settings
-
-# Create global settings instance
-settings = get_settings()
+from .settings import settings, get_settings, reload_settings
+from .logging_config import (
+    configure_logging,
+    get_logger,
+    bind_context,
+    clear_context,
+    LoggerMixin,
+    log_function_call,
+    log_performance,
+    log_error,
+)
 
 __all__ = [
-    "Settings",
-    "get_settings", 
+    # Settings
     "settings",
+    "get_settings", 
+    "reload_settings",
+    
+    # Logging
+    "configure_logging",
+    "get_logger",
+    "bind_context",
+    "clear_context",
+    "LoggerMixin",
+    "log_function_call",
+    "log_performance",
+    "log_error",
 ]
