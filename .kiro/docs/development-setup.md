@@ -1,293 +1,253 @@
 # Development Setup Guide
 
+## Project Structure Overview
+
+The Codebase Gardener MVP follows modern Python packaging standards with a src layout structure:
+
+```
+codebase-gardener-mvp/
+├── pyproject.toml           # Project configuration and dependencies
+├── README.md               # Project documentation
+├── requirements.txt        # Generated dependency list
+├── .gitignore             # Git ignore patterns
+├── .python-version        # Python version specification
+├── src/                   # Source code (src layout)
+│   └── codebase_gardener/
+│       ├── __init__.py    # Main package
+│       ├── main.py        # CLI entry point
+│       ├── config/        # Configuration management
+│       ├── core/          # Core business logic
+│       ├── models/        # AI/ML model interfaces
+│       ├── data/          # Data processing
+│       ├── ui/            # User interface
+│       └── utils/         # Utility functions
+├── tests/                 # Test suite
+├── .kiro/                 # Kiro-specific files
+│   ├── docs/             # Documentation
+│   ├── memory/           # Task memory files
+│   └── specs/            # Feature specifications
+└── docs/                 # Additional documentation
+```
+
 ## Prerequisites
 
-### System Requirements
-- **macOS** (optimized for Mac Mini M4)
-- **Python 3.9+** with pip
-- **Git** for version control
-- **Ollama** for local LLM inference
-- **8GB+ RAM** (16GB recommended for multiple projects)
+- **Python**: 3.11 or higher
+- **Operating System**: macOS (optimized for Mac Mini M4)
+- **Memory**: 8GB RAM minimum (16GB recommended)
+- **Storage**: 10GB free space for models and dependencies
 
-### Hardware Optimization
-- **Apple Silicon M4** - Primary target platform
-- **SSD Storage** - Fast model loading and vector operations
-- **Unified Memory** - Efficient for dynamic model loading
+## Installation Steps
 
-## Development Environment Setup
+### 1. Clone and Setup
 
-### 1. Clone and Navigate
 ```bash
-git clone https://github.com/seanc-codingtemple/codebase-gardener.git
-cd codebase-gardener
-```
+# Clone the repository
+git clone https://github.com/codebase-gardener/codebase-gardener-mvp.git
+cd codebase-gardener-mvp
 
-### 2. Python Environment
-```bash
 # Create virtual environment
 python -m venv venv
-
-# Activate virtual environment
-source venv/bin/activate  # macOS/Linux
-# or
-venv\Scripts\activate     # Windows
+source venv/bin/activate  # On macOS/Linux
 
 # Verify Python version
-python --version  # Should be 3.9+
+python --version  # Should be 3.11+
 ```
 
-### 3. Install Dependencies
+### 2. Install Dependencies
+
 ```bash
-# Install development dependencies
-pip install -e ".[dev]"
+# Install in development mode with all dependencies
+pip install -e .[dev]
+
+# Or install just the core dependencies
+pip install -e .
 
 # Verify installation
-python -c "import codebase_gardener; print('Installation successful')"
+codebase-gardener --help
+cgardener --help  # Short alias
 ```
 
-### 4. Install Ollama
+### 3. Initialize Application
+
 ```bash
-# Install Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
+# Initialize directory structure
+codebase-gardener init
 
-# Start Ollama service
-ollama serve
-
-# Download base model (in another terminal)
-ollama pull codellama:7b
-```
-
-### 5. Development Tools Setup
-```bash
-# Install pre-commit hooks
-pre-commit install
-
-# Run initial code formatting
-black src/ tests/
-
-# Run type checking
-mypy src/
-
-# Run tests to verify setup
-pytest tests/ -v
-```
-
-## IDE Configuration
-
-### VS Code Setup
-```json
-// .vscode/settings.json
-{
-    "python.defaultInterpreterPath": "./venv/bin/python",
-    "python.formatting.provider": "black",
-    "python.linting.enabled": true,
-    "python.linting.mypyEnabled": true,
-    "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": ["tests/"]
-}
-```
-
-### Kiro IDE Integration
-- Memory files are automatically tracked in `.kiro/memory/`
-- Steering documents provide context during development
-- Task specifications guide implementation workflow
-
-## Environment Variables
-
-### Required Configuration
-```bash
-# Create .env file
-cat > .env << EOF
-# Application Configuration
-CODEBASE_GARDENER_DEBUG=true
-CODEBASE_GARDENER_LOG_LEVEL=DEBUG
-CODEBASE_GARDENER_DATA_DIR=~/.codebase-gardener
-
-# Model Configuration
-CODEBASE_GARDENER_OLLAMA_BASE_URL=http://localhost:11434
-CODEBASE_GARDENER_EMBEDDING_MODEL=nomic-embed-code
-
-# Development Configuration
-CODEBASE_GARDENER_BATCH_SIZE=16  # Smaller for development
-CODEBASE_GARDENER_MAX_WORKERS=2  # Conservative for development
-EOF
-```
-
-### Load Environment
-```bash
-# Add to your shell profile (.bashrc, .zshrc, etc.)
-export $(cat .env | xargs)
+# This creates ~/.codebase-gardener/ with:
+# - base_models/     (for storing base AI models)
+# - projects/        (for project-specific data)
+# - active_project.json (current project state)
 ```
 
 ## Development Workflow
 
-### Task-Based Development
-1. **Review Task**: Read task specification in `.kiro/specs/codebase-gardener-mvp/tasks.md`
-2. **Create Branch**: `git checkout -b feat/task-name`
-3. **Create Memory File**: Document approach in `.kiro/memory/`
-4. **Research**: Use MCP tools for documentation and examples
-5. **Implement**: Follow incremental development approach
-6. **Test**: Write and run comprehensive tests
-7. **Document**: Update memory file with lessons learned
-8. **Commit**: Use conventional commit format
-9. **Update Steering**: Update patterns if new conventions established
+### Running Tests
 
-### Memory File Workflow
 ```bash
-# Create memory file for task
-touch .kiro/memory/component_task_N.md
+# Run all tests
+pytest
 
-# Document approach and decisions
-# (See memory file template)
+# Run with coverage
+pytest --cov=src/codebase_gardener
 
-# Update throughout implementation
-# Commit memory file with implementation
-git add .kiro/memory/component_task_N.md
-git commit -m "feat: implement component with documented approach"
+# Run specific test categories
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+pytest -m "not slow"    # Skip slow tests
+
+# Run tests with verbose output
+pytest -v
 ```
 
-## Testing Setup
+### Code Quality
 
-### Test Categories
 ```bash
-# Unit tests (fast, isolated)
-pytest tests/unit/ -v
+# Format code with Black
+black src/ tests/
 
-# Integration tests (component interaction)
-pytest tests/integration/ -v
+# Sort imports with isort
+isort src/ tests/
 
-# End-to-end tests (full system)
-pytest tests/e2e/ -v
+# Type checking with MyPy
+mypy src/
 
-# Performance tests
-pytest tests/performance/ --benchmark-only
+# Lint with Ruff
+ruff check src/ tests/
+
+# Run all quality checks
+black src/ tests/ && isort src/ tests/ && mypy src/ && ruff check src/ tests/
 ```
 
-### Test Data Setup
+### Development Commands
+
 ```bash
-# Create test data directory
-mkdir -p tests/data/sample_codebases
+# Add a project for testing
+codebase-gardener add /path/to/test/project --name "Test Project"
 
-# Add sample Python project
-mkdir -p tests/data/sample_codebases/python_project
-echo "def hello(): return 'world'" > tests/data/sample_codebases/python_project/main.py
+# List registered projects
+codebase-gardener list
+
+# Start development server
+codebase-gardener serve --debug
+
+# Remove test project
+codebase-gardener remove "Test Project"
 ```
 
-## Debugging Setup
+## Configuration
 
-### Logging Configuration
-```python
-# Development logging setup
-import logging
-import structlog
+### Environment Variables
 
-# Configure structured logging for development
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+All configuration can be overridden with environment variables using the `CODEBASE_GARDENER_` prefix:
 
-logger = structlog.get_logger(__name__)
-```
-
-### Debug Tools
 ```bash
-# Interactive debugging with ipdb
-pip install ipdb
+# Application settings
+export CODEBASE_GARDENER_DEBUG=true
+export CODEBASE_GARDENER_LOG_LEVEL=DEBUG
 
-# Add breakpoint in code
-import ipdb; ipdb.set_trace()
+# Model settings
+export CODEBASE_GARDENER_OLLAMA_BASE_URL=http://localhost:11434
+export CODEBASE_GARDENER_EMBEDDING_MODEL=nomic-embed-code
 
-# Memory profiling
-pip install memory-profiler
-python -m memory_profiler your_script.py
+# Storage settings
+export CODEBASE_GARDENER_DATA_DIR=~/.codebase-gardener
+export CODEBASE_GARDENER_MEMORY_LIMIT_GB=6
+
+# Performance settings
+export CODEBASE_GARDENER_MAX_WORKERS=4
+export CODEBASE_GARDENER_EMBEDDING_BATCH_SIZE=32
 ```
 
-## Performance Monitoring
+### Configuration File
 
-### Mac Mini M4 Specific
+Settings are managed through `src/codebase_gardener/config/settings.py` using Pydantic BaseSettings for validation and type safety.
+
+## Package Structure Details
+
+### Src Layout Benefits
+
+The project uses src layout (source code in `src/` directory) which provides:
+
+- **Import Safety**: Prevents accidentally importing from source during development
+- **Clean Separation**: Clear distinction between source code and project files
+- **Testing Reliability**: Ensures tests run against installed package, not source
+- **Distribution Ready**: Proper structure for packaging and distribution
+
+### Module Organization
+
+- **config/**: Configuration management with Pydantic validation
+- **core/**: Core business logic (project registry, context management, model loading)
+- **models/**: AI/ML model interfaces (Ollama, PEFT, embeddings)
+- **data/**: Data processing (parsing, preprocessing, vector storage)
+- **ui/**: User interface components (Gradio web interface)
+- **utils/**: Utility functions (file operations, error handling, logging)
+
+## Dependencies
+
+### Core AI/ML Dependencies
+
+- **ollama**: Local LLM inference
+- **transformers**: HuggingFace model support
+- **peft**: Parameter Efficient Fine-Tuning
+- **lancedb**: Vector database
+- **tree-sitter**: Code parsing
+- **gradio**: Web interface
+- **nomic**: Code embeddings
+
+### Development Dependencies
+
+- **pytest**: Testing framework
+- **black**: Code formatting
+- **mypy**: Type checking
+- **ruff**: Fast linting
+- **pre-commit**: Git hooks
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Import Errors**: Ensure you've installed in development mode with `pip install -e .`
+2. **Missing Dependencies**: Run `pip install -e .[dev]` to install all dependencies
+3. **Python Version**: Verify you're using Python 3.11+ with `python --version`
+4. **Virtual Environment**: Ensure virtual environment is activated
+
+### Dependency Conflicts
+
+If you encounter dependency conflicts:
+
 ```bash
-# Monitor CPU and memory usage
-top -pid $(pgrep -f "python.*codebase_gardener")
-
-# Monitor thermal state
-sudo powermetrics --samplers smc -n 1 | grep -i temp
-
-# Monitor memory pressure
-memory_pressure
-```
-
-### Application Metrics
-```python
-# Add to development code
-import psutil
-import time
-
-def monitor_resources():
-    process = psutil.Process()
-    print(f"Memory: {process.memory_info().rss / 1024 / 1024:.1f} MB")
-    print(f"CPU: {process.cpu_percent():.1f}%")
-```
-
-## Troubleshooting Common Issues
-
-### Ollama Connection Issues
-```bash
-# Check Ollama status
-ollama list
-
-# Restart Ollama service
-pkill ollama
-ollama serve
-
-# Test connection
-curl http://localhost:11434/api/version
-```
-
-### Python Environment Issues
-```bash
-# Recreate virtual environment
+# Create fresh virtual environment
+deactivate
 rm -rf venv
 python -m venv venv
 source venv/bin/activate
-pip install -e ".[dev]"
+
+# Reinstall
+pip install --upgrade pip
+pip install -e .[dev]
 ```
 
-### Memory Issues on Mac Mini M4
-```bash
-# Monitor memory usage
-vm_stat
+### Performance Issues
 
-# Clear Python cache
-find . -name "__pycache__" -exec rm -rf {} +
-find . -name "*.pyc" -delete
-```
+For Mac Mini M4 optimization:
 
-## Development Best Practices
-
-### Code Quality
-- **Follow PEP 8** with black formatting
-- **Type hints** for all public APIs
-- **Docstrings** for all modules, classes, and functions
-- **Error handling** with custom exceptions
-- **Logging** instead of print statements
-
-### Git Workflow
-- **Feature branches** for each task
-- **Conventional commits** with clear messages
-- **Memory files** committed with implementation
-- **Steering updates** when patterns change
-
-### Testing Standards
-- **Test-driven development** where appropriate
-- **Mock external dependencies** (Ollama, file system)
-- **Performance benchmarks** for critical paths
-- **Edge case coverage** especially for AI components
+- Set `CODEBASE_GARDENER_MEMORY_LIMIT_GB=6` for 8GB systems
+- Use `CODEBASE_GARDENER_MAX_WORKERS=4` for optimal CPU usage
+- Monitor memory usage during development
 
 ## Next Steps
 
-1. **Verify Setup**: Run `pytest tests/ -v` to ensure everything works
-2. **Review Steering**: Read all documents in `.kiro/steering/`
-3. **Start Task 1**: Follow the task workflow in the specifications
-4. **Create Memory File**: Document your approach and decisions
-5. **Implement Incrementally**: Build and test in small steps
+After setup:
+
+1. **Add Test Project**: Use `codebase-gardener add` to add a small test project
+2. **Start Web Interface**: Run `codebase-gardener serve` to test the UI
+3. **Run Tests**: Execute `pytest` to verify everything works
+4. **Read Architecture**: Review `.kiro/specs/codebase-gardener-mvp/design.md`
+5. **Check Tasks**: Look at `.kiro/specs/codebase-gardener-mvp/tasks.md` for next steps
+
+## Support
+
+- Check the main README.md for usage instructions
+- Review test files for usage examples
+- Consult the design document for architecture details
+- Look at memory files in `.kiro/memory/` for implementation notes

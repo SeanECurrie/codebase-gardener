@@ -1,0 +1,234 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codebase-gardener"
+version = "0.1.0"
+description = "AI-powered project-specific codebase analysis through specialized LoRA adapters"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Codebase Gardener Team", email = "team@codebase-gardener.dev"}
+]
+maintainers = [
+    {name = "Codebase Gardener Team", email = "team@codebase-gardener.dev"}
+]
+keywords = ["ai", "ml", "code-analysis", "lora", "ollama", "local-first"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.11"
+
+dependencies = [
+    # Core AI/ML dependencies
+    "ollama>=0.1.0",
+    "transformers>=4.36.0",
+    "peft>=0.7.0",
+    "torch>=2.1.0",
+    
+    # Vector database and embeddings
+    "lancedb>=0.4.0",
+    "nomic[local]>=1.0.0",
+    
+    # Code parsing and processing
+    "tree-sitter>=0.20.0",
+    "tree-sitter-python>=0.20.0",
+    "tree-sitter-javascript>=0.20.0",
+    "tree-sitter-typescript>=0.20.0",
+    
+    # Web interface
+    "gradio>=4.0.0",
+    
+    # Configuration and logging
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "structlog>=23.2.0",
+    
+    # Utilities
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "pathlib-mate>=1.0.0",
+    "python-dotenv>=1.0.0",
+    
+    # Data processing
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    
+    # HTTP client for API calls
+    "httpx>=0.25.0",
+    "aiohttp>=3.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    
+    # Code quality
+    "black>=23.12.0",
+    "isort>=5.13.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+    
+    # Documentation
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    
+    # Development utilities
+    "pre-commit>=3.6.0",
+    "ipython>=8.18.0",
+    "jupyter>=1.0.0",
+]
+
+performance = [
+    # Performance monitoring
+    "memory-profiler>=0.61.0",
+    "py-spy>=0.3.0",
+    
+    # Optimized libraries
+    "accelerate>=0.25.0",
+    "bitsandbytes>=0.41.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/codebase-gardener/codebase-gardener-mvp"
+Documentation = "https://docs.codebase-gardener.dev"
+Repository = "https://github.com/codebase-gardener/codebase-gardener-mvp"
+Issues = "https://github.com/codebase-gardener/codebase-gardener-mvp/issues"
+
+[project.scripts]
+codebase-gardener = "codebase_gardener.main:main"
+cgardener = "codebase_gardener.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.md", "*.yml", "*.yaml", "*.json"]
+
+# Black configuration
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["codebase_gardener"]
+
+# MyPy configuration
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ollama.*",
+    "lancedb.*",
+    "nomic.*",
+    "tree_sitter.*",
+    "gradio.*",
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "ai: marks tests that require AI models",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/codebase_gardener"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["B011"]
