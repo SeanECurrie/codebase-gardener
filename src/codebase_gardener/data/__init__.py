@@ -30,6 +30,12 @@ from .preprocessor import (
     preprocess_code_string,
 )
 
+from .vector_store import (
+    CodeChunkSchema,
+    SearchResult,
+    VectorStore,
+)
+
 __all__ = [
     # Parser exports
     "CodeElement",
@@ -48,4 +54,8 @@ __all__ = [
     "PreprocessingConfig",
     "preprocess_file",
     "preprocess_code_string",
+    # Vector store exports
+    "CodeChunkSchema",
+    "SearchResult",
+    "VectorStore",
 ]
