@@ -49,6 +49,10 @@ class Settings(BaseSettings):
         default=30,
         description="Timeout for Ollama API calls in seconds"
     )
+    default_base_model: str = Field(
+        default="microsoft/DialoGPT-small",
+        description="Default base model for LoRA fine-tuning"
+    )
     embedding_model: str = Field(
         default="microsoft/codebert-base",
         description="Embedding model for code analysis"
