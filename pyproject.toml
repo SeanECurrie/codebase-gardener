@@ -38,6 +38,7 @@ dependencies = [
     # Vector database and embeddings
     "lancedb>=0.4.0",
     "nomic[local]>=1.0.0",
+    "sentence-transformers>=2.2.0",
     
     # Code parsing and processing
     "tree-sitter>=0.20.0",

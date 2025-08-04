@@ -170,7 +170,7 @@
   - Commit: `git add . && git commit -m "feat: code preprocessing and intelligent chunking system"`
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 7. Implement Nomic Embed Code integration
+- [-] 7. Implement Nomic Embed Code integration
      **Pre-Task Setup:**
 
   - Create git feature branch: `git checkout -b feat/nomic-embeddings`
