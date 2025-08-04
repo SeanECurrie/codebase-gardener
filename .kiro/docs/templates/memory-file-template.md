@@ -34,16 +34,28 @@
 
 ## Research Findings
 
-### MCP Tools Used
-- **Tool 1**: [Name and purpose]
-  - Query: [What was searched]
-  - Key Findings: [Important discoveries]
-  - Applied: [How findings were used]
+### MCP Tools Used (MANDATORY - Use in this order)
 
-- **Tool 2**: [Name and purpose]
-  - Query: [What was searched]
-  - Key Findings: [Important discoveries]
-  - Applied: [How findings were used]
+- **Sequential Thinking**: [Problem breakdown and architectural decisions]
+  - Thoughts: [Key decision points analyzed]
+  - Alternatives Evaluated: [Options considered systematically]
+  - Applied: [How structured thinking influenced implementation]
+
+- **Context7**: [Specific library documentation retrieved]
+  - Library ID: [Context7 library identifier used]
+  - Topic: [Specific documentation topic]
+  - Key Findings: [Important API details, configuration options, best practices]
+  - Applied: [How documentation guided implementation]
+
+- **Bright Data**: [Real-world code examples found]
+  - Repository/URL: [Source of examples]
+  - Key Patterns: [Implementation patterns discovered]
+  - Applied: [How real-world examples influenced design]
+
+- **Basic Memory**: [Context maintained from previous tasks]
+  - Previous Patterns: [Patterns referenced from earlier tasks]
+  - Integration Points: [How previous work influenced current task]
+  - Applied: [How memory context guided decisions]
 
 ### Documentation Sources
 - [Source 1]: [URL/Reference] - [Key insights]

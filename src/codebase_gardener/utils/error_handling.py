@@ -234,6 +234,20 @@ class NetworkError(CodebaseGardenerError):
         super().__init__(message, **kwargs)
 
 
+class PreprocessingError(CodebaseGardenerError):
+    """Errors during code preprocessing and chunking."""
+    
+    def __init__(self, message: str, **kwargs):
+        if 'suggestions' not in kwargs:
+            kwargs['suggestions'] = [
+                "Check if the code contains valid syntax",
+                "Verify the programming language is supported",
+                "Try preprocessing smaller code segments",
+                "Check file encoding (should be UTF-8)"
+            ]
+        super().__init__(message, **kwargs)
+
+
 class ProjectError(CodebaseGardenerError):
     """Errors related to project management."""
     

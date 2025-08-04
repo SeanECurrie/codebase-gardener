@@ -2,41 +2,94 @@
 
 ## Effective MCP Server Tool Usage
 
-### When to Use MCP Tools During Development
+### MANDATORY MCP Tool Usage Order
 
-#### Research and Documentation Phase
-- **Use MCP tools FIRST** before implementing any new component
-- **Search for existing patterns** in similar projects or libraries
-- **Validate architectural decisions** against current best practices
-- **Find optimization techniques** specific to the technology stack
+**ALWAYS use these MCP tools in this specific order for every task:**
 
-#### Implementation Guidance
+1. **Sequential Thinking FIRST** - Break down complex problems and architectural decisions
+2. **Context7** - Get precise library documentation and API references  
+3. **Bright Data** - Find real-world code examples and implementation patterns
+4. **Basic Memory** - Maintain context and patterns across tasks
+
+**NEVER use Tavily or general web search as the primary research tool.**
+
+### When to Use Each MCP Tool
+
+#### 1. Sequential Thinking (ALWAYS START HERE)
+- **Break down complex implementation decisions** into structured thought processes
+- **Evaluate architectural alternatives** systematically
+- **Plan integration approaches** with existing components
+- **Analyze trade-offs** between different technical approaches
+
 ```python
-# Before implementing Tree-sitter integration:
-# 1. Use MCP search tools to find Tree-sitter Python examples
-# 2. Research language-specific parsing patterns
-# 3. Look for performance optimization techniques
-# 4. Find error handling patterns for malformed code
+# Example: Before implementing any component, use Sequential Thinking to:
+# 1. Analyze the problem space and requirements
+# 2. Evaluate 3-5 different implementation approaches
+# 3. Consider integration points with existing code
+# 4. Plan error handling and testing strategies
+# 5. Make informed architectural decisions
 ```
 
-#### Problem-Solving Workflow
-1. **Encounter Issue**: Document the specific problem in memory file
-2. **MCP Research**: Search for solutions, similar issues, and best practices
-3. **Synthesize Solutions**: Combine research findings with project constraints
-4. **Implement**: Apply solution with project-specific adaptations
-5. **Document**: Update memory file with solution and lessons learned
+#### 2. Context7 (FOR PRECISE DOCUMENTATION)
+- **Get specific library documentation** (Tree-sitter, HuggingFace PEFT, LanceDB, Ollama)
+- **Find API references and usage examples** for exact libraries you're using
+- **Understand configuration options** and best practices
+- **Get up-to-date information** on library versions and features
+
+```python
+# Example Context7 usage:
+# - resolve_library_id("tree-sitter") → get Context7 library ID
+# - get_library_docs("/tree-sitter/tree-sitter", topic="python bindings")
+# - get_library_docs("/huggingface/peft", topic="LoRA adapters")
+```
+
+#### 3. Bright Data (FOR REAL-WORLD EXAMPLES)
+- **Find actual code implementations** on GitHub repositories
+- **Analyze real-world usage patterns** of libraries you're integrating
+- **Get examples of error handling** in production code
+- **See performance optimization techniques** used in practice
+
+```python
+# Example Bright Data usage:
+# - scrape_as_markdown("https://github.com/tree-sitter/py-tree-sitter/blob/master/examples/")
+# - extract structured data from code repositories
+# - Find implementation patterns in similar projects
+```
+
+#### 4. Basic Memory (FOR CONTEXT MAINTENANCE)
+- **Store architectural decisions** across tasks
+- **Maintain patterns and lessons learned** from previous implementations
+- **Track integration points** between components
+- **Remember performance constraints** and optimization strategies
+
+### Problem-Solving Workflow (MANDATORY)
+
+1. **Sequential Thinking**: Break down the problem systematically
+2. **Context7**: Get precise documentation for libraries involved
+3. **Bright Data**: Find real-world implementation examples
+4. **Basic Memory**: Check previous patterns and decisions
+5. **Implement**: Apply solution with project-specific adaptations
+6. **Document**: Update memory file with solution and lessons learned
 
 ### MCP Tool Selection Strategy
 
-#### For AI/ML Components
-- **Use documentation MCPs** for HuggingFace, Ollama, LanceDB specifics
-- **Use code search MCPs** for implementation patterns and examples
-- **Use performance MCPs** for optimization techniques and benchmarking
+#### For AI/ML Components (Tree-sitter, PEFT, LanceDB, Ollama)
+- **Sequential Thinking**: Evaluate model architectures and integration approaches
+- **Context7**: Get HuggingFace, Ollama, LanceDB documentation
+- **Bright Data**: Find real ML pipeline implementations
+- **Basic Memory**: Track model performance and optimization patterns
 
 #### For System Integration
-- **Use file system MCPs** for directory structure and permission patterns
-- **Use configuration MCPs** for environment variable and settings management
-- **Use testing MCPs** for test framework selection and patterns
+- **Sequential Thinking**: Plan component integration and data flow
+- **Context7**: Get Python packaging, configuration management docs
+- **Bright Data**: Find directory structure and permission patterns
+- **Basic Memory**: Track established patterns from previous tasks
+
+#### For Testing and Quality Assurance
+- **Sequential Thinking**: Plan testing strategies and coverage
+- **Context7**: Get pytest, testing framework documentation
+- **Bright Data**: Find testing patterns in similar projects
+- **Basic Memory**: Track testing patterns and mock strategies
 
 ## Memory File Patterns and Best Practices
 

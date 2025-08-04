@@ -117,7 +117,7 @@
   - Commit: `git add . && git commit -m "feat: comprehensive error handling framework"`
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [-] 5. Build Tree-sitter code parser integration
+- [x] 5. Build Tree-sitter code parser integration
      **Pre-Task Setup:**
 
   - Create git feature branch: `git checkout -b feat/treesitter-parser`
@@ -144,7 +144,7 @@
   - Commit: `git add . && git commit -m "feat: Tree-sitter code parser integration"`
   - _Requirements: 2.4, 7.1, 7.2_
 
-- [ ] 6. Create code preprocessing and chunking system
+- [-] 6. Create code preprocessing and chunking system
      **Pre-Task Setup:**
 
   - Create git feature branch: `git checkout -b feat/code-preprocessing`

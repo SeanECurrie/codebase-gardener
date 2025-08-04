@@ -21,7 +21,17 @@ from .parser import (
     is_supported_file,
 )
 
+from .preprocessor import (
+    ChunkType,
+    CodeChunk,
+    CodePreprocessor,
+    PreprocessingConfig,
+    preprocess_file,
+    preprocess_code_string,
+)
+
 __all__ = [
+    # Parser exports
     "CodeElement",
     "CodeStructure", 
     "ParseError",
@@ -31,4 +41,11 @@ __all__ = [
     "create_parser_for_file",
     "get_supported_extensions",
     "is_supported_file",
+    # Preprocessor exports
+    "ChunkType",
+    "CodeChunk",
+    "CodePreprocessor",
+    "PreprocessingConfig",
+    "preprocess_file",
+    "preprocess_code_string",
 ]
