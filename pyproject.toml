@@ -187,6 +187,7 @@ markers = [
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
     "ai: marks tests that require AI models",
+    "asyncio: marks tests as async tests",
 ]
 
 # Coverage configuration

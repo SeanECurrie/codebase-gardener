@@ -200,7 +200,7 @@
 - [ ] 8. Build LanceDB vector storage system
 
   - [x] 8.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
-  - [-] 8.2 **IMPLEMENTATION**: Build LanceDB vector storage system
+  - [x] 8.2 **IMPLEMENTATION**: Build LanceDB vector storage system
 
     **Pre-Task Setup:**
 
@@ -229,7 +229,7 @@
 
 - [ ] 9. Create Ollama client integration
 
-  - [ ] 9.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
+  - [x] 9.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
   - [ ] 9.2 **IMPLEMENTATION**: Create Ollama client integration
 
     **Pre-Task Setup:**
