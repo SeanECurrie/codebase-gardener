@@ -144,7 +144,7 @@
   - Commit: `git add . && git commit -m "feat: Tree-sitter code parser integration"`
   - _Requirements: 2.4, 7.1, 7.2_
 
-- [-] 6. Create code preprocessing and chunking system
+- [x] 6. Create code preprocessing and chunking system
      **Pre-Task Setup:**
 
   - Create git feature branch: `git checkout -b feat/code-preprocessing`
