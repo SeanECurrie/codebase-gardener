@@ -227,10 +227,10 @@
   - Commit: `git add . && git commit -m "feat: LanceDB vector storage with similarity search"`
   - _Requirements: 2.3, 7.1, 7.2_
 
-- [ ] 9. Create Ollama client integration
+- [x] 9. Create Ollama client integration
 
   - [x] 9.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
-  - [ ] 9.2 **IMPLEMENTATION**: Create Ollama client integration
+  - [x] 9.2 **IMPLEMENTATION**: Create Ollama client integration
 
     **Pre-Task Setup:**
 
@@ -260,7 +260,7 @@
 
 - [ ] 10. Implement HuggingFace PEFT manager
 
-  - [ ] 10.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
+  - [x] 10.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
   - [ ] 10.2 **IMPLEMENTATION**: Implement HuggingFace PEFT manager
 
     **Pre-Task Setup:**
