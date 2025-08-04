@@ -49,9 +49,19 @@ class Settings(BaseSettings):
         default=30,
         description="Timeout for Ollama API calls in seconds"
     )
-    default_embedding_model: str = Field(
-        default="nomic-embed-code",
-        description="Default embedding model for code analysis"
+    embedding_model: str = Field(
+        default="microsoft/codebert-base",
+        description="Embedding model for code analysis"
+    )
+    embedding_cache_size: int = Field(
+        default=1000,
+        description="Maximum number of embeddings to cache",
+        ge=100,
+        le=10000
+    )
+    embedding_device: str = Field(
+        default="auto",
+        description="Device for embedding model (auto, cpu, cuda, mps)"
     )
     
     # Vector database settings
@@ -66,10 +76,22 @@ class Settings(BaseSettings):
         le=128
     )
     max_chunk_size: int = Field(
-        default=1000,
+        default=2048,
         description="Maximum size of code chunks for embedding",
         ge=100,
         le=5000
+    )
+    min_chunk_size: int = Field(
+        default=50,
+        description="Minimum size of code chunks for embedding",
+        ge=10,
+        le=500
+    )
+    chunk_overlap: int = Field(
+        default=100,
+        description="Overlap between adjacent chunks",
+        ge=0,
+        le=500
     )
     
     # Training settings
@@ -105,11 +127,15 @@ class Settings(BaseSettings):
         ge=1,
         le=16
     )
-    memory_limit_mb: int = Field(
-        default=6144,  # 6GB for Mac Mini M4 8GB
+    max_memory_mb: int = Field(
+        default=6000,  # 6GB for Mac Mini M4 8GB
         description="Memory limit in MB for AI operations",
         ge=1024,
         le=16384
+    )
+    supported_languages: str = Field(
+        default="python,javascript,typescript,java,go,rust",
+        description="Comma-separated list of supported programming languages"
     )
     
     # UI settings

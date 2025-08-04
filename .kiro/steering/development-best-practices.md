@@ -7,9 +7,9 @@
 **ALWAYS use these MCP tools in this specific order for every task:**
 
 1. **Sequential Thinking FIRST** - Break down complex problems and architectural decisions
-2. **Context7** - Get precise library documentation and API references  
-3. **Bright Data** - Find real-world code examples and implementation patterns
-4. **Basic Memory** - Maintain context and patterns across tasks
+2. **Context7 FORTH** - Get precise library documentation and API references  
+3. **Bright Data SECOND** - Find real-world code examples and implementation patterns
+4. **Basic Memory THIRD** - Maintain context and patterns across tasks
 
 **NEVER use Tavily or general web search as the primary research tool.**
 

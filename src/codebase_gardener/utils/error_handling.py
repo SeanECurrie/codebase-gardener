@@ -248,6 +248,20 @@ class PreprocessingError(CodebaseGardenerError):
         super().__init__(message, **kwargs)
 
 
+class EmbeddingError(CodebaseGardenerError):
+    """Errors during embedding generation."""
+    
+    def __init__(self, message: str, **kwargs):
+        if 'suggestions' not in kwargs:
+            kwargs['suggestions'] = [
+                "Check if the embedding model is loaded correctly",
+                "Verify system has sufficient memory",
+                "Try reducing batch size for embedding generation",
+                "Check if input text is valid and not empty"
+            ]
+        super().__init__(message, **kwargs)
+
+
 class ProjectError(CodebaseGardenerError):
     """Errors related to project management."""
     
@@ -366,6 +380,42 @@ def network_retry(func: F) -> F:
 def storage_retry(func: F) -> F:
     """Decorator for retrying storage operations with appropriate backoff."""
     return retry(**STORAGE_RETRY_CONFIG)(func)
+
+
+def retry_with_exponential_backoff(max_retries: int = 3) -> Callable[[F], F]:
+    """
+    Simple retry decorator with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+    
+    Returns:
+        Decorated function with retry logic
+    """
+    def decorator(func: F) -> F:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_retries:
+                        # Last attempt failed, reraise the exception
+                        raise
+                    
+                    # Calculate wait time with exponential backoff
+                    wait_time = 2 ** attempt
+                    logger.warning(
+                        f"Attempt {attempt + 1} failed, retrying in {wait_time}s",
+                        function=func.__name__,
+                        error=str(e),
+                        attempt=attempt + 1,
+                        max_retries=max_retries
+                    )
+                    time.sleep(wait_time)
+            
+        return wrapper
+    return decorator
 
 
 def handle_errors(
