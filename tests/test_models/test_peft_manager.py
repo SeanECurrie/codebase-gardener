@@ -1,524 +1,578 @@
 """
 Tests for the PEFT Manager module.
 
-This module tests the HuggingFace PEFT manager functionality including
-LoRA adapter creation, training, management, and error handling.
+Comprehensive test suite covering LoRA adapter creation, training, loading,
+and resource management functionality.
 """
 
 import json
 import pytest
 import tempfile
-import shutil
-from pathlib import Path
+import threading
+import time
 from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List
+from pathlib import Path
+from unittest.mock import Mock, patch, MagicMock, call
 
-from codebase_gardener.models.peft_manager import (
-    PEFTManager,
-    AdapterInfo,
-    TrainingResult,
-    TrainingConfig,
-    PEFTError,
-    PEFTTrainingError,
-    AdapterNotFoundError,
-    ResourceError,
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from src.codebase_gardener.models.peft_manager import (
+    PeftManager,
+    AdapterMetadata,
+    TrainingProgress,
+    TrainingError,
+    AdapterError
 )
-from codebase_gardener.config.settings import Settings
+from src.codebase_gardener.config.settings import Settings
+from src.codebase_gardener.utils.error_handling import ModelError
 
 
 @pytest.fixture
-def temp_settings():
-    """Create temporary settings for testing."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        settings = Settings()
-        settings.data_dir = Path(temp_dir)
-        settings.default_base_model = "microsoft/DialoGPT-small"
-        yield settings
+def mock_settings():
+    """Create mock settings for testing."""
+    settings = Mock(spec=Settings)
+    settings.data_dir = Path(tempfile.mkdtemp())
+    settings.ollama_base_url = "http://localhost:11434"
+    settings.ollama_timeout = 30
+    return settings
 
 
 @pytest.fixture
-def peft_manager(temp_settings):
-    """Create PEFT manager instance for testing."""
-    return PEFTManager(temp_settings)
+def peft_manager(mock_settings):
+    """Create PeftManager instance for testing."""
+    with patch('src.codebase_gardener.models.peft_manager.logger'):
+        return PeftManager(mock_settings)
 
 
 @pytest.fixture
 def sample_training_data():
     """Sample training data for testing."""
     return [
-        {
-            "input": "def hello_world():",
-            "output": "This function prints 'Hello, World!' to the console."
-        },
-        {
-            "input": "class Calculator:",
-            "output": "This is a calculator class for basic arithmetic operations."
-        },
-        {
-            "input": "import numpy as np",
-            "output": "This imports the NumPy library for numerical computations."
-        },
+        {"input": "def hello():", "output": "    return 'Hello, World!'"},
+        {"input": "class MyClass:", "output": "    def __init__(self):\n        pass"},
+        {"input": "import numpy as np", "output": "# NumPy for numerical operations"},
     ]
 
 
 @pytest.fixture
 def sample_adapter_metadata():
     """Sample adapter metadata for testing."""
-    return {
-        "adapter_id": "test_project_20250203_120000",
-        "project_id": "test_project",
-        "created_at": "2025-02-03T12:00:00",
-        "model_name": "microsoft/DialoGPT-small",
-        "config": {
-            "rank": 8,
-            "alpha": 16,
-            "target_modules": ["q_proj", "v_proj"],
-            "dropout": 0.1,
-        },
-        "status": "completed",
-        "last_trained": "2025-02-03T12:30:00",
-        "training_steps": 100,
-        "final_loss": 0.5,
-    }
+    return AdapterMetadata(
+        name="test_adapter",
+        project_name="test_project",
+        created_at=datetime.now(),
+        model_name="microsoft/DialoGPT-medium",
+        config={"r": 16, "lora_alpha": 32},
+        training_metrics={"final_loss": 0.5},
+        file_path=Path("/tmp/test_adapter.bin"),
+        size_mb=10.5,
+        status="ready"
+    )
 
 
-class TestPEFTManager:
-    """Test cases for PEFTManager class."""
+class TestPeftManagerInitialization:
+    """Test PeftManager initialization and setup."""
     
-    def test_init(self, temp_settings):
-        """Test PEFT manager initialization."""
-        manager = PEFTManager(temp_settings)
-        
-        assert manager.settings == temp_settings
-        assert manager.adapters_dir == temp_settings.data_dir / "adapters"
-        assert manager.adapters_dir.exists()
-        assert manager._current_training is None
-        assert manager._training_cancelled is False
+    def test_initialization_success(self, mock_settings):
+        """Test successful PeftManager initialization."""
+        with patch('src.codebase_gardener.models.peft_manager.logger'):
+            manager = PeftManager(mock_settings)
+            
+            assert manager.settings == mock_settings
+            assert manager.adapters_dir == mock_settings.data_dir / "adapters"
+            assert manager.adapters_dir.exists()
+            assert len(manager._adapters_cache) == 0
+            assert len(manager._adapter_metadata) == 0
     
-    def test_training_config_defaults(self):
-        """Test TrainingConfig default values."""
-        config = TrainingConfig()
+    def test_adapters_directory_creation(self, mock_settings):
+        """Test that adapters directory is created."""
+        adapters_dir = mock_settings.data_dir / "adapters"
+        assert not adapters_dir.exists()
         
-        assert config.rank == 8
-        assert config.alpha == 16
-        assert config.target_modules == ["q_proj", "v_proj"]
-        assert config.dropout == 0.1
-        assert config.batch_size == 1
-        assert config.learning_rate == 2e-4
-        assert config.num_epochs == 3
-        assert config.max_steps == 500
-        assert config.gradient_checkpointing is True
-        assert config.warmup_steps == 50
+        with patch('src.codebase_gardener.models.peft_manager.logger'):
+            PeftManager(mock_settings)
+            
+        assert adapters_dir.exists()
     
-    def test_training_config_custom(self):
-        """Test TrainingConfig with custom values."""
-        config = TrainingConfig(
-            rank=16,
-            alpha=32,
-            target_modules=["q_proj", "k_proj", "v_proj"],
-            dropout=0.05,
-            batch_size=2,
-        )
+    def test_load_existing_metadata(self, mock_settings, sample_adapter_metadata):
+        """Test loading existing adapter metadata."""
+        # Create metadata file
+        adapters_dir = mock_settings.data_dir / "adapters"
+        adapters_dir.mkdir(parents=True, exist_ok=True)
         
-        assert config.rank == 16
-        assert config.alpha == 32
-        assert config.target_modules == ["q_proj", "k_proj", "v_proj"]
-        assert config.dropout == 0.05
-        assert config.batch_size == 2
-    
-    def test_list_adapters_empty(self, peft_manager):
-        """Test listing adapters when none exist."""
-        adapters = peft_manager.list_adapters()
-        assert adapters == []
-    
-    def test_list_adapters_with_data(self, peft_manager, sample_adapter_metadata):
-        """Test listing adapters with existing data."""
-        # Create a mock adapter directory with metadata
-        adapter_id = sample_adapter_metadata["adapter_id"]
-        adapter_dir = peft_manager.adapters_dir / adapter_id
-        adapter_dir.mkdir(parents=True)
-        
-        # Write metadata file
-        with open(adapter_dir / "metadata.json", "w") as f:
-            json.dump(sample_adapter_metadata, f)
-        
-        # Create some dummy files to test size calculation
-        (adapter_dir / "adapter_model.bin").write_text("dummy model data")
-        (adapter_dir / "adapter_config.json").write_text('{"test": "config"}')
-        
-        adapters = peft_manager.list_adapters()
-        
-        assert len(adapters) == 1
-        adapter = adapters[0]
-        assert adapter.adapter_id == adapter_id
-        assert adapter.project_id == "test_project"
-        assert adapter.model_name == "microsoft/DialoGPT-small"
-        assert adapter.rank == 8
-        assert adapter.alpha == 16
-        assert adapter.target_modules == ["q_proj", "v_proj"]
-        assert adapter.training_steps == 100
-        assert adapter.status == "completed"
-        assert adapter.file_size_mb > 0
-    
-    def test_get_adapter_info_success(self, peft_manager, sample_adapter_metadata):
-        """Test getting adapter info for existing adapter."""
-        # Create mock adapter
-        adapter_id = sample_adapter_metadata["adapter_id"]
-        adapter_dir = peft_manager.adapters_dir / adapter_id
-        adapter_dir.mkdir(parents=True)
-        
-        with open(adapter_dir / "metadata.json", "w") as f:
-            json.dump(sample_adapter_metadata, f)
-        
-        (adapter_dir / "adapter_model.bin").write_text("dummy model data")
-        
-        adapter_info = peft_manager.get_adapter_info(adapter_id)
-        
-        assert adapter_info.adapter_id == adapter_id
-        assert adapter_info.project_id == "test_project"
-        assert adapter_info.status == "completed"
-    
-    def test_get_adapter_info_not_found(self, peft_manager):
-        """Test getting adapter info for non-existent adapter."""
-        with pytest.raises(AdapterNotFoundError):
-            peft_manager.get_adapter_info("non_existent_adapter")
-    
-    def test_delete_adapter_success(self, peft_manager, sample_adapter_metadata):
-        """Test successful adapter deletion."""
-        # Create mock adapter
-        adapter_id = sample_adapter_metadata["adapter_id"]
-        adapter_dir = peft_manager.adapters_dir / adapter_id
-        adapter_dir.mkdir(parents=True)
-        
-        with open(adapter_dir / "metadata.json", "w") as f:
-            json.dump(sample_adapter_metadata, f)
-        
-        assert adapter_dir.exists()
-        
-        result = peft_manager.delete_adapter(adapter_id)
-        
-        assert result is True
-        assert not adapter_dir.exists()
-    
-    def test_delete_adapter_not_found(self, peft_manager):
-        """Test deleting non-existent adapter."""
-        result = peft_manager.delete_adapter("non_existent_adapter")
-        assert result is False
-    
-    def test_cancel_training_no_training(self, peft_manager):
-        """Test canceling training when none is running."""
-        result = peft_manager.cancel_training()
-        assert result is False
-    
-    def test_cancel_training_with_training(self, peft_manager):
-        """Test canceling training when training is running."""
-        peft_manager._current_training = "test_adapter"
-        
-        result = peft_manager.cancel_training()
-        
-        assert result is True
-        assert peft_manager._training_cancelled is True
-    
-    def test_get_training_status_none(self, peft_manager):
-        """Test getting training status when none is running."""
-        status = peft_manager.get_training_status()
-        assert status is None
-    
-    def test_get_training_status_active(self, peft_manager):
-        """Test getting training status when training is active."""
-        peft_manager._current_training = "test_adapter"
-        
-        status = peft_manager.get_training_status()
-        assert status == "test_adapter"
-    
-    def test_default_base_model_property(self, peft_manager):
-        """Test default base model property."""
-        model = peft_manager.default_base_model
-        assert model == "microsoft/DialoGPT-small"
-    
-    @patch('codebase_gardener.models.peft_manager.AutoTokenizer')
-    @patch('codebase_gardener.models.peft_manager.AutoModelForCausalLM')
-    @patch('codebase_gardener.models.peft_manager.get_peft_model')
-    @patch('codebase_gardener.models.peft_manager.torch')
-    def test_prepare_training_dataset(
-        self, mock_torch, mock_get_peft_model, mock_model, mock_tokenizer, 
-        peft_manager, sample_training_data
-    ):
-        """Test training dataset preparation."""
-        # Mock tokenizer
-        mock_tokenizer_instance = Mock()
-        mock_tokenizer_instance.return_value = {
-            'input_ids': [1, 2, 3],
-            'attention_mask': [1, 1, 1]
+        metadata_file = adapters_dir / "metadata.json"
+        metadata_dict = {
+            "test_project_test_adapter": {
+                "name": sample_adapter_metadata.name,
+                "project_name": sample_adapter_metadata.project_name,
+                "created_at": sample_adapter_metadata.created_at.isoformat(),
+                "model_name": sample_adapter_metadata.model_name,
+                "config": sample_adapter_metadata.config,
+                "training_metrics": sample_adapter_metadata.training_metrics,
+                "file_path": str(sample_adapter_metadata.file_path),
+                "size_mb": sample_adapter_metadata.size_mb,
+                "status": sample_adapter_metadata.status
+            }
         }
-        mock_tokenizer.from_pretrained.return_value = mock_tokenizer_instance
         
-        # Test dataset preparation
-        dataset = peft_manager._prepare_training_dataset(
-            sample_training_data, mock_tokenizer_instance
-        )
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata_dict, f)
         
-        assert dataset is not None
-        # The actual dataset testing would require more complex mocking
-        # of the HuggingFace datasets library
-    
-    def test_get_peak_memory_usage_cuda_available(self, peft_manager):
-        """Test peak memory usage calculation when CUDA is available."""
-        with patch('torch.cuda.is_available', return_value=True):
-            with patch('torch.cuda.max_memory_allocated', return_value=1024 * 1024 * 100):  # 100MB
-                memory = peft_manager._get_peak_memory_usage()
-                assert memory == 100.0
-    
-    def test_get_peak_memory_usage_cuda_not_available(self, peft_manager):
-        """Test peak memory usage calculation when CUDA is not available."""
-        with patch('torch.cuda.is_available', return_value=False):
-            memory = peft_manager._get_peak_memory_usage()
-            assert memory == 0.0
+        with patch('src.codebase_gardener.models.peft_manager.logger'):
+            manager = PeftManager(mock_settings)
+            
+        assert len(manager._adapter_metadata) == 1
+        assert "test_project_test_adapter" in manager._adapter_metadata
 
 
-class TestPEFTManagerIntegration:
-    """Integration tests for PEFT manager with mocked dependencies."""
+class TestAdapterCreation:
+    """Test LoRA adapter creation and training."""
     
-    @patch('codebase_gardener.models.peft_manager.AutoTokenizer')
-    @patch('codebase_gardener.models.peft_manager.AutoModelForCausalLM')
-    @patch('codebase_gardener.models.peft_manager.get_peft_model')
-    @patch('codebase_gardener.models.peft_manager.torch')
-    def test_create_adapter_success(
-        self, mock_torch, mock_get_peft_model, mock_model, mock_tokenizer,
-        peft_manager, sample_training_data
-    ):
-        """Test successful adapter creation with mocked training."""
-        # Mock CUDA availability
-        mock_torch.cuda.is_available.return_value = False
-        mock_torch.cuda.empty_cache = Mock()
+    @patch('src.codebase_gardener.models.peft_manager.threading.Thread')
+    def test_create_adapter_success(self, mock_thread, peft_manager, sample_training_data):
+        """Test successful adapter creation."""
+        mock_thread_instance = Mock()
+        mock_thread.return_value = mock_thread_instance
         
-        # Mock tokenizer
+        with patch.object(peft_manager, '_check_memory_usage', return_value={"available_gb": 4.0}):
+            adapter_id = peft_manager.create_adapter(
+                project_name="test_project",
+                training_data=sample_training_data,
+                adapter_name="test_adapter"
+            )
+        
+        assert adapter_id == "test_project_test_adapter"
+        assert adapter_id in peft_manager._adapter_metadata
+        
+        metadata = peft_manager._adapter_metadata[adapter_id]
+        assert metadata.name == "test_adapter"
+        assert metadata.project_name == "test_project"
+        assert metadata.status == "training"
+        
+        # Verify training thread was started
+        mock_thread.assert_called_once()
+        mock_thread_instance.start.assert_called_once()
+    
+    def test_create_adapter_insufficient_memory(self, peft_manager, sample_training_data):
+        """Test adapter creation with insufficient memory."""
+        with patch.object(peft_manager, '_check_memory_usage', return_value={"available_gb": 1.0}):
+            with pytest.raises(AdapterError, match="Insufficient memory"):
+                peft_manager.create_adapter(
+                    project_name="test_project",
+                    training_data=sample_training_data
+                )
+    
+    def test_create_adapter_custom_config(self, peft_manager, sample_training_data):
+        """Test adapter creation with custom configuration."""
+        custom_config = {"r": 8, "lora_alpha": 16}
+        
+        with patch.object(peft_manager, '_check_memory_usage', return_value={"available_gb": 4.0}):
+            with patch('src.codebase_gardener.models.peft_manager.threading.Thread'):
+                adapter_id = peft_manager.create_adapter(
+                    project_name="test_project",
+                    training_data=sample_training_data,
+                    config_override=custom_config
+                )
+        
+        metadata = peft_manager._adapter_metadata[adapter_id]
+        assert metadata.config["r"] == 8
+        assert metadata.config["lora_alpha"] == 16
+    
+    @patch('src.codebase_gardener.models.peft_manager.AutoModelForCausalLM')
+    @patch('src.codebase_gardener.models.peft_manager.AutoTokenizer')
+    @patch('src.codebase_gardener.models.peft_manager.get_peft_model')
+    @patch('src.codebase_gardener.models.peft_manager.Dataset')
+    @patch('src.codebase_gardener.models.peft_manager.Trainer')
+    @patch('src.codebase_gardener.models.peft_manager.BitsAndBytesConfig')
+    @patch('src.codebase_gardener.models.peft_manager.LoraConfig')
+    @patch('src.codebase_gardener.models.peft_manager.TrainingArguments')
+    @patch('src.codebase_gardener.models.peft_manager.DataCollatorForLanguageModeling')
+    def test_train_adapter_success(self, mock_data_collator, mock_training_args, mock_lora_config, 
+                                 mock_bits_config, mock_trainer_class, mock_dataset, mock_get_peft_model, 
+                                 mock_tokenizer, mock_model, peft_manager, sample_training_data):
+        """Test successful adapter training."""
+        # Setup mocks
+        mock_model_instance = Mock()
+        mock_model.from_pretrained.return_value = mock_model_instance
+        
         mock_tokenizer_instance = Mock()
         mock_tokenizer_instance.pad_token = None
         mock_tokenizer_instance.eos_token = "<eos>"
-        mock_tokenizer_instance.return_value = {
-            'input_ids': [1, 2, 3],
-            'attention_mask': [1, 1, 1]
-        }
         mock_tokenizer.from_pretrained.return_value = mock_tokenizer_instance
         
-        # Mock model
-        mock_model_instance = Mock()
-        mock_model_instance.print_trainable_parameters = Mock()
-        mock_model_instance.save_pretrained = Mock()
-        mock_model.from_pretrained.return_value = mock_model_instance
-        
-        # Mock PEFT model
         mock_peft_model = Mock()
-        mock_peft_model.print_trainable_parameters = Mock()
-        mock_peft_model.save_pretrained = Mock()
         mock_get_peft_model.return_value = mock_peft_model
         
-        # Mock trainer and training result
-        with patch.object(peft_manager, '_create_trainer') as mock_create_trainer:
-            mock_trainer = Mock()
-            mock_train_result = Mock()
-            mock_train_result.global_step = 100
-            mock_train_result.training_loss = 0.5
-            mock_trainer.train.return_value = mock_train_result
-            mock_create_trainer.return_value = mock_trainer
-            
-            # Mock dataset preparation
-            with patch.object(peft_manager, '_prepare_training_dataset') as mock_prepare:
-                mock_dataset = Mock()
-                mock_prepare.return_value = mock_dataset
+        mock_dataset_instance = Mock()
+        mock_dataset.from_dict.return_value = mock_dataset_instance
+        mock_dataset_instance.map.return_value = mock_dataset_instance
+        
+        # Mock trainer
+        mock_trainer = Mock()
+        mock_trainer.state.log_history = [{"train_loss": 0.5}]
+        mock_trainer.state.global_step = 100
+        mock_trainer_class.return_value = mock_trainer
+        
+        # Create adapter metadata
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = AdapterMetadata(
+            name="test_adapter",
+            project_name="test_project",
+            created_at=datetime.now(),
+            model_name="microsoft/DialoGPT-medium",
+            config={"r": 16, "lora_alpha": 32},
+            training_metrics={},
+            file_path=Path("/tmp/test_adapter.bin"),
+            size_mb=0.0,
+            status="training"
+        )
+        
+        # Mock the save_pretrained method to avoid file operations
+        with patch.object(mock_peft_model, 'save_pretrained'):
+            # Run training
+            peft_manager._train_adapter(
+                adapter_id=adapter_id,
+                base_model="microsoft/DialoGPT-medium",
+                training_data=sample_training_data,
+                config={"r": 16, "lora_alpha": 32}
+            )
+        
+        # Verify metadata was updated
+        metadata = peft_manager._adapter_metadata[adapter_id]
+        assert metadata.status == "ready"
+        assert "final_loss" in metadata.training_metrics
+
+
+class TestAdapterLoading:
+    """Test LoRA adapter loading and unloading."""
+    
+    def test_load_adapter_from_cache(self, peft_manager):
+        """Test loading adapter from cache."""
+        adapter_id = "test_project_test_adapter"
+        mock_model = Mock()
+        peft_manager._adapters_cache[adapter_id] = mock_model
+        
+        result = peft_manager.load_adapter("test_project", "test_adapter")
+        assert result == mock_model
+    
+    def test_load_adapter_not_found(self, peft_manager):
+        """Test loading non-existent adapter."""
+        with pytest.raises(AdapterError, match="not found"):
+            peft_manager.load_adapter("nonexistent_project", "nonexistent_adapter")
+    
+    def test_load_adapter_not_ready(self, peft_manager, sample_adapter_metadata):
+        """Test loading adapter that's not ready."""
+        sample_adapter_metadata.status = "training"
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
+        
+        with pytest.raises(AdapterError, match="not ready"):
+            peft_manager.load_adapter("test_project", "test_adapter")
+    
+    @patch('src.codebase_gardener.models.peft_manager.AutoModelForCausalLM')
+    @patch('src.codebase_gardener.models.peft_manager.PeftModel')
+    def test_load_adapter_success(self, mock_peft_model, mock_auto_model, 
+                                peft_manager, sample_adapter_metadata):
+        """Test successful adapter loading."""
+        # Setup metadata
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
+        
+        # Setup mocks
+        mock_base_model = Mock()
+        mock_auto_model.from_pretrained.return_value = mock_base_model
+        
+        mock_loaded_model = Mock()
+        mock_peft_model.from_pretrained.return_value = mock_loaded_model
+        
+        with patch.object(peft_manager, '_check_memory_usage', return_value={"available_gb": 4.0}):
+            result = peft_manager.load_adapter("test_project", "test_adapter")
+        
+        assert result == mock_loaded_model
+        assert adapter_id in peft_manager._adapters_cache
+        
+        # Verify model loading calls
+        mock_auto_model.from_pretrained.assert_called_once()
+        mock_peft_model.from_pretrained.assert_called_once()
+    
+    def test_unload_adapter_success(self, peft_manager):
+        """Test successful adapter unloading."""
+        adapter_id = "test_project_test_adapter"
+        mock_model = Mock()
+        peft_manager._adapters_cache[adapter_id] = mock_model
+        
+        result = peft_manager.unload_adapter("test_project", "test_adapter")
+        
+        assert result is True
+        assert adapter_id not in peft_manager._adapters_cache
+    
+    def test_unload_adapter_not_cached(self, peft_manager):
+        """Test unloading adapter not in cache."""
+        result = peft_manager.unload_adapter("test_project", "test_adapter")
+        assert result is False
+
+
+class TestAdapterManagement:
+    """Test adapter management operations."""
+    
+    def test_list_adapters_empty(self, peft_manager):
+        """Test listing adapters when none exist."""
+        result = peft_manager.list_adapters()
+        assert result == []
+    
+    def test_list_adapters_with_data(self, peft_manager, sample_adapter_metadata):
+        """Test listing adapters with existing data."""
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
+        
+        result = peft_manager.list_adapters()
+        
+        assert len(result) == 1
+        adapter_info = result[0]
+        assert adapter_info["id"] == adapter_id
+        assert adapter_info["name"] == sample_adapter_metadata.name
+        assert adapter_info["project_name"] == sample_adapter_metadata.project_name
+        assert adapter_info["status"] == sample_adapter_metadata.status
+    
+    def test_list_adapters_filtered_by_project(self, peft_manager):
+        """Test listing adapters filtered by project."""
+        # Add adapters for different projects
+        metadata1 = AdapterMetadata(
+            name="adapter1", project_name="project1", created_at=datetime.now(),
+            model_name="model", config={}, training_metrics={},
+            file_path=Path("/tmp/1"), size_mb=1.0, status="ready"
+        )
+        metadata2 = AdapterMetadata(
+            name="adapter2", project_name="project2", created_at=datetime.now(),
+            model_name="model", config={}, training_metrics={},
+            file_path=Path("/tmp/2"), size_mb=1.0, status="ready"
+        )
+        
+        peft_manager._adapter_metadata["project1_adapter1"] = metadata1
+        peft_manager._adapter_metadata["project2_adapter2"] = metadata2
+        
+        result = peft_manager.list_adapters(project_name="project1")
+        
+        assert len(result) == 1
+        assert result[0]["project_name"] == "project1"
+    
+    def test_delete_adapter_success(self, peft_manager, sample_adapter_metadata):
+        """Test successful adapter deletion."""
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
+        
+        # Mock file operations
+        with patch('shutil.rmtree') as mock_rmtree:
+            with patch.object(Path, 'exists', return_value=True):
+                result = peft_manager.delete_adapter("test_project", "test_adapter")
+        
+        assert result is True
+        assert adapter_id not in peft_manager._adapter_metadata
+        mock_rmtree.assert_called_once()
+    
+    def test_delete_adapter_not_found(self, peft_manager):
+        """Test deleting non-existent adapter."""
+        result = peft_manager.delete_adapter("nonexistent_project", "nonexistent_adapter")
+        assert result is False
+
+
+class TestTrainingProgress:
+    """Test training progress tracking."""
+    
+    def test_get_training_progress_not_training(self, peft_manager):
+        """Test getting progress when not training."""
+        result = peft_manager.get_training_progress("test_project", "test_adapter")
+        assert result is None
+    
+    def test_is_training_false(self, peft_manager):
+        """Test is_training when not training."""
+        result = peft_manager.is_training("test_project", "test_adapter")
+        assert result is False
+    
+    def test_is_training_true(self, peft_manager):
+        """Test is_training when training is active."""
+        adapter_id = "test_project_test_adapter"
+        mock_thread = Mock()
+        mock_thread.is_alive.return_value = True
+        peft_manager._training_threads[adapter_id] = mock_thread
+        
+        result = peft_manager.is_training("test_project", "test_adapter")
+        assert result is True
+
+
+class TestMemoryManagement:
+    """Test memory management functionality."""
+    
+    @patch('torch.cuda.is_available', return_value=False)
+    @patch('psutil.Process')
+    def test_check_memory_usage_cpu(self, mock_process, mock_cuda, peft_manager):
+        """Test memory usage checking on CPU."""
+        mock_process_instance = Mock()
+        mock_process_instance.memory_info.return_value.rss = 2048 * 1024 * 1024  # 2GB
+        mock_process.return_value = mock_process_instance
+        
+        result = peft_manager._check_memory_usage()
+        
+        assert "allocated_gb" in result
+        assert "reserved_gb" in result
+        assert "available_gb" in result
+        assert result["allocated_gb"] == 2.0
+    
+    @patch('torch.cuda.is_available', return_value=True)
+    @patch('torch.cuda.memory_allocated', return_value=1024**3)  # 1GB
+    @patch('torch.cuda.memory_reserved', return_value=2*1024**3)  # 2GB
+    @patch('torch.cuda.get_device_properties')
+    def test_check_memory_usage_cuda(self, mock_props, mock_reserved, 
+                                   mock_allocated, mock_cuda, peft_manager):
+        """Test memory usage checking on CUDA."""
+        mock_props.return_value.total_memory = 8 * 1024**3  # 8GB
+        
+        result = peft_manager._check_memory_usage()
+        
+        assert result["allocated_gb"] == 1.0
+        assert result["reserved_gb"] == 2.0
+        assert result["available_gb"] == 6.0
+    
+    def test_manage_cache_within_limit(self, peft_manager):
+        """Test cache management when within limits."""
+        # Add adapters within limit
+        for i in range(2):
+            peft_manager._adapters_cache[f"adapter_{i}"] = Mock()
+        
+        initial_count = len(peft_manager._adapters_cache)
+        peft_manager._manage_cache()
+        
+        assert len(peft_manager._adapters_cache) == initial_count
+    
+    def test_manage_cache_exceeds_limit(self, peft_manager):
+        """Test cache management when exceeding limits."""
+        # Add more adapters than the limit
+        for i in range(5):
+            peft_manager._adapters_cache[f"adapter_{i}"] = Mock()
+        
+        peft_manager._manage_cache()
+        
+        assert len(peft_manager._adapters_cache) <= peft_manager._max_cache_size
+    
+    def test_get_memory_usage(self, peft_manager):
+        """Test getting memory usage information."""
+        # Add some test data
+        peft_manager._adapters_cache["test1"] = Mock()
+        peft_manager._adapter_metadata["test1"] = Mock()
+        
+        with patch.object(peft_manager, '_check_memory_usage', 
+                         return_value={"allocated_gb": 2.0, "reserved_gb": 2.0, "available_gb": 4.0}):
+            result = peft_manager.get_memory_usage()
+        
+        assert "allocated_gb" in result
+        assert "cached_adapters" in result
+        assert "total_adapters" in result
+        assert result["cached_adapters"] == 1
+        assert result["total_adapters"] == 1
+
+
+class TestContextManager:
+    """Test adapter context manager."""
+    
+    def test_adapter_context_not_cached(self, peft_manager):
+        """Test context manager with adapter not in cache."""
+        mock_model = Mock()
+        
+        with patch.object(peft_manager, 'load_adapter', return_value=mock_model) as mock_load:
+            with patch.object(peft_manager, 'unload_adapter') as mock_unload:
+                with peft_manager.adapter_context("test_project", "test_adapter") as model:
+                    assert model == mock_model
                 
-                # Create adapter
-                adapter_id = peft_manager.create_adapter(
-                    project_id="test_project",
-                    training_data=sample_training_data,
+                mock_load.assert_called_once_with("test_project", "test_adapter")
+                mock_unload.assert_called_once_with("test_project", "test_adapter")
+    
+    def test_adapter_context_already_cached(self, peft_manager):
+        """Test context manager with adapter already cached."""
+        adapter_id = "test_project_test_adapter"
+        mock_model = Mock()
+        peft_manager._adapters_cache[adapter_id] = mock_model
+        
+        with patch.object(peft_manager, 'load_adapter', return_value=mock_model) as mock_load:
+            with patch.object(peft_manager, 'unload_adapter') as mock_unload:
+                with peft_manager.adapter_context("test_project", "test_adapter") as model:
+                    assert model == mock_model
+                
+                mock_load.assert_called_once_with("test_project", "test_adapter")
+                mock_unload.assert_not_called()  # Should not unload if was cached
+
+
+class TestErrorHandling:
+    """Test error handling scenarios."""
+    
+    def test_training_error_propagation(self, peft_manager, sample_training_data):
+        """Test that training errors are properly propagated."""
+        with patch.object(peft_manager, '_check_memory_usage', return_value={"available_gb": 4.0}):
+            with patch('src.codebase_gardener.models.peft_manager.AutoModelForCausalLM') as mock_model:
+                mock_model.from_pretrained.side_effect = Exception("Model loading failed")
+                
+                # Create adapter metadata
+                adapter_id = "test_project_test_adapter"
+                peft_manager._adapter_metadata[adapter_id] = AdapterMetadata(
+                    name="test_adapter", project_name="test_project", created_at=datetime.now(),
+                    model_name="microsoft/DialoGPT-medium", config={}, training_metrics={},
+                    file_path=Path("/tmp/test"), size_mb=0.0, status="training"
                 )
                 
-                # Verify adapter was created
-                assert adapter_id.startswith("test_project_")
+                with pytest.raises(TrainingError):
+                    peft_manager._train_adapter(
+                        adapter_id=adapter_id,
+                        base_model="microsoft/DialoGPT-medium",
+                        training_data=sample_training_data,
+                        config={}
+                    )
                 
-                # Check metadata file was created
-                adapter_dir = peft_manager.adapters_dir / adapter_id
-                metadata_file = adapter_dir / "metadata.json"
-                assert metadata_file.exists()
-                
-                with open(metadata_file) as f:
-                    metadata = json.load(f)
-                
-                assert metadata["adapter_id"] == adapter_id
-                assert metadata["project_id"] == "test_project"
-                assert metadata["status"] == "completed"
-                assert metadata["training_steps"] == 100
-                assert metadata["final_loss"] == 0.5
+                # Verify metadata was updated to error status
+                assert peft_manager._adapter_metadata[adapter_id].status == "error"
     
-    @patch('codebase_gardener.models.peft_manager.AutoTokenizer')
-    @patch('codebase_gardener.models.peft_manager.AutoModelForCausalLM')
-    def test_create_adapter_training_failure(
-        self, mock_model, mock_tokenizer, peft_manager, sample_training_data
-    ):
-        """Test adapter creation with training failure."""
-        # Mock tokenizer to raise an exception
-        mock_tokenizer.from_pretrained.side_effect = Exception("Model loading failed")
+    def test_adapter_loading_error(self, peft_manager, sample_adapter_metadata):
+        """Test adapter loading error handling."""
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
         
-        with pytest.raises(PEFTTrainingError):
-            peft_manager.create_adapter(
-                project_id="test_project",
-                training_data=sample_training_data,
-            )
-        
-        # Verify no adapter directory was left behind
-        adapter_dirs = list(peft_manager.adapters_dir.glob("test_project_*"))
-        assert len(adapter_dirs) == 0
-    
-    @pytest.mark.asyncio
-    async def test_create_adapter_async(self, peft_manager, sample_training_data):
-        """Test asynchronous adapter creation."""
-        with patch.object(peft_manager, 'create_adapter') as mock_create:
-            mock_create.return_value = "test_adapter_id"
+        with patch('src.codebase_gardener.models.peft_manager.AutoModelForCausalLM') as mock_model:
+            mock_model.from_pretrained.side_effect = Exception("Model loading failed")
             
-            adapter_id = await peft_manager.create_adapter_async(
-                project_id="test_project",
-                training_data=sample_training_data,
-            )
-            
-            assert adapter_id == "test_adapter_id"
-            mock_create.assert_called_once()
+            with pytest.raises(AdapterError, match="Failed to load adapter"):
+                peft_manager.load_adapter("test_project", "test_adapter")
 
 
-class TestPEFTManagerErrorHandling:
-    """Test error handling in PEFT manager."""
+class TestUtilityMethods:
+    """Test utility methods."""
     
-    def test_adapter_info_corrupted_metadata(self, peft_manager):
-        """Test handling of corrupted metadata file."""
-        adapter_id = "corrupted_adapter"
-        adapter_dir = peft_manager.adapters_dir / adapter_id
-        adapter_dir.mkdir(parents=True)
+    def test_get_adapter_id(self, peft_manager):
+        """Test adapter ID generation."""
+        result = peft_manager._get_adapter_id("test_project", "test_adapter")
+        assert result == "test_project_test_adapter"
         
-        # Write invalid JSON
-        with open(adapter_dir / "metadata.json", "w") as f:
-            f.write("invalid json content")
-        
-        with pytest.raises(PEFTError):
-            peft_manager.get_adapter_info(adapter_id)
+        result = peft_manager._get_adapter_id("test_project")
+        assert result == "test_project_default"
     
-    def test_list_adapters_with_corrupted_metadata(self, peft_manager, sample_adapter_metadata):
-        """Test listing adapters with some corrupted metadata."""
-        # Create valid adapter
-        valid_adapter_id = "valid_adapter"
-        valid_adapter_dir = peft_manager.adapters_dir / valid_adapter_id
-        valid_adapter_dir.mkdir(parents=True)
-        
-        valid_metadata = sample_adapter_metadata.copy()
-        valid_metadata["adapter_id"] = valid_adapter_id
-        
-        with open(valid_adapter_dir / "metadata.json", "w") as f:
-            json.dump(valid_metadata, f)
-        
-        # Create corrupted adapter
-        corrupted_adapter_id = "corrupted_adapter"
-        corrupted_adapter_dir = peft_manager.adapters_dir / corrupted_adapter_id
-        corrupted_adapter_dir.mkdir(parents=True)
-        
-        with open(corrupted_adapter_dir / "metadata.json", "w") as f:
-            f.write("invalid json")
-        
-        # List adapters should return only valid ones
-        adapters = peft_manager.list_adapters()
-        
-        assert len(adapters) == 1
-        assert adapters[0].adapter_id == valid_adapter_id
+    def test_get_adapter_path(self, peft_manager):
+        """Test adapter path generation."""
+        result = peft_manager._get_adapter_path("test_adapter")
+        expected = peft_manager.adapters_dir / "test_adapter.bin"
+        assert result == expected
     
-    def test_delete_adapter_permission_error(self, peft_manager, sample_adapter_metadata):
-        """Test adapter deletion with permission error."""
-        adapter_id = sample_adapter_metadata["adapter_id"]
-        adapter_dir = peft_manager.adapters_dir / adapter_id
-        adapter_dir.mkdir(parents=True)
+    def test_save_and_load_metadata(self, peft_manager, sample_adapter_metadata):
+        """Test metadata persistence."""
+        adapter_id = "test_project_test_adapter"
+        peft_manager._adapter_metadata[adapter_id] = sample_adapter_metadata
         
-        with open(adapter_dir / "metadata.json", "w") as f:
-            json.dump(sample_adapter_metadata, f)
+        # Save metadata
+        peft_manager._save_adapter_metadata()
         
-        # Mock shutil.rmtree to raise PermissionError
-        with patch('shutil.rmtree', side_effect=PermissionError("Access denied")):
-            result = peft_manager.delete_adapter(adapter_id)
-            assert result is False
-
-
-class TestTrainingResult:
-    """Test TrainingResult dataclass."""
-    
-    def test_training_result_success(self):
-        """Test successful training result."""
-        result = TrainingResult(
-            adapter_id="test_adapter",
-            success=True,
-            training_steps=100,
-            final_loss=0.5,
-            training_time_seconds=300.0,
-            memory_peak_mb=1024.0,
-        )
+        # Clear and reload
+        peft_manager._adapter_metadata.clear()
+        peft_manager._load_adapter_metadata()
         
-        assert result.adapter_id == "test_adapter"
-        assert result.success is True
-        assert result.training_steps == 100
-        assert result.final_loss == 0.5
-        assert result.training_time_seconds == 300.0
-        assert result.memory_peak_mb == 1024.0
-        assert result.error_message is None
-    
-    def test_training_result_failure(self):
-        """Test failed training result."""
-        result = TrainingResult(
-            adapter_id="test_adapter",
-            success=False,
-            training_steps=0,
-            final_loss=None,
-            training_time_seconds=60.0,
-            memory_peak_mb=512.0,
-            error_message="Training failed due to insufficient memory",
-        )
-        
-        assert result.adapter_id == "test_adapter"
-        assert result.success is False
-        assert result.training_steps == 0
-        assert result.final_loss is None
-        assert result.error_message == "Training failed due to insufficient memory"
-
-
-class TestAdapterInfo:
-    """Test AdapterInfo dataclass."""
-    
-    def test_adapter_info_creation(self):
-        """Test AdapterInfo creation."""
-        created_at = datetime.now()
-        last_trained = datetime.now()
-        
-        info = AdapterInfo(
-            adapter_id="test_adapter",
-            project_id="test_project",
-            created_at=created_at,
-            last_trained=last_trained,
-            model_name="microsoft/DialoGPT-small",
-            rank=8,
-            alpha=16,
-            target_modules=["q_proj", "v_proj"],
-            training_steps=100,
-            file_size_mb=10.5,
-            status="completed",
-        )
-        
-        assert info.adapter_id == "test_adapter"
-        assert info.project_id == "test_project"
-        assert info.created_at == created_at
-        assert info.last_trained == last_trained
-        assert info.model_name == "microsoft/DialoGPT-small"
-        assert info.rank == 8
-        assert info.alpha == 16
-        assert info.target_modules == ["q_proj", "v_proj"]
-        assert info.training_steps == 100
-        assert info.file_size_mb == 10.5
-        assert info.status == "completed"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+        # Verify data was restored
+        assert adapter_id in peft_manager._adapter_metadata
+        restored_metadata = peft_manager._adapter_metadata[adapter_id]
+        assert restored_metadata.name == sample_adapter_metadata.name
+        assert restored_metadata.project_name == sample_adapter_metadata.project_name

@@ -261,7 +261,7 @@
 - [ ] 10. Implement HuggingFace PEFT manager
 
   - [x] 10.1 **PRE-TASK REVIEW**: Complete comprehensive review using `.kiro/docs/templates/pre-task-review-template.md`
-  - [ ] 10.2 **IMPLEMENTATION**: Implement HuggingFace PEFT manager
+  - [-] 10.2 **IMPLEMENTATION**: Implement HuggingFace PEFT manager
 
     **Pre-Task Setup:**
 

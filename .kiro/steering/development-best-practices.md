@@ -1,5 +1,7 @@
 # Development Best Practices
 
+
+
 ## Effective MCP Server Tool Usage
 
 ### MANDATORY MCP Tool Usage Order
