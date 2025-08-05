@@ -10,4 +10,18 @@ AI analysis functionality:
 - LoRA training pipeline for creating project-specific adapters
 """
 
-__all__ = []
+from .project_registry import (
+    ProjectRegistry,
+    ProjectMetadata,
+    TrainingStatus,
+    ProjectRegistryError,
+    get_project_registry
+)
+
+__all__ = [
+    'ProjectRegistry',
+    'ProjectMetadata', 
+    'TrainingStatus',
+    'ProjectRegistryError',
+    'get_project_registry'
+]

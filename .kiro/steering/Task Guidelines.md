@@ -1,37 +1,56 @@
-<!------------------------------------------------------------------------------------
-   Add Rules to this file or a short description and have Kiro refine them for you:   
--------------------------------------------------------------------------------------> 
-Context
-I am a solo developer working on personal/small projects
+---
+inclusion: always
+---
 
-This is NOT an enterprise-level project
+# Development Philosophy: Pragmatic POC Approach
 
-I prefer simple, direct solutions over "best practices"
+## Project Context
+- Solo developer working on personal/small projects
+- NOT enterprise-level - prioritize shipping over perfect architecture
+- Default assumption: everything is a Proof of Concept unless explicitly stated otherwise
 
-I'm a vibe coder who values shipping over perfect architecture
+## Core Principles
 
-What to do
-Always assume this is a POC (Proof of Concept) unless explicitly told otherwise
+### Simplicity First
+- Choose the most obvious solution that works
+- Prefer direct implementations over abstractions
+- Single files over multiple files when reasonable
+- Hardcode sensible defaults instead of building configuration systems
 
-Keep it simple and direct - don't overthink it
+### Shipping Over Perfection
+- Start with working code, refine only when necessary
+- Don't overthink solutions - implement and iterate
+- Avoid frameworks unless absolutely required
+- Focus on functionality over architectural purity
 
-Start with the most obvious solution that works
+## Implementation Guidelines
 
-No frameworks unless absolutely necessary
+### What TO Do
+- **Start simple**: Begin with the most straightforward approach
+- **Hardcode defaults**: Use reasonable hardcoded values instead of complex config
+- **Consolidate files**: Keep related functionality together when it makes sense
+- **Ship early**: Get working versions deployed quickly for feedback
 
-Prefer single files over multiple files when reasonable
+### What NOT To Do
+- **No premature abstraction**: Don't add layers until you actually need them
+- **No future-proofing**: Don't build for imaginary requirements
+- **No over-engineering**: Avoid complex error handling for unlikely edge cases
+- **No pattern obsession**: Don't force design patterns where simple code suffices
+- **No premature optimization**: Don't optimize until you have actual performance problems
+- **No configuration overkill**: Don't make everything configurable
 
-Hardcode reasonable defaults instead of building configuration systems
+## Code Style Preferences
+- Favor readability over cleverness
+- Use descriptive variable names even if they're longer
+- Keep functions small and focused
+- Comment the "why" not the "what"
+- Prefer explicit over implicit when it aids understanding
 
-What NOT to do
-Don't add abstractions until we actually need them
+## Decision Framework
+When facing implementation choices, ask:
+1. What's the simplest thing that could work?
+2. Can I ship this today?
+3. Will this actually be used or am I building for "someday"?
+4. Is this abstraction solving a real problem I have right now?
 
-Don't build for imaginary future requirements
-
-Don't add complex error handling for edge cases that probably won't happen
-
-Don't suggest design patterns unless the problem actually requires them
-
-Don't optimize prematurely
-
-Don't add configuration for things that rarely change
+Choose the path that gets you to working software fastest.
