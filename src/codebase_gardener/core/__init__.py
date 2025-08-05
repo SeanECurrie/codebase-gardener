@@ -18,10 +18,67 @@ from .project_registry import (
     get_project_registry
 )
 
+from .training_pipeline import (
+    TrainingPipeline,
+    TrainingProgress,
+    TrainingPhase,
+    TrainingConfig,
+    TrainingDataPreparator,
+    TrainingProgressTracker,
+    get_training_pipeline,
+    start_project_training,
+    get_project_training_progress,
+    is_project_training_active,
+    cancel_project_training
+)
+
+from .dynamic_model_loader import (
+    DynamicModelLoader,
+    LoaderStatus,
+    AdapterInfo,
+    LoaderMetrics,
+    DynamicModelLoaderError,
+    get_dynamic_model_loader,
+    cleanup_global_loader
+)
+
+from .project_context_manager import (
+    ProjectContextManager,
+    ProjectContext,
+    ConversationMessage,
+    ContextManagerError,
+    get_project_context_manager,
+    setup_context_manager_integration
+)
+
 __all__ = [
     'ProjectRegistry',
     'ProjectMetadata', 
     'TrainingStatus',
     'ProjectRegistryError',
-    'get_project_registry'
+    'get_project_registry',
+    'TrainingPipeline',
+    'TrainingProgress',
+    'TrainingPhase',
+    'TrainingConfig',
+    'TrainingDataPreparator',
+    'TrainingProgressTracker',
+    'get_training_pipeline',
+    'start_project_training',
+    'get_project_training_progress',
+    'is_project_training_active',
+    'cancel_project_training',
+    'DynamicModelLoader',
+    'LoaderStatus',
+    'AdapterInfo',
+    'LoaderMetrics',
+    'DynamicModelLoaderError',
+    'get_dynamic_model_loader',
+    'cleanup_global_loader',
+    'ProjectContextManager',
+    'ProjectContext',
+    'ConversationMessage',
+    'ContextManagerError',
+    'get_project_context_manager',
+    'setup_context_manager_integration'
 ]

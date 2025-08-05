@@ -9,4 +9,8 @@ This module provides the Gradio-based web interface including:
 - Reusable UI components and layouts
 """
 
-__all__ = []
+from .gradio_app import create_app
+
+__all__ = [
+    "create_app"
+]
