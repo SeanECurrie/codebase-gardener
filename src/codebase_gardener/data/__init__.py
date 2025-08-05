@@ -36,6 +36,13 @@ from .vector_store import (
     VectorStore,
 )
 
+from .project_vector_store import (
+    ProjectVectorStoreInfo,
+    ProjectVectorStoreManager,
+    get_project_vector_store_manager,
+    reset_project_vector_store_manager,
+)
+
 __all__ = [
     # Parser exports
     "CodeElement",
@@ -58,4 +65,9 @@ __all__ = [
     "CodeChunkSchema",
     "SearchResult",
     "VectorStore",
+    # Project vector store exports
+    "ProjectVectorStoreInfo",
+    "ProjectVectorStoreManager",
+    "get_project_vector_store_manager",
+    "reset_project_vector_store_manager",
 ]

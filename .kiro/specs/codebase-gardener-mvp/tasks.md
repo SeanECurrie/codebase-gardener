@@ -123,7 +123,7 @@
 
   Validate integration with dynamic model loader and project registry, ensure context switching works seamlessly with model loading, run tests to verify context isolation between projects, update `.kiro/docs/architecture-overview.md` with context management patterns, update `.kiro/steering/development-best-practices.md` with context management patterns if new patterns emerge, update `.kiro/docs/components/` with context manager component documentation, commit all changes with `git add . && git commit -m "feat: project context manager with conversation state isolation"`, and complete memory file with lessons learned, integration points, and interfaces needed for vector store management in task 15.
 
-- [ ] 15. Create project-specific vector store management
+- [-] 15. Create project-specific vector store management
 
   Review task completion test log (`.kiro/docs/task_completion_test_log.md`) to understand proven capabilities and identified gaps from previous tasks, review memory files from tasks 8, 11, 13-14 for LanceDB integration, project registry patterns, and context management interfaces, read ALL steering documents (especially `.kiro/steering/Task Guidelines.md` for simplicity-first approach, `.kiro/steering/ai-ml-architecture-context.md` for vector store architecture, and `.kiro/steering/development-best-practices.md` for MCP tool usage), and create feature branch `git checkout -b feat/project-vector-stores`. Research multi-tenant vector store patterns using MCP tools and create memory file `project_vector_stores_task15.md` following `.kiro/docs/templates/memory-file-template.md`.
 
