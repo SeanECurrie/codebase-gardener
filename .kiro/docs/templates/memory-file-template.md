@@ -238,6 +238,12 @@ def mock_dependency():
 - **Task [N-2] ([Component])**: [How it was used/referenced]
 - **Task [N-3] ([Component])**: [How it was used/referenced]
 
+## Task Completion Test Reference
+- **Test Log Entry**: See `.kiro/docs/task_completion_test_log.md` Task [N] entry
+- **Capabilities Proven**: [Summary of what the completion test validated]
+- **Integration Validated**: [Which component integrations were tested]
+- **Gaps for Next Task**: [What the next task should address based on test results]
+
 ## Steering Document Updates
 - **Updated**: [List of steering documents modified]
 - **New Patterns**: [New patterns added to steering documents]
