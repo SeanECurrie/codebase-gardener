@@ -10,7 +10,32 @@ This module provides the Gradio-based web interface including:
 """
 
 from .gradio_app import create_app
+from .project_selector import ProjectSelector, get_project_selector
+from .components import (
+    StatusDisplay,
+    ChatInterface, 
+    CodeAnalysisInterface,
+    ProgressIndicator,
+    ProjectManagement,
+    MetricsDisplay,
+    CustomCSS,
+    create_status_section,
+    create_chat_section,
+    create_analysis_section
+)
 
 __all__ = [
-    "create_app"
+    "create_app",
+    "ProjectSelector",
+    "get_project_selector", 
+    "StatusDisplay",
+    "ChatInterface",
+    "CodeAnalysisInterface",
+    "ProgressIndicator",
+    "ProjectManagement",
+    "MetricsDisplay",
+    "CustomCSS",
+    "create_status_section",
+    "create_chat_section",
+    "create_analysis_section"
 ]
