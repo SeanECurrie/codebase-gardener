@@ -71,6 +71,7 @@ The Codebase Gardener MVP is fundamentally about creating **specialized AI assis
 - **Graceful fallbacks** when specialized models fail
 - **Comprehensive testing** especially for AI/ML components
 - **Clear logging** for debugging complex AI workflows
+- **Dynamic gap closure** to prevent quality degradation over time (see `.kiro/docs/gap-closure-criteria.md`)
 
 ## Success Metrics
 
@@ -111,5 +112,23 @@ When making architectural or implementation decisions, ask:
 3. **Is this optimized for Mac Mini M4 constraints?**
 4. **Does this support the project switching paradigm?**
 5. **Will this scale to 10+ projects without degrading performance?**
+6. **Does this align with our gap closure framework for continuous quality improvement?**
 
 If the answer to any of these is "no" or "unclear," reconsider the approach.
+
+## Quality Assurance Integration
+
+### Dynamic Gap Closure Alignment
+Our gap closure framework (`.kiro/docs/gap-closure-criteria.md`) directly supports core principles:
+
+- **Quality Over Speed**: Gap Closure Phase ensures we ship higher quality by addressing quick wins
+- **Prove First, Scale Second**: Gap Validation Phase ensures we build on proven capabilities
+- **Reliability Over Features**: Systematic gap management prevents quality degradation
+- **User Experience First**: Gap closure improves actual user-facing functionality
+
+### Continuous Improvement Metrics
+- **Gap Closure Rate**: >60% within 2 tasks aligns with "prove first" philosophy
+- **Integration Health**: <2 integration gaps per task supports reliability goals
+- **Quality Trend**: Decreasing gaps over time validates "quality over speed" approach
+
+**Reference `.kiro/docs/task_completion_test_log.md` for current system capabilities and proven quality metrics.**

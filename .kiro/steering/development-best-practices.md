@@ -1,6 +1,20 @@
 # Development Best Practices
 
+## Dynamic Gap Closure Framework
 
+**CRITICAL**: As of Task 15, we use a two-phase gap closure system to prevent gap accumulation and maintain continuous quality improvement.
+
+### Gap Management Process
+1. **Gap Validation Phase** (start of task): Review `.kiro/docs/task_completion_test_log.md` and identify gaps from previous task that align with current scope
+2. **Gap Closure Phase** (end of task): Apply decision criteria from `.kiro/docs/gap-closure-criteria.md` to close quick wins
+3. **Target**: >60% gap closure rate within 2 tasks of identification
+
+### Decision Criteria Quick Reference
+- **Quick Win** (<30min, low risk, improves validation) → Implement now
+- **Next Task** (aligns with scope, requires research) → Document for next task  
+- **Defer** (out of scope, major changes, low priority) → Document with rationale
+
+**See `.kiro/docs/gap-closure-criteria.md` for complete framework and templates.**
 
 ## Effective MCP Server Tool Usage
 
@@ -70,8 +84,10 @@
 2. **Context7**: Get precise documentation for libraries involved
 3. **Bright Data**: Find real-world implementation examples
 4. **Basic Memory**: Check previous patterns and decisions
-5. **Implement**: Apply solution with project-specific adaptations
-6. **Document**: Update memory file with solution and lessons learned
+5. **Gap Validation**: Apply gap closure framework from previous task (see `.kiro/docs/gap-closure-criteria.md`)
+6. **Implement**: Apply solution with project-specific adaptations
+7. **Gap Closure**: Address quick wins before task completion
+8. **Document**: Update memory file and task completion test log with solution and lessons learned
 
 ### MCP Tool Selection Strategy
 

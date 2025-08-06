@@ -238,11 +238,22 @@ def mock_dependency():
 - **Task [N-2] ([Component])**: [How it was used/referenced]
 - **Task [N-3] ([Component])**: [How it was used/referenced]
 
+## Gap Closure Analysis
+- **Gaps from Previous Task**: [List gaps from previous task that were relevant to current task]
+- **Gap Validation Phase**: [How previous gaps were addressed in current task scope]
+- **Gap Closure Phase**: [Quick wins implemented before task completion]
+- **Remaining Gaps**: [Gaps identified in current task for future closure]
+- **Gap Closure Rate**: [Percentage of previous gaps closed in this task]
+
 ## Task Completion Test Reference
 - **Test Log Entry**: See `.kiro/docs/task_completion_test_log.md` Task [N] entry
 - **Capabilities Proven**: [Summary of what the completion test validated]
 - **Integration Validated**: [Which component integrations were tested]
+- **Gaps Identified**: [New gaps discovered during completion testing]
+- **Gap Closure Recommendations**: [Specific gaps that could be quick wins for next task]
 - **Gaps for Next Task**: [What the next task should address based on test results]
+
+**Reference `.kiro/docs/gap-closure-criteria.md` for gap management framework and decision criteria.**
 
 ## Steering Document Updates
 - **Updated**: [List of steering documents modified]

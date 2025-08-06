@@ -54,3 +54,19 @@ When facing implementation choices, ask:
 4. Is this abstraction solving a real problem I have right now?
 
 Choose the path that gets you to working software fastest.
+
+## Gap Closure Integration with Pragmatic Approach
+
+**IMPORTANT**: Our dynamic gap closure framework (see `.kiro/docs/gap-closure-criteria.md`) aligns perfectly with the pragmatic POC approach:
+
+### Gap Closure Decision Framework
+- **Quick Win Criteria** aligns with "ship early" - close gaps that can be done in <30 minutes
+- **Next Task Criteria** aligns with "don't build for someday" - only address gaps that fit next task's actual scope
+- **Defer Criteria** aligns with "avoid over-engineering" - don't fix gaps that require major architectural changes
+
+### Pragmatic Gap Management
+- **Focus on functionality**: Close gaps that improve actual functionality, not theoretical completeness
+- **Ship working versions**: Use Gap Closure Phase to ship more complete versions without scope creep
+- **Iterate based on real needs**: Use Gap Validation Phase to address gaps when they become relevant
+
+**See `.kiro/docs/task_completion_test_log.md` for current system capabilities and `.kiro/docs/gap-closure-criteria.md` for detailed framework.**

@@ -9,6 +9,23 @@
 - **WHEN** unsure about patterns or using MCP tools → READ `.kiro/steering/development-best-practices.md`
 - **WHEN** starting any task → READ previous 2-3 memory files in `.kiro/memory/`
 - **WHEN** creating memory files → USE template in `.kiro/docs/templates/memory-file-template.md`
+- **WHEN** managing gaps → REFERENCE `.kiro/docs/gap-closure-criteria.md` for decision framework
+
+## Dynamic Gap Closure Framework (Enhanced as of Task 15)
+
+**CRITICAL**: All tasks now use a two-phase gap closure system to prevent gap accumulation:
+
+### Gap Management Process
+1. **Gap Validation Phase** (start of task): Review `.kiro/docs/task_completion_test_log.md` and address gaps from previous task that align with current scope
+2. **Gap Closure Phase** (end of task): Apply decision criteria to close quick wins (<30min, low risk) before completion
+3. **Target**: >60% gap closure rate within 2 tasks of identification
+
+### Quick Reference
+- **Quick Win** → Implement now (improves current validation)
+- **Next Task** → Document for next task (aligns with scope)  
+- **Defer** → Document with rationale (out of scope/major changes)
+
+**See `.kiro/docs/gap-closure-criteria.md` for complete framework and templates.**
 
 ---
 
