@@ -290,6 +290,20 @@ class TrainingError(CodebaseGardenerError):
         super().__init__(message, **kwargs)
 
 
+class FileUtilityError(CodebaseGardenerError):
+    """Errors related to file utility operations."""
+    
+    def __init__(self, message: str, **kwargs):
+        if 'suggestions' not in kwargs:
+            kwargs['suggestions'] = [
+                "Check file permissions and access rights",
+                "Verify file path exists and is accessible",
+                "Ensure sufficient disk space for file operations",
+                "Check for file locks or concurrent access issues"
+            ]
+        super().__init__(message, **kwargs)
+
+
 # Retry decorator configurations
 DEFAULT_RETRY_CONFIG = {
     "stop": stop_after_attempt(3),
