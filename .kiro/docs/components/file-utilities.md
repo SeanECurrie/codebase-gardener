@@ -340,8 +340,8 @@ for change in changes:
 Enable debug logging to see detailed file operation information:
 
 ```python
-import structlog
-structlog.configure(level="DEBUG")
+import logging
+logging.getLogger().setLevel(logging.DEBUG)
 ```
 
 ### Performance Tuning

@@ -191,13 +191,13 @@ class FileType(Enum):
 All file utility operations may raise `FileUtilityError` for various failure conditions:
 
 ```python
-from codebase_gardener.utils import FileUtilityError
+from codebase_gardener.utils import FileUtilityError, safe_read_file
+from pathlib import Path
 
 try:
     content = safe_read_file(Path("nonexistent.txt"))
 except FileUtilityError as e:
     print(f"File operation failed: {e}")
-    print(f"Suggestions: {e.suggestions}")
 ```
 
 ### Integration Examples

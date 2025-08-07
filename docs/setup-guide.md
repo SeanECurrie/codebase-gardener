@@ -354,7 +354,7 @@ docker run -p 7860:7860 -v ~/.codebase-gardener:/root/.codebase-gardener codebas
 
 ## Next Steps
 
-1. **Add Your First Project**: Follow the [User Guide](user-guide.md) to add and analyze your first codebase
+1. **Add Your First Project**: Use `codebase-gardener add /path/to/your/project` to add and analyze your first codebase
 2. **Explore Features**: Try the web interface and CLI commands
 3. **Customize Configuration**: Adjust settings for your specific needs
 4. **Monitor Performance**: Use the system status commands to monitor resource usage
@@ -363,7 +363,7 @@ docker run -p 7860:7860 -v ~/.codebase-gardener:/root/.codebase-gardener codebas
 
 If you encounter issues not covered in this guide:
 
-1. Check the [Troubleshooting Guide](troubleshooting.md)
+1. Check the [Troubleshooting Guide](../.kiro/docs/troubleshooting.md)
 2. Search existing [GitHub Issues](https://github.com/your-org/codebase-gardener-mvp/issues)
 3. Create a new issue with detailed information about your setup and the problem
 

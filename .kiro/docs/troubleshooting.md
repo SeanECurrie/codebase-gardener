@@ -49,7 +49,7 @@ arch -arm64 pip install package-name
 #### Ollama Connection Issues
 
 **Issue**: Cannot connect to Ollama service
-```bash
+```
 ConnectionError: HTTPConnectionPool(host='localhost', port=11434)
 ```
 
