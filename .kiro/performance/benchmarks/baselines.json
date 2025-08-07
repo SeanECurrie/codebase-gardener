@@ -1,0 +1,73 @@
+{
+  "startup_time": {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593427.832072,
+    "duration_seconds": 0.0006930828094482422,
+    "success": true,
+    "response_time_avg": 0.0006930828094482422,
+    "response_time_p95": 0.0006930828094482422,
+    "response_time_p99": 0.0006930828094482422,
+    "throughput_ops_per_sec": 1442.829033367733,
+    "memory_usage_mb": 6095.375,
+    "cpu_usage_percent": 19.1,
+    "baseline_comparison": {
+      "response_time_avg_change": 62.311557788944725,
+      "response_time_p95_change": 62.311557788944725,
+      "response_time_p99_change": 62.311557788944725,
+      "throughput_change": -38.39009287925697,
+      "memory_change": -2.790901660586488,
+      "cpu_change": -9.47867298578199
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  "project_switching": {
+    "benchmark_name": "project_switching",
+    "timestamp": 1754593429.898186,
+    "duration_seconds": 1.0557360649108887,
+    "success": true,
+    "response_time_avg": 0.10556623935699463,
+    "response_time_p95": 0.11007046699523926,
+    "response_time_p99": 0.1100893497467041,
+    "throughput_ops_per_sec": 9.4720644035629,
+    "memory_usage_mb": 6111.359375,
+    "cpu_usage_percent": 22.3,
+    "baseline_comparison": {
+      "response_time_avg_change": -1.7978495978225741,
+      "response_time_p95_change": 0.02006168426288188,
+      "response_time_p99_change": 0.03607595518089423,
+      "throughput_change": 1.8304781442422609,
+      "memory_change": -2.2395129059429575,
+      "cpu_change": -19.20289855072464
+    },
+    "details": {
+      "switches_performed": 10
+    }
+  },
+  "load_test": {
+    "benchmark_name": "load_test",
+    "timestamp": 1754593431.874646,
+    "duration_seconds": 1.0155720710754395,
+    "success": false,
+    "response_time_avg": 0,
+    "response_time_p95": 0,
+    "response_time_p99": 0,
+    "throughput_ops_per_sec": 0.0,
+    "memory_usage_mb": 6095.1875,
+    "cpu_usage_percent": 15.6,
+    "baseline_comparison": {
+      "response_time_avg_change": 0.0,
+      "response_time_p95_change": 0.0,
+      "response_time_p99_change": 0.0,
+      "throughput_change": 0.0,
+      "memory_change": -3.173425139682831,
+      "cpu_change": -38.095238095238095
+    },
+    "details": {
+      "total_operations": 0,
+      "success_rate": 0.0,
+      "projects_tested": 0
+    }
+  }
+}

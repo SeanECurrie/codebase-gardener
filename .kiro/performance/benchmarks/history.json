@@ -1,0 +1,357 @@
+[
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593310.6837919,
+    "duration_seconds": 0.00042700767517089844,
+    "success": true,
+    "response_time_avg": 0.00042700767517089844,
+    "response_time_p95": 0.00042700767517089844,
+    "response_time_p99": 0.00042700767517089844,
+    "throughput_ops_per_sec": 2341.8782802903406,
+    "memory_usage_mb": 6270.375,
+    "cpu_usage_percent": 21.1,
+    "baseline_comparison": null,
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "project_switching",
+    "timestamp": 1754593312.7565272,
+    "duration_seconds": 1.0750610828399658,
+    "success": true,
+    "response_time_avg": 0.10749890804290771,
+    "response_time_p95": 0.11004838943481446,
+    "response_time_p99": 0.11004964828491211,
+    "throughput_ops_per_sec": 9.301797041692938,
+    "memory_usage_mb": 6251.359375,
+    "cpu_usage_percent": 27.6,
+    "baseline_comparison": null,
+    "details": {
+      "switches_performed": 10
+    }
+  },
+  {
+    "benchmark_name": "load_test",
+    "timestamp": 1754593314.716949,
+    "duration_seconds": 1.0145699977874756,
+    "success": false,
+    "response_time_avg": 0,
+    "response_time_p95": 0,
+    "response_time_p99": 0,
+    "throughput_ops_per_sec": 0.0,
+    "memory_usage_mb": 6294.953125,
+    "cpu_usage_percent": 25.2,
+    "baseline_comparison": null,
+    "details": {
+      "total_operations": 0,
+      "success_rate": 0.0,
+      "projects_tested": 0
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593315.725188,
+    "duration_seconds": 0.0011668205261230469,
+    "success": true,
+    "response_time_avg": 0.0011668205261230469,
+    "response_time_p95": 0.0011668205261230469,
+    "response_time_p99": 0.0011668205261230469,
+    "throughput_ops_per_sec": 857.0298324478954,
+    "memory_usage_mb": 6304.859375,
+    "cpu_usage_percent": 25.2,
+    "baseline_comparison": {
+      "response_time_avg_change": 173.25516471245115,
+      "response_time_p95_change": 173.25516471245115,
+      "response_time_p99_change": 173.25516471245115,
+      "throughput_change": -63.40416836943196,
+      "memory_change": 0.5499571397244982,
+      "cpu_change": 19.43127962085307
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "project_switching",
+    "timestamp": 1754593317.757581,
+    "duration_seconds": 1.0240650177001953,
+    "success": true,
+    "response_time_avg": 0.10240046977996826,
+    "response_time_p95": 0.10802046060562134,
+    "response_time_p99": 0.10915311098098755,
+    "throughput_ops_per_sec": 9.765004982259432,
+    "memory_usage_mb": 6324.296875,
+    "cpu_usage_percent": 26.2,
+    "baseline_comparison": {
+      "response_time_avg_change": -4.742781443793295,
+      "response_time_p95_change": -1.8427610250437414,
+      "response_time_p99_change": -0.8146662146556546,
+      "throughput_change": 4.979768301654862,
+      "memory_change": 1.166746232694389,
+      "cpu_change": -5.0724637681159495
+    },
+    "details": {
+      "switches_performed": 10
+    }
+  },
+  {
+    "benchmark_name": "load_test",
+    "timestamp": 1754593319.7450502,
+    "duration_seconds": 1.0083098411560059,
+    "success": false,
+    "response_time_avg": 0,
+    "response_time_p95": 0,
+    "response_time_p99": 0,
+    "throughput_ops_per_sec": 0.0,
+    "memory_usage_mb": 6373.171875,
+    "cpu_usage_percent": 26.4,
+    "baseline_comparison": {
+      "response_time_avg_change": 0.0,
+      "response_time_p95_change": 0.0,
+      "response_time_p99_change": 0.0,
+      "throughput_change": 0.0,
+      "memory_change": 1.2425628665821082,
+      "cpu_change": 4.761904761904759
+    },
+    "details": {
+      "total_operations": 0,
+      "success_rate": 0.0,
+      "projects_tested": 0
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593321.876704,
+    "duration_seconds": 0.0006489753723144531,
+    "success": true,
+    "response_time_avg": 0.0006489753723144531,
+    "response_time_p95": 0.0006489753723144531,
+    "response_time_p99": 0.0006489753723144531,
+    "throughput_ops_per_sec": 1540.8905216752387,
+    "memory_usage_mb": 6364.546875,
+    "cpu_usage_percent": 0.0,
+    "baseline_comparison": {
+      "response_time_avg_change": 51.9821328866555,
+      "response_time_p95_change": 51.9821328866555,
+      "response_time_p99_change": 51.9821328866555,
+      "throughput_change": -34.20279206465835,
+      "memory_change": 1.501853956103104,
+      "cpu_change": -100.0
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593324.041041,
+    "duration_seconds": 0.0005228519439697266,
+    "success": true,
+    "response_time_avg": 0.0005228519439697266,
+    "response_time_p95": 0.0005228519439697266,
+    "response_time_p99": 0.0005228519439697266,
+    "throughput_ops_per_sec": 1912.5873233014136,
+    "memory_usage_mb": 6253.734375,
+    "cpu_usage_percent": 19.3,
+    "baseline_comparison": {
+      "response_time_avg_change": 22.445561139028474,
+      "response_time_p95_change": 22.445561139028474,
+      "response_time_p99_change": 22.445561139028474,
+      "throughput_change": -18.33105335157319,
+      "memory_change": -0.26538484540398305,
+      "cpu_change": -8.530805687203795
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593427.832072,
+    "duration_seconds": 0.0006930828094482422,
+    "success": true,
+    "response_time_avg": 0.0006930828094482422,
+    "response_time_p95": 0.0006930828094482422,
+    "response_time_p99": 0.0006930828094482422,
+    "throughput_ops_per_sec": 1442.829033367733,
+    "memory_usage_mb": 6095.375,
+    "cpu_usage_percent": 19.1,
+    "baseline_comparison": {
+      "response_time_avg_change": 62.311557788944725,
+      "response_time_p95_change": 62.311557788944725,
+      "response_time_p99_change": 62.311557788944725,
+      "throughput_change": -38.39009287925697,
+      "memory_change": -2.790901660586488,
+      "cpu_change": -9.47867298578199
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "project_switching",
+    "timestamp": 1754593429.898186,
+    "duration_seconds": 1.0557360649108887,
+    "success": true,
+    "response_time_avg": 0.10556623935699463,
+    "response_time_p95": 0.11007046699523926,
+    "response_time_p99": 0.1100893497467041,
+    "throughput_ops_per_sec": 9.4720644035629,
+    "memory_usage_mb": 6111.359375,
+    "cpu_usage_percent": 22.3,
+    "baseline_comparison": {
+      "response_time_avg_change": -1.7978495978225741,
+      "response_time_p95_change": 0.02006168426288188,
+      "response_time_p99_change": 0.03607595518089423,
+      "throughput_change": 1.8304781442422609,
+      "memory_change": -2.2395129059429575,
+      "cpu_change": -19.20289855072464
+    },
+    "details": {
+      "switches_performed": 10
+    }
+  },
+  {
+    "benchmark_name": "load_test",
+    "timestamp": 1754593431.874646,
+    "duration_seconds": 1.0155720710754395,
+    "success": false,
+    "response_time_avg": 0,
+    "response_time_p95": 0,
+    "response_time_p99": 0,
+    "throughput_ops_per_sec": 0.0,
+    "memory_usage_mb": 6095.1875,
+    "cpu_usage_percent": 15.6,
+    "baseline_comparison": {
+      "response_time_avg_change": 0.0,
+      "response_time_p95_change": 0.0,
+      "response_time_p99_change": 0.0,
+      "throughput_change": 0.0,
+      "memory_change": -3.173425139682831,
+      "cpu_change": -38.095238095238095
+    },
+    "details": {
+      "total_operations": 0,
+      "success_rate": 0.0,
+      "projects_tested": 0
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593432.8861818,
+    "duration_seconds": 0.0004942417144775391,
+    "success": true,
+    "response_time_avg": 0.0004942417144775391,
+    "response_time_p95": 0.0004942417144775391,
+    "response_time_p99": 0.0004942417144775391,
+    "throughput_ops_per_sec": 2023.3014954172697,
+    "memory_usage_mb": 6145.734375,
+    "cpu_usage_percent": 19.4,
+    "baseline_comparison": {
+      "response_time_avg_change": -28.689370485036118,
+      "response_time_p95_change": -28.689370485036118,
+      "response_time_p99_change": -28.689370485036118,
+      "throughput_change": 40.23154848046311,
+      "memory_change": 0.826189939093165,
+      "cpu_change": 1.5706806282722363
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "project_switching",
+    "timestamp": 1754593434.9438741,
+    "duration_seconds": 1.0560376644134521,
+    "success": true,
+    "response_time_avg": 0.10559558868408203,
+    "response_time_p95": 0.11005359888076782,
+    "response_time_p99": 0.11005412340164185,
+    "throughput_ops_per_sec": 9.46935922551042,
+    "memory_usage_mb": 6149.953125,
+    "cpu_usage_percent": 22.4,
+    "baseline_comparison": {
+      "response_time_avg_change": 0.027801811702457085,
+      "response_time_p95_change": -0.015324832293266389,
+      "response_time_p99_change": -0.03199795906080413,
+      "throughput_change": -0.028559540320085904,
+      "memory_change": 0.6315084358788833,
+      "cpu_change": 0.44843049327353307
+    },
+    "details": {
+      "switches_performed": 10
+    }
+  },
+  {
+    "benchmark_name": "load_test",
+    "timestamp": 1754593436.92649,
+    "duration_seconds": 1.0134949684143066,
+    "success": false,
+    "response_time_avg": 0,
+    "response_time_p95": 0,
+    "response_time_p99": 0,
+    "throughput_ops_per_sec": 0.0,
+    "memory_usage_mb": 6150.125,
+    "cpu_usage_percent": 21.3,
+    "baseline_comparison": {
+      "response_time_avg_change": 0.0,
+      "response_time_p95_change": 0.0,
+      "response_time_p99_change": 0.0,
+      "throughput_change": 0.0,
+      "memory_change": 0.9013258410836419,
+      "cpu_change": 36.53846153846155
+    },
+    "details": {
+      "total_operations": 0,
+      "success_rate": 0.0,
+      "projects_tested": 0
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593439.051645,
+    "duration_seconds": 0.0006341934204101562,
+    "success": true,
+    "response_time_avg": 0.0006341934204101562,
+    "response_time_p95": 0.0006341934204101562,
+    "response_time_p99": 0.0006341934204101562,
+    "throughput_ops_per_sec": 1576.806015037594,
+    "memory_usage_mb": 6146.5,
+    "cpu_usage_percent": 17.6,
+    "baseline_comparison": {
+      "response_time_avg_change": -8.49673202614379,
+      "response_time_p95_change": -8.49673202614379,
+      "response_time_p99_change": -8.49673202614379,
+      "throughput_change": 9.285714285714295,
+      "memory_change": 0.838750692123126,
+      "cpu_change": -7.853403141361256
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  },
+  {
+    "benchmark_name": "startup_time",
+    "timestamp": 1754593441.216037,
+    "duration_seconds": 0.0006299018859863281,
+    "success": true,
+    "response_time_avg": 0.0006299018859863281,
+    "response_time_p95": 0.0006299018859863281,
+    "response_time_p99": 0.0006299018859863281,
+    "throughput_ops_per_sec": 1587.54882664648,
+    "memory_usage_mb": 6219.828125,
+    "cpu_usage_percent": 0.0,
+    "baseline_comparison": {
+      "response_time_avg_change": -9.11592707258342,
+      "response_time_p95_change": -9.11592707258342,
+      "response_time_p99_change": -9.11592707258342,
+      "throughput_change": 10.030280090840275,
+      "memory_change": 2.0417632221151285,
+      "cpu_change": -100.0
+    },
+    "details": {
+      "startup_components": "all"
+    }
+  }
+]
