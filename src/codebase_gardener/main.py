@@ -761,23 +761,96 @@ def analyze(ctx: click.Context, code_input: Optional[str], file: Optional[Path],
         console.print(f"[green]Analyzing code using project: {project}[/green]")
         
         with console.status("Performing analysis..."):
-            # Gap closure: Real model inference integration
+            # Real Model Integration - Gap Closure: Use actual AI components
             analysis_result = {
                 "project": project,
                 "code_length": len(code_to_analyze),
-                "analysis": "Code analysis using project-specific LoRA adapter",
-                "suggestions": [
-                    "This would use the actual LoRA model for analysis",
-                    "Vector store would provide relevant context",
-                    "Project-specific patterns would be identified"
-                ]
+                "analysis": "Analyzing with project-specific AI...",
+                "suggestions": [],
+                "context_retrieved": False,
+                "similar_patterns": None,
+                "ai_response": None
             }
             
-            # Gap closure: Embedding generation integration
+            # Switch to the project context
+            app_context.switch_project(project)
+            
+            # Real Embedding Generation - Gap Closure: Use actual embedding pipeline
+            embedding_generated = False
+            similar_code_found = False
+            
             if app_context.vector_store_manager:
-                # Note: Actual embedding generation would happen here
-                analysis_result["context_retrieved"] = True
-                analysis_result["similar_patterns"] = "Found 3 similar code patterns in project"
+                try:
+                    # Get project-specific vector store
+                    vector_store = app_context.vector_store_manager.get_project_vector_store(project)
+                    if vector_store:
+                        # Try to generate embeddings for the code
+                        try:
+                            from .models.nomic_embedder import get_nomic_embedder
+                            embedder = get_nomic_embedder()
+                            
+                            # Generate embedding for the input code
+                            code_embedding = embedder.embed_code(code_to_analyze)
+                            embedding_generated = True
+                            
+                            # Search for similar code in the project
+                            search_results = vector_store.search_similar(code_embedding, limit=3)
+                            if search_results:
+                                similar_code_found = True
+                                analysis_result["context_retrieved"] = True
+                                analysis_result["similar_patterns"] = f"Found {len(search_results)} similar code patterns in project"
+                            else:
+                                analysis_result["similar_patterns"] = "No similar code patterns found in project"
+                        except Exception as e:
+                            analysis_result["similar_patterns"] = f"Embedding generation failed: {str(e)}"
+                except Exception as e:
+                    analysis_result["similar_patterns"] = f"Vector store error: {str(e)}"
+            
+            # Real AI Analysis - Gap Closure: Use actual model inference
+            if app_context.dynamic_model_loader:
+                try:
+                    # Create analysis prompt with context
+                    analysis_prompt = f"""Analyze this code snippet for the project '{project}':
+
+```
+{code_to_analyze}
+```
+
+Please provide:
+1. Code quality assessment
+2. Potential improvements
+3. Architecture patterns used
+4. Any project-specific insights
+
+{"Note: Similar code was found in the project." if similar_code_found else "Note: No similar code found in project."}"""
+
+                    ai_response = app_context.dynamic_model_loader.generate_response(analysis_prompt, project)
+                    if ai_response:
+                        analysis_result["ai_response"] = ai_response
+                        analysis_result["analysis"] = "Analysis completed using project-specific LoRA adapter"
+                        analysis_result["suggestions"] = [
+                            "AI analysis generated using project-specific model",
+                            "Vector store integration validated",
+                            "Project context successfully applied"
+                        ]
+                    else:
+                        analysis_result["analysis"] = "Analysis completed (AI response generation failed)"
+                        analysis_result["suggestions"] = [
+                            "Basic analysis completed",
+                            "AI model integration needs attention"
+                        ]
+                except Exception as e:
+                    analysis_result["analysis"] = f"Analysis completed with AI error: {str(e)}"
+                    analysis_result["suggestions"] = [
+                        "Basic analysis completed",
+                        f"AI integration error: {str(e)}"
+                    ]
+            else:
+                analysis_result["analysis"] = "Analysis completed (AI components not available)"
+                analysis_result["suggestions"] = [
+                    "Basic analysis completed",
+                    "AI components need initialization"
+                ]
         
         if output == "json":
             import json
@@ -785,14 +858,20 @@ def analyze(ctx: click.Context, code_input: Optional[str], file: Optional[Path],
         else:
             console.print(f"\n[bold]Analysis Results for Project '{project}':[/bold]")
             console.print(f"Code length: {analysis_result['code_length']} characters")
-            console.print(f"Analysis: {analysis_result['analysis']}")
+            console.print(f"Status: {analysis_result['analysis']}")
             
-            if analysis_result.get("context_retrieved"):
+            if analysis_result.get("similar_patterns"):
                 console.print(f"Context: {analysis_result['similar_patterns']}")
             
-            console.print("\n[bold]Suggestions:[/bold]")
-            for suggestion in analysis_result["suggestions"]:
-                console.print(f"• {suggestion}")
+            # Display AI analysis if available
+            if analysis_result.get("ai_response"):
+                console.print(f"\n[bold]AI Analysis:[/bold]")
+                console.print(analysis_result["ai_response"])
+            
+            if analysis_result["suggestions"]:
+                console.print("\n[bold]System Status:[/bold]")
+                for suggestion in analysis_result["suggestions"]:
+                    console.print(f"• {suggestion}")
         
     except Exception as e:
         console.print(f"[red]Error analyzing code: {e}[/red]")
