@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.codebase-gardener.app</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/codebase-gardener/venv/bin/python</string>
+        <string>-m</string>
+        <string>codebase_gardener.main</string>
+        <string>--production</string>
+    </array>
+    
+    <key>UserName</key>
+    <string>codebase-gardener</string>
+    
+    <key>GroupName</key>
+    <string>staff</string>
+    
+    <key>WorkingDirectory</key>
+    <string>/opt/codebase-gardener</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+        <key>CODEBASE_GARDENER_ENV</key>
+        <string>production</string>
+        <key>CODEBASE_GARDENER_DATA_DIR</key>
+        <string>/var/lib/codebase-gardener</string>
+        <key>CODEBASE_GARDENER_LOG_LEVEL</key>
+        <string>INFO</string>
+        <key>CODEBASE_GARDENER_MAX_MEMORY_MB</key>
+        <string>2048</string>
+        <key>CODEBASE_GARDENER_MAX_WORKERS</key>
+        <string>2</string>
+        <key>OLLAMA_BASE_URL</key>
+        <string>http://127.0.0.1:11434</string>
+    </dict>
+    
+    <key>StandardOutPath</key>
+    <string>/var/log/codebase-gardener/app.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/var/log/codebase-gardener/app.error.log</string>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+        <key>Crashed</key>
+        <true/>
+        <key>NetworkState</key>
+        <true/>
+    </dict>
+    
+    <key>ProcessType</key>
+    <string>Background</string>
+    
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    
+    <key>SoftResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>1024</integer>
+        <key>NumberOfProcesses</key>
+        <integer>50</integer>
+        <key>ResidentSetSize</key>
+        <integer>2147483648</integer> <!-- 2GB memory limit -->
+    </dict>
+    
+    <key>HardResourceLimits</key>
+    <dict>
+        <key>NumberOfFiles</key>
+        <integer>2048</integer>
+        <key>NumberOfProcesses</key>
+        <integer>100</integer>
+        <key>ResidentSetSize</key>
+        <integer>3221225472</integer> <!-- 3GB hard memory limit -->
+    </dict>
+    
+    <!-- Service dependencies -->
+    <key>LaunchOnlyOnce</key>
+    <false/>
+    
+    <!-- Health check integration -->
+    <key>EnableTransactions</key>
+    <true/>
+</dict>
+</plist>
