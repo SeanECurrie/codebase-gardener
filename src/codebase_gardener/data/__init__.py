@@ -20,33 +20,26 @@ from .parser import (
     get_supported_extensions,
     is_supported_file,
 )
-
 from .preprocessor import (
     ChunkType,
     CodeChunk,
     CodePreprocessor,
     PreprocessingConfig,
-    preprocess_file,
     preprocess_code_string,
+    preprocess_file,
 )
-
-from .vector_store import (
-    CodeChunkSchema,
-    SearchResult,
-    VectorStore,
-)
-
 from .project_vector_store import (
     ProjectVectorStoreInfo,
     ProjectVectorStoreManager,
     get_project_vector_store_manager,
     reset_project_vector_store_manager,
 )
+from .vector_store import CodeChunkSchema, SearchResult, VectorStore
 
 __all__ = [
     # Parser exports
     "CodeElement",
-    "CodeStructure", 
+    "CodeStructure",
     "ParseError",
     "ParseResult",
     "SupportedLanguage",

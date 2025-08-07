@@ -5,27 +5,28 @@ This module provides centralized configuration for the Codebase Gardener applica
 with automatic environment variable support and type validation.
 """
 
-from pathlib import Path
-from typing import Optional, List
-from pydantic import Field, field_validator, ConfigDict
-from pydantic_settings import BaseSettings
 import os
+from pathlib import Path
+from typing import List, Optional
+
+from pydantic import ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     """
     Application settings with environment variable support.
-    
+
     All settings can be overridden using environment variables with the
     CODEBASE_GARDENER_ prefix. For example, to override debug mode:
     export CODEBASE_GARDENER_DEBUG=true
     """
-    
+
     # Application settings
     app_name: str = Field(default="Codebase Gardener", description="Application name")
     debug: bool = Field(default=False, description="Enable debug mode")
     log_level: str = Field(default="INFO", description="Logging level")
-    
+
     # Data storage settings
     data_dir: Path = Field(
         default_factory=lambda: Path.home() / ".codebase-gardener",
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
         default=None,
         description="Directory for base AI models"
     )
-    
+
     # AI/ML Model settings
     ollama_base_url: str = Field(
         default="http://localhost:11434",
@@ -67,7 +68,7 @@ class Settings(BaseSettings):
         default="auto",
         description="Device for embedding model (auto, cpu, cuda, mps)"
     )
-    
+
     # Vector database settings
     vector_db_path: Optional[Path] = Field(
         default=None,
@@ -97,7 +98,7 @@ class Settings(BaseSettings):
         ge=0,
         le=500
     )
-    
+
     # Training settings
     lora_rank: int = Field(
         default=16,
@@ -123,7 +124,7 @@ class Settings(BaseSettings):
         ge=100,
         le=10000
     )
-    
+
     # Performance settings
     max_workers: int = Field(
         default=4,
@@ -141,7 +142,7 @@ class Settings(BaseSettings):
         default="python,javascript,typescript,java,go,rust",
         description="Comma-separated list of supported programming languages"
     )
-    
+
     # UI settings
     gradio_host: str = Field(
         default="127.0.0.1",
@@ -157,7 +158,7 @@ class Settings(BaseSettings):
         default=False,
         description="Enable Gradio sharing (creates public URL)"
     )
-    
+
     # Development settings
     enable_profiling: bool = Field(
         default=False,
@@ -167,14 +168,14 @@ class Settings(BaseSettings):
         default=True,
         description="Cache embeddings to disk for reuse"
     )
-    
+
     model_config = ConfigDict(
         env_prefix="CODEBASE_GARDENER_",
         case_sensitive=False,
         env_file=".env",
         env_file_encoding="utf-8"
     )
-    
+
     @field_validator("log_level")
     @classmethod
     def validate_log_level(cls, v):
@@ -183,22 +184,22 @@ class Settings(BaseSettings):
         if v.upper() not in valid_levels:
             raise ValueError(f"log_level must be one of {valid_levels}")
         return v.upper()
-    
+
     @field_validator("data_dir", mode="before")
     @classmethod
     def validate_data_dir(cls, v):
         """Ensure data directory is a Path object and create if needed."""
         if isinstance(v, str):
             v = Path(v)
-        
+
         # Expand user home directory
         v = v.expanduser().resolve()
-        
+
         # Create directory if it doesn't exist
         v.mkdir(parents=True, exist_ok=True)
-        
+
         return v
-    
+
     @field_validator("projects_dir", mode="before")
     @classmethod
     def set_projects_dir(cls, v, info):
@@ -209,7 +210,7 @@ class Settings(BaseSettings):
                 data_dir = Path(data_dir)
             return data_dir / "projects"
         return v
-    
+
     @field_validator("base_models_dir", mode="before")
     @classmethod
     def set_base_models_dir(cls, v, info):
@@ -220,7 +221,7 @@ class Settings(BaseSettings):
                 data_dir = Path(data_dir)
             return data_dir / "base_models"
         return v
-    
+
     @field_validator("vector_db_path", mode="before")
     @classmethod
     def set_vector_db_path(cls, v, info):
@@ -231,7 +232,7 @@ class Settings(BaseSettings):
                 data_dir = Path(data_dir)
             return data_dir / "vector_store"
         return v
-    
+
     @field_validator("ollama_base_url")
     @classmethod
     def validate_ollama_url(cls, v):
@@ -239,7 +240,7 @@ class Settings(BaseSettings):
         if not v.startswith(("http://", "https://")):
             raise ValueError("ollama_base_url must start with http:// or https://")
         return v.rstrip("/")  # Remove trailing slash
-    
+
     def create_directories(self) -> None:
         """Create all necessary directories for the application."""
         directories = [
@@ -248,25 +249,25 @@ class Settings(BaseSettings):
             self.base_models_dir,
             self.vector_db_path.parent if self.vector_db_path else None,
         ]
-        
+
         for directory in directories:
             if directory:
                 directory.mkdir(parents=True, exist_ok=True)
-    
+
     def get_project_dir(self, project_name: str) -> Path:
         """Get the directory path for a specific project."""
         project_dir = self.projects_dir / project_name
         project_dir.mkdir(parents=True, exist_ok=True)
         return project_dir
-    
+
     def get_lora_adapter_path(self, project_name: str) -> Path:
         """Get the path for a project's LoRA adapter."""
         return self.get_project_dir(project_name) / "lora_adapter.bin"
-    
+
     def get_project_vector_store_path(self, project_name: str) -> Path:
         """Get the path for a project's vector store."""
         return self.get_project_dir(project_name) / "vector_store"
-    
+
     def get_project_context_path(self, project_name: str) -> Path:
         """Get the path for a project's context file."""
         return self.get_project_dir(project_name) / "context.json"

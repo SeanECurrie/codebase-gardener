@@ -5,16 +5,17 @@ This module provides reusable UI components for the Codebase Gardener web interf
 including status displays, progress indicators, and specialized input/output components.
 """
 
-import gradio as gr
-from typing import Dict, Any, List, Optional, Tuple
-import structlog
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+import gradio as gr
+import structlog
 
 logger = structlog.get_logger(__name__)
 
 class StatusDisplay:
     """Component for displaying system and project status."""
-    
+
     @staticmethod
     def create_project_status_card() -> gr.Markdown:
         """Create a project status card component."""
@@ -23,7 +24,7 @@ class StatusDisplay:
             elem_classes=["project-status-card"],
             elem_id="project-status"
         )
-    
+
     @staticmethod
     def create_system_health_card() -> gr.Markdown:
         """Create a system health status card."""
@@ -32,7 +33,7 @@ class StatusDisplay:
             elem_classes=["system-health-card"],
             elem_id="system-health"
         )
-    
+
     @staticmethod
     def create_message_display(message_type: str = "info") -> gr.Markdown:
         """Create a message display component."""
@@ -42,26 +43,26 @@ class StatusDisplay:
             elem_classes=[css_class],
             visible=False
         )
-    
+
     @staticmethod
     def format_status_message(message: str, status_type: str = "info") -> str:
         """Format a status message with appropriate styling."""
         icons = {
             "success": "✅",
-            "error": "❌", 
+            "error": "❌",
             "warning": "⚠️",
             "info": "ℹ️",
             "loading": "⏳"
         }
-        
+
         icon = icons.get(status_type, "ℹ️")
         timestamp = datetime.now().strftime("%H:%M:%S")
-        
+
         return f"{icon} **{timestamp}** - {message}"
 
 class ChatInterface:
     """Enhanced chat interface components."""
-    
+
     @staticmethod
     def create_chatbot() -> gr.Chatbot:
         """Create an enhanced chatbot component."""
@@ -73,7 +74,7 @@ class ChatInterface:
             avatar_images=("👤", "🤖"),
             bubble_full_width=False
         )
-    
+
     @staticmethod
     def create_chat_input() -> gr.Textbox:
         """Create chat input component."""
@@ -84,7 +85,7 @@ class ChatInterface:
             max_lines=5,
             elem_id="chat-input"
         )
-    
+
     @staticmethod
     def create_chat_controls() -> Tuple[gr.Button, gr.Button]:
         """Create chat control buttons."""
@@ -93,18 +94,18 @@ class ChatInterface:
             variant="primary",
             elem_id="chat-send"
         )
-        
+
         clear_btn = gr.Button(
             "Clear Chat",
             variant="secondary",
             elem_id="chat-clear"
         )
-        
+
         return send_btn, clear_btn
 
 class CodeAnalysisInterface:
     """Code analysis interface components."""
-    
+
     @staticmethod
     def create_code_input() -> gr.Code:
         """Create code input component."""
@@ -115,7 +116,7 @@ class CodeAnalysisInterface:
             placeholder="Paste your code here for analysis...",
             elem_id="code-input"
         )
-    
+
     @staticmethod
     def create_analysis_output() -> gr.Markdown:
         """Create analysis output component."""
@@ -125,7 +126,7 @@ class CodeAnalysisInterface:
             elem_classes=["analysis-output"],
             elem_id="analysis-results"
         )
-    
+
     @staticmethod
     def create_analysis_controls() -> Tuple[gr.Button, gr.Dropdown]:
         """Create analysis control components."""
@@ -134,7 +135,7 @@ class CodeAnalysisInterface:
             variant="primary",
             elem_id="analyze-button"
         )
-        
+
         analysis_type = gr.Dropdown(
             label="Analysis Type",
             choices=[
@@ -146,12 +147,12 @@ class CodeAnalysisInterface:
             value="general",
             elem_id="analysis-type"
         )
-        
+
         return analyze_btn, analysis_type
 
 class ProgressIndicator:
     """Progress indicator components."""
-    
+
     @staticmethod
     def create_loading_indicator() -> gr.HTML:
         """Create a loading indicator."""
@@ -164,7 +165,7 @@ class ProgressIndicator:
             """,
             elem_id="loading-indicator"
         )
-    
+
     @staticmethod
     def create_progress_bar() -> gr.Progress:
         """Create a progress bar component."""
@@ -172,7 +173,7 @@ class ProgressIndicator:
 
 class ProjectManagement:
     """Project management interface components."""
-    
+
     @staticmethod
     def create_project_actions() -> Tuple[gr.Button, gr.Button, gr.Button]:
         """Create project action buttons."""
@@ -181,21 +182,21 @@ class ProjectManagement:
             variant="secondary",
             elem_id="add-project"
         )
-        
+
         train_btn = gr.Button(
             "🎯 Train Model",
             variant="primary",
             elem_id="train-model"
         )
-        
+
         remove_btn = gr.Button(
             "🗑️ Remove Project",
             variant="stop",
             elem_id="remove-project"
         )
-        
+
         return add_btn, train_btn, remove_btn
-    
+
     @staticmethod
     def create_project_form() -> Dict[str, gr.Component]:
         """Create project creation form components."""
@@ -220,7 +221,7 @@ class ProjectManagement:
 
 class MetricsDisplay:
     """Components for displaying metrics and statistics."""
-    
+
     @staticmethod
     def create_metrics_grid() -> gr.HTML:
         """Create a metrics display grid."""
@@ -247,7 +248,7 @@ class MetricsDisplay:
             """,
             elem_id="metrics-display"
         )
-    
+
     @staticmethod
     def create_health_indicators() -> gr.HTML:
         """Create system health indicators."""
@@ -277,7 +278,7 @@ class MetricsDisplay:
 
 class CustomCSS:
     """Custom CSS styles for the interface."""
-    
+
     @staticmethod
     def get_styles() -> str:
         """Get custom CSS styles."""
@@ -291,7 +292,7 @@ class CustomCSS:
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin: 10px 0;
         }
-        
+
         /* System Health Card */
         .system-health-card {
             background: linear-gradient(135deg, #f1f8ff 0%, #e3f2fd 100%);
@@ -301,7 +302,7 @@ class CustomCSS:
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin: 10px 0;
         }
-        
+
         /* Message Display */
         .message-display {
             padding: 12px 16px;
@@ -309,31 +310,31 @@ class CustomCSS:
             margin: 8px 0;
             border-left: 4px solid;
         }
-        
+
         .message-display.success {
             background-color: #d4edda;
             color: #155724;
             border-left-color: #28a745;
         }
-        
+
         .message-display.error {
             background-color: #f8d7da;
             color: #721c24;
             border-left-color: #dc3545;
         }
-        
+
         .message-display.warning {
             background-color: #fff3cd;
             color: #856404;
             border-left-color: #ffc107;
         }
-        
+
         .message-display.info {
             background-color: #d1ecf1;
             color: #0c5460;
             border-left-color: #17a2b8;
         }
-        
+
         /* Analysis Output */
         .analysis-output {
             background-color: #f8f9fa;
@@ -344,7 +345,7 @@ class CustomCSS:
             max-height: 500px;
             overflow-y: auto;
         }
-        
+
         /* Loading Indicator */
         .loading-indicator {
             display: flex;
@@ -353,7 +354,7 @@ class CustomCSS:
             padding: 20px;
             gap: 10px;
         }
-        
+
         .spinner {
             width: 20px;
             height: 20px;
@@ -362,12 +363,12 @@ class CustomCSS:
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
+
         /* Metrics Grid */
         .metrics-grid {
             display: grid;
@@ -375,7 +376,7 @@ class CustomCSS:
             gap: 15px;
             margin: 15px 0;
         }
-        
+
         .metric-card {
             background: white;
             padding: 20px;
@@ -384,7 +385,7 @@ class CustomCSS:
             text-align: center;
             border-top: 3px solid #007bff;
         }
-        
+
         .metric-card h3 {
             margin: 0 0 10px 0;
             color: #6c757d;
@@ -392,13 +393,13 @@ class CustomCSS:
             font-weight: 600;
             text-transform: uppercase;
         }
-        
+
         .metric-value {
             font-size: 24px;
             font-weight: bold;
             color: #007bff;
         }
-        
+
         /* Health Indicators */
         .health-indicators {
             display: grid;
@@ -406,7 +407,7 @@ class CustomCSS:
             gap: 10px;
             margin: 15px 0;
         }
-        
+
         .health-item {
             display: flex;
             justify-content: space-between;
@@ -416,44 +417,44 @@ class CustomCSS:
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        
+
         .health-label {
             font-weight: 500;
             color: #495057;
         }
-        
+
         .health-status {
             font-weight: 600;
         }
-        
+
         /* Chat Interface Enhancements */
         #main-chatbot {
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
+
         #chat-input {
             border-radius: 8px;
         }
-        
+
         /* Button Styling */
         .gradio-button {
             border-radius: 6px;
             font-weight: 500;
             transition: all 0.2s ease;
         }
-        
+
         .gradio-button:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        
+
         /* Code Input Styling */
         #code-input {
             border-radius: 8px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
         }
-        
+
         /* Project Selector */
         #project-selector {
             border-radius: 8px;

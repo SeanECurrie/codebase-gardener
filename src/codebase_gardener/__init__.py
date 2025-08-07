@@ -23,7 +23,7 @@ from codebase_gardener.config import settings
 
 __all__ = [
     "__version__",
-    "__author__", 
+    "__author__",
     "__email__",
     "settings",
 ]

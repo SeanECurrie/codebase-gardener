@@ -14,17 +14,17 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Any
 from threading import Lock
+from typing import Any, Dict, List, Optional
 
 import structlog
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from codebase_gardener.config import settings
 from codebase_gardener.utils.error_handling import (
     CodebaseGardenerError,
     StorageError,
-    retry_with_backoff
+    retry_with_backoff,
 )
 
 logger = structlog.get_logger(__name__)
@@ -41,7 +41,7 @@ class TrainingStatus(str, Enum):
 class ProjectMetadata(BaseModel):
     """
     Metadata for a registered project.
-    
+
     This model contains all the information needed to track a project's
     state, training status, and file locations.
     """
@@ -93,7 +93,7 @@ class ProjectMetadata(BaseModel):
 class RegistryData(BaseModel):
     """
     Container for the entire registry data structure.
-    
+
     This includes versioning information and the projects dictionary.
     """
     version: str = Field(default="1.0", description="Registry format version")
@@ -116,10 +116,10 @@ class ProjectRegistryError(CodebaseGardenerError):
 class ProjectRegistry:
     """
     Centralized registry for managing multiple processed codebases.
-    
+
     This class provides a thread-safe interface for registering projects,
     tracking their status, and managing project lifecycle operations.
-    
+
     The registry uses JSON-based persistence with in-memory caching for
     fast lookup operations.
     """
@@ -127,7 +127,7 @@ class ProjectRegistry:
     def __init__(self, registry_path: Optional[Path] = None):
         """
         Initialize the project registry.
-        
+
         Args:
             registry_path: Optional custom path for the registry file.
                           Defaults to ~/.codebase-gardener/registry.json
@@ -135,13 +135,13 @@ class ProjectRegistry:
         self.registry_file = registry_path or (settings.data_dir / "registry.json")
         self._data: RegistryData = RegistryData()
         self._lock = Lock()
-        
+
         # Ensure the data directory exists
         self.registry_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Load existing registry if it exists
         self._load_registry()
-        
+
         logger.info(
             "Project registry initialized",
             registry_file=str(self.registry_file),
@@ -157,7 +157,7 @@ class ProjectRegistry:
         try:
             with self.registry_file.open('r', encoding='utf-8') as f:
                 data = json.load(f)
-            
+
             # Convert datetime strings back to datetime objects
             if 'projects' in data:
                 for project_data in data['projects'].values():
@@ -165,7 +165,7 @@ class ProjectRegistry:
                         project_data['created_at'] = datetime.fromisoformat(project_data['created_at'])
                     if 'last_updated' in project_data:
                         project_data['last_updated'] = datetime.fromisoformat(project_data['last_updated'])
-            
+
             self._data = RegistryData(**data)
             logger.info(
                 "Registry loaded successfully",
@@ -189,20 +189,20 @@ class ProjectRegistry:
     def _save_registry(self) -> None:
         """Save the registry to disk atomically."""
         temp_file = self.registry_file.with_suffix('.tmp')
-        
+
         try:
             # Convert to dict for JSON serialization
             registry_dict = self._data.model_dump()
-            
+
             # Write to temporary file first
             with temp_file.open('w', encoding='utf-8') as f:
                 json.dump(registry_dict, f, indent=2, default=str, ensure_ascii=False)
-            
+
             # Atomic move to final location
             temp_file.replace(self.registry_file)
-            
+
             logger.debug("Registry saved successfully", registry_file=str(self.registry_file))
-            
+
         except Exception as e:
             # Clean up temporary file on error
             if temp_file.exists():
@@ -218,15 +218,15 @@ class ProjectRegistry:
     ) -> str:
         """
         Register a new project in the registry.
-        
+
         Args:
             name: Human-readable project name
             source_path: Path to the original codebase
             language: Primary programming language
-            
+
         Returns:
             str: The generated project ID
-            
+
         Raises:
             ProjectRegistryError: If project registration fails
         """
@@ -234,22 +234,22 @@ class ProjectRegistry:
             # Validate inputs
             if not name or not name.strip():
                 raise ProjectRegistryError("Project name cannot be empty")
-            
+
             if not source_path.exists():
                 raise ProjectRegistryError(f"Source path does not exist: {source_path}")
-            
+
             # Check for duplicate names
             for project in self._data.projects.values():
                 if project.name.lower() == name.lower():
                     raise ProjectRegistryError(f"Project with name '{name}' already exists")
-            
+
             # Generate unique project ID
             project_id = str(uuid.uuid4())
-            
+
             # Create project directories
             project_dir = settings.data_dir / "projects" / project_id
             project_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Create project metadata
             metadata = ProjectMetadata(
                 project_id=project_id,
@@ -260,15 +260,15 @@ class ProjectRegistry:
                 vector_store_path=project_dir / "vector_store",
                 context_path=project_dir / "context.json"
             )
-            
+
             # Save to disk first (this can fail)
             # Temporarily add to registry for saving
             self._data.projects[project_id] = metadata
-            
+
             # Set as active project if it's the first one
             if len(self._data.projects) == 1:
                 self._data.active_project = project_id
-            
+
             try:
                 self._save_registry()
             except Exception:
@@ -281,7 +281,7 @@ class ProjectRegistry:
                     import shutil
                     shutil.rmtree(project_dir, ignore_errors=True)
                 raise
-            
+
             logger.info(
                 "Project registered successfully",
                 project_id=project_id,
@@ -289,16 +289,16 @@ class ProjectRegistry:
                 source_path=str(source_path),
                 language=language
             )
-            
+
             return project_id
 
     def get_project(self, project_id: str) -> Optional[ProjectMetadata]:
         """
         Get project metadata by ID.
-        
+
         Args:
             project_id: The project identifier
-            
+
         Returns:
             ProjectMetadata or None if not found
         """
@@ -307,7 +307,7 @@ class ProjectRegistry:
     def list_projects(self) -> List[ProjectMetadata]:
         """
         Get a list of all registered projects.
-        
+
         Returns:
             List of ProjectMetadata objects
         """
@@ -316,25 +316,25 @@ class ProjectRegistry:
     def update_project_status(self, project_id: str, status: TrainingStatus) -> None:
         """
         Update the training status of a project.
-        
+
         Args:
             project_id: The project identifier
             status: New training status
-            
+
         Raises:
             ProjectRegistryError: If project not found
         """
         with self._lock:
             if project_id not in self._data.projects:
                 raise ProjectRegistryError(f"Project not found: {project_id}")
-            
+
             project = self._data.projects[project_id]
             old_status = project.training_status
             project.training_status = status
             project.update_timestamp()
-            
+
             self._save_registry()
-            
+
             logger.info(
                 "Project status updated",
                 project_id=project_id,
@@ -346,29 +346,29 @@ class ProjectRegistry:
     def update_project_metadata(self, project_id: str, **kwargs) -> None:
         """
         Update project metadata fields.
-        
+
         Args:
             project_id: The project identifier
             **kwargs: Fields to update
-            
+
         Raises:
             ProjectRegistryError: If project not found
         """
         with self._lock:
             if project_id not in self._data.projects:
                 raise ProjectRegistryError(f"Project not found: {project_id}")
-            
+
             project = self._data.projects[project_id]
-            
+
             # Update allowed fields
             allowed_fields = {'file_count', 'language'}
             for field, value in kwargs.items():
                 if field in allowed_fields:
                     setattr(project, field, value)
-            
+
             project.update_timestamp()
             self._save_registry()
-            
+
             logger.info(
                 "Project metadata updated",
                 project_id=project_id,
@@ -379,20 +379,20 @@ class ProjectRegistry:
     def remove_project(self, project_id: str) -> None:
         """
         Remove a project from the registry and clean up its files.
-        
+
         Args:
             project_id: The project identifier
-            
+
         Raises:
             ProjectRegistryError: If project not found
         """
         with self._lock:
             if project_id not in self._data.projects:
                 raise ProjectRegistryError(f"Project not found: {project_id}")
-            
+
             project = self._data.projects[project_id]
             project_name = project.name
-            
+
             # Clean up project directory
             project_dir = settings.data_dir / "projects" / project_id
             if project_dir.exists():
@@ -402,18 +402,18 @@ class ProjectRegistry:
                     logger.debug("Project directory removed", project_dir=str(project_dir))
                 except OSError as e:
                     logger.warning("Failed to remove project directory", error=str(e))
-            
+
             # Remove from registry
             del self._data.projects[project_id]
-            
+
             # Update active project if necessary
             if self._data.active_project == project_id:
                 # Set to another project or None
                 remaining_projects = list(self._data.projects.keys())
                 self._data.active_project = remaining_projects[0] if remaining_projects else None
-            
+
             self._save_registry()
-            
+
             logger.info(
                 "Project removed successfully",
                 project_id=project_id,
@@ -423,7 +423,7 @@ class ProjectRegistry:
     def get_active_project(self) -> Optional[str]:
         """
         Get the currently active project ID.
-        
+
         Returns:
             Active project ID or None
         """
@@ -432,22 +432,22 @@ class ProjectRegistry:
     def set_active_project(self, project_id: str) -> None:
         """
         Set the active project.
-        
+
         Args:
             project_id: The project identifier to set as active
-            
+
         Raises:
             ProjectRegistryError: If project not found
         """
         with self._lock:
             if project_id not in self._data.projects:
                 raise ProjectRegistryError(f"Project not found: {project_id}")
-            
+
             old_active = self._data.active_project
             self._data.active_project = project_id
-            
+
             self._save_registry()
-            
+
             logger.info(
                 "Active project changed",
                 old_active=old_active,
@@ -458,10 +458,10 @@ class ProjectRegistry:
     def get_projects_by_status(self, status: TrainingStatus) -> List[ProjectMetadata]:
         """
         Get all projects with a specific training status.
-        
+
         Args:
             status: Training status to filter by
-            
+
         Returns:
             List of matching projects
         """
@@ -477,26 +477,26 @@ class ProjectRegistry:
     def validate_registry(self) -> List[str]:
         """
         Validate the registry and return any issues found.
-        
+
         Returns:
             List of validation issues (empty if valid)
         """
         issues = []
-        
+
         for project_id, project in self._data.projects.items():
             # Check if source path still exists
             if not project.source_path.exists():
                 issues.append(f"Project {project.name}: source path no longer exists")
-            
+
             # Check if project directory exists
             project_dir = settings.data_dir / "projects" / project_id
             if not project_dir.exists():
                 issues.append(f"Project {project.name}: project directory missing")
-        
+
         # Check if active project exists
         if self._data.active_project and self._data.active_project not in self._data.projects:
             issues.append("Active project ID does not exist in registry")
-        
+
         return issues
 
 
@@ -508,17 +508,17 @@ _registry_lock = Lock()
 def get_project_registry() -> ProjectRegistry:
     """
     Get the global project registry instance.
-    
+
     This function implements a thread-safe singleton pattern for the registry.
-    
+
     Returns:
         ProjectRegistry: The global registry instance
     """
     global _registry_instance
-    
+
     if _registry_instance is None:
         with _registry_lock:
             if _registry_instance is None:
                 _registry_instance = ProjectRegistry()
-    
+
     return _registry_instance

@@ -15,11 +15,11 @@ from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
 
 import structlog
 from tenacity import (
+    RetryError,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    RetryError,
 )
 
 logger = structlog.get_logger(__name__)
@@ -30,10 +30,10 @@ F = TypeVar('F', bound=Callable[..., Any])
 
 class CodebaseGardenerError(Exception):
     """Base exception for all Codebase Gardener errors.
-    
+
     Provides structured error handling with context and user-friendly messages.
     """
-    
+
     def __init__(
         self,
         message: str,
@@ -47,7 +47,7 @@ class CodebaseGardenerError(Exception):
         self.user_message = user_message or message
         self.suggestions = suggestions or []
         self.timestamp = datetime.now()
-        
+
         # Log the error with structured context
         logger.error(
             "Codebase Gardener error occurred",
@@ -58,7 +58,7 @@ class CodebaseGardenerError(Exception):
             suggestions=self.suggestions,
             timestamp=self.timestamp.isoformat()
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert error to dictionary for serialization."""
         return {
@@ -73,7 +73,7 @@ class CodebaseGardenerError(Exception):
 
 class ConfigurationError(CodebaseGardenerError):
     """Errors related to configuration and setup."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -86,7 +86,7 @@ class ConfigurationError(CodebaseGardenerError):
 
 class ModelError(CodebaseGardenerError):
     """Errors related to AI model operations."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -100,13 +100,13 @@ class ModelError(CodebaseGardenerError):
 
 class ModelLoadingError(ModelError):
     """Specific error for model loading failures."""
-    
+
     def __init__(self, model_name: str, **kwargs):
         message = f"Failed to load model: {model_name}"
         details = kwargs.get('details', {})
         details.update({"model_name": model_name})
         kwargs['details'] = details
-        
+
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
                 f"Verify model '{model_name}' is downloaded",
@@ -114,19 +114,19 @@ class ModelLoadingError(ModelError):
                 "Try loading a smaller model",
                 "Restart Ollama service"
             ]
-        
+
         super().__init__(message, **kwargs)
 
 
 class ModelInferenceError(ModelError):
     """Specific error for model inference failures."""
-    
+
     def __init__(self, operation: str, **kwargs):
         message = f"Model inference failed during: {operation}"
         details = kwargs.get('details', {})
         details.update({"operation": operation})
         kwargs['details'] = details
-        
+
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
                 "Check if the model is still loaded",
@@ -134,13 +134,13 @@ class ModelInferenceError(ModelError):
                 "Try reducing input size",
                 "Check system resources"
             ]
-        
+
         super().__init__(message, **kwargs)
 
 
 class ParsingError(CodebaseGardenerError):
     """Errors during code parsing and analysis."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -154,13 +154,13 @@ class ParsingError(CodebaseGardenerError):
 
 class TreeSitterError(ParsingError):
     """Specific error for Tree-sitter parsing failures."""
-    
+
     def __init__(self, file_path: str, language: str, **kwargs):
         message = f"Tree-sitter parsing failed for {file_path} (language: {language})"
         details = kwargs.get('details', {})
         details.update({"file_path": file_path, "language": language})
         kwargs['details'] = details
-        
+
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
                 f"Verify {file_path} contains valid {language} code",
@@ -168,13 +168,13 @@ class TreeSitterError(ParsingError):
                 "Try parsing a simpler file first",
                 "Check file encoding and syntax"
             ]
-        
+
         super().__init__(message, **kwargs)
 
 
 class StorageError(CodebaseGardenerError):
     """Errors related to data storage and retrieval."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -188,13 +188,13 @@ class StorageError(CodebaseGardenerError):
 
 class VectorStoreError(StorageError):
     """Specific error for vector store operations."""
-    
+
     def __init__(self, operation: str, **kwargs):
         message = f"Vector store operation failed: {operation}"
         details = kwargs.get('details', {})
         details.update({"operation": operation})
         kwargs['details'] = details
-        
+
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
                 "Check if vector store database is accessible",
@@ -202,13 +202,13 @@ class VectorStoreError(StorageError):
                 "Check available disk space",
                 "Try rebuilding the vector store"
             ]
-        
+
         super().__init__(message, **kwargs)
 
 
 class DirectorySetupError(StorageError):
     """Specific error for directory setup operations."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -222,7 +222,7 @@ class DirectorySetupError(StorageError):
 
 class NetworkError(CodebaseGardenerError):
     """Errors related to network operations."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -236,7 +236,7 @@ class NetworkError(CodebaseGardenerError):
 
 class PreprocessingError(CodebaseGardenerError):
     """Errors during code preprocessing and chunking."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -250,7 +250,7 @@ class PreprocessingError(CodebaseGardenerError):
 
 class EmbeddingError(CodebaseGardenerError):
     """Errors during embedding generation."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -264,7 +264,7 @@ class EmbeddingError(CodebaseGardenerError):
 
 class ProjectError(CodebaseGardenerError):
     """Errors related to project management."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -278,7 +278,7 @@ class ProjectError(CodebaseGardenerError):
 
 class TrainingError(CodebaseGardenerError):
     """Errors related to model training operations."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -292,7 +292,7 @@ class TrainingError(CodebaseGardenerError):
 
 class FileUtilityError(CodebaseGardenerError):
     """Errors related to file utility operations."""
-    
+
     def __init__(self, message: str, **kwargs):
         if 'suggestions' not in kwargs:
             kwargs['suggestions'] = [
@@ -338,20 +338,20 @@ def retry_with_backoff(
 ) -> Callable[[F], F]:
     """
     Decorator for retrying functions with exponential backoff.
-    
+
     Args:
         max_attempts: Maximum number of retry attempts
         min_wait: Minimum wait time between retries (seconds)
         max_wait: Maximum wait time between retries (seconds)
         multiplier: Exponential backoff multiplier
         retry_exceptions: Tuple of exception types to retry on
-    
+
     Returns:
         Decorated function with retry logic
     """
     if retry_exceptions is None:
         retry_exceptions = (Exception,)
-    
+
     def decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -363,7 +363,7 @@ def retry_with_backoff(
                 )
                 def _inner():
                     return func(*args, **kwargs)
-                
+
                 return _inner()
             except RetryError as e:
                 # Extract the original exception from RetryError
@@ -376,7 +376,7 @@ def retry_with_backoff(
                     error_type=type(original_exception).__name__
                 )
                 raise original_exception from e
-        
+
         return wrapper
     return decorator
 
@@ -399,10 +399,10 @@ def storage_retry(func: F) -> F:
 def retry_with_exponential_backoff(max_retries: int = 3) -> Callable[[F], F]:
     """
     Simple retry decorator with exponential backoff.
-    
+
     Args:
         max_retries: Maximum number of retry attempts
-    
+
     Returns:
         Decorated function with retry logic
     """
@@ -416,7 +416,7 @@ def retry_with_exponential_backoff(max_retries: int = 3) -> Callable[[F], F]:
                     if attempt == max_retries:
                         # Last attempt failed, reraise the exception
                         raise
-                    
+
                     # Calculate wait time with exponential backoff
                     wait_time = 2 ** attempt
                     logger.warning(
@@ -427,7 +427,7 @@ def retry_with_exponential_backoff(max_retries: int = 3) -> Callable[[F], F]:
                         max_retries=max_retries
                     )
                     time.sleep(wait_time)
-            
+
         return wrapper
     return decorator
 
@@ -440,13 +440,13 @@ def handle_errors(
 ) -> Callable[[F], F]:
     """
     Decorator for handling and converting exceptions to structured errors.
-    
+
     Args:
         error_type: Type of CodebaseGardenerError to raise
         user_message: User-friendly error message
         suggestions: List of suggestions for resolving the error
         reraise: Whether to reraise the structured error
-    
+
     Returns:
         Decorated function with error handling
     """
@@ -465,14 +465,14 @@ def handle_errors(
                     "original_error": str(e),
                     "original_error_type": type(e).__name__
                 }
-                
+
                 structured_error = error_type(
                     message=f"Error in {func.__name__}: {str(e)}",
                     details=details,
                     user_message=user_message,
                     suggestions=suggestions
                 )
-                
+
                 if reraise:
                     raise structured_error from e
                 else:
@@ -482,7 +482,7 @@ def handle_errors(
                         error=str(e)
                     )
                     return None
-        
+
         return wrapper
     return decorator
 
@@ -493,11 +493,11 @@ def graceful_fallback(
 ) -> Callable[[F], F]:
     """
     Decorator for graceful error handling with fallback values.
-    
+
     Args:
         fallback_value: Value to return on error
         log_level: Logging level for the error
-    
+
     Returns:
         Decorated function with graceful error handling
     """
@@ -515,7 +515,7 @@ def graceful_fallback(
                     fallback_value=fallback_value
                 )
                 return fallback_value
-        
+
         return wrapper
     return decorator
 
@@ -534,7 +534,7 @@ def log_errors(func: F) -> F:
                 error_type=type(e).__name__
             )
             raise
-    
+
     return wrapper
 
 
@@ -543,12 +543,12 @@ def log_errors(func: F) -> F:
 def format_error_for_user(error: CodebaseGardenerError) -> str:
     """Format error for user display with suggestions."""
     message = f"Error: {error.user_message}\n"
-    
+
     if error.suggestions:
         message += "\nSuggestions:\n"
         for i, suggestion in enumerate(error.suggestions, 1):
             message += f"  {i}. {suggestion}\n"
-    
+
     return message
 
 
@@ -573,12 +573,12 @@ def get_error_context(error: Exception) -> Dict[str, Any]:
         "error_message": str(error),
         "timestamp": datetime.now().isoformat()
     }
-    
+
     if isinstance(error, CodebaseGardenerError):
         context.update({
             "details": error.details,
             "user_message": error.user_message,
             "suggestions": error.suggestions
         })
-    
+
     return context
