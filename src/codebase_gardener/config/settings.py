@@ -168,6 +168,24 @@ class Settings(BaseSettings):
         default=True,
         description="Cache embeddings to disk for reuse"
     )
+    
+    # Code preprocessing settings
+    preserve_comments: bool = Field(
+        default=True,
+        description="Preserve comments during code preprocessing"
+    )
+    preserve_docstrings: bool = Field(
+        default=True,
+        description="Preserve docstrings during code preprocessing"
+    )
+    normalize_whitespace: bool = Field(
+        default=True,
+        description="Normalize whitespace during code preprocessing"
+    )
+    calculate_complexity: bool = Field(
+        default=True,
+        description="Calculate complexity scores for code chunks"
+    )
 
     model_config = ConfigDict(
         env_prefix="CODEBASE_GARDENER_",

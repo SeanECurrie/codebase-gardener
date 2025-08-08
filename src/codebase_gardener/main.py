@@ -378,17 +378,29 @@ def add(ctx: click.Context, project_path: Path, name: Optional[str], auto_train:
             console.print("[red]Failed to initialize application components[/red]")
             sys.exit(1)
 
-        # Validate project path using file utilities
+        # Validate project path using file utilities with progress feedback
         if app_context.file_utilities:
-            source_files = list(app_context.file_utilities.discover_source_files(project_path))
-            if not source_files:
-                console.print(f"[yellow]Warning: No source files found in {project_path}[/yellow]")
+            def progress_callback(message):
+                console.print(f"[dim]{message}[/dim]")
+            
+            try:
+                console.print(f"[blue]Analyzing project structure...[/blue]")
+                source_files = app_context.file_utilities.find_source_files(
+                    project_path, progress_callback=progress_callback
+                )
+                if not source_files:
+                    console.print(f"[yellow]Warning: No source files found in {project_path}[/yellow]")
+                else:
+                    console.print(f"[green]Found {len(source_files)} source files[/green]")
+            except Exception as e:
+                console.print(f"[red]Error analyzing project: {e}[/red]")
+                return
 
         # Add project to registry
-        project_metadata = app_context.project_registry.add_project(project_path, project_name)
+        project_id = app_context.project_registry.register_project(project_name, project_path)
 
         console.print(f"[green]✓ Project '{project_name}' added successfully![/green]")
-        console.print(f"[dim]Project ID: {project_metadata.project_id}[/dim]")
+        console.print(f"[dim]Project ID: {project_id}[/dim]")
 
         if auto_train:
             console.print("[dim]LoRA adapter training will begin automatically.[/dim]")
@@ -683,7 +695,12 @@ def status(ctx: click.Context, detailed: bool, project: Optional[str]) -> None:
                 project_obj = app_context.project_registry.get_project(project)
                 if project_obj:
                     try:
-                        source_files = list(app_context.file_utilities.discover_source_files(project_obj.source_path))
+                        def progress_callback(message):
+                            console.print(f"[dim]{message}[/dim]")
+                        
+                        source_files = list(app_context.file_utilities.find_source_files(
+                            project_obj.source_path, progress_callback=progress_callback
+                        ))
                         console.print(f"Source files: {len(source_files)}")
 
                         # Show recent changes if available

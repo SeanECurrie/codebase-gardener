@@ -10,12 +10,14 @@ import hashlib
 import mimetypes
 import os
 import re
+import signal
 import stat
 import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
 
@@ -25,6 +27,9 @@ from ..config import settings
 from .error_handling import FileUtilityError
 
 logger = structlog.get_logger(__name__)
+
+
+# Remove timeout functionality - we want progress, not timeouts
 
 
 class FileType(Enum):
@@ -354,15 +359,17 @@ class FileUtilities:
     # Directory Traversal Methods
 
     def scan_directory(self, dir_path: Path, patterns: Optional[List[str]] = None,
-                      recursive: bool = True, include_hidden: bool = False) -> Iterator[Path]:
+                      recursive: bool = True, include_hidden: bool = False,
+                      exclude_patterns: Optional[List[str]] = None) -> Iterator[Path]:
         """
-        Scan directory for files matching patterns.
+        Scan directory for files matching patterns, excluding specified directories.
 
         Args:
             dir_path: Directory to scan
             patterns: List of glob patterns to match (default: all files)
             recursive: Whether to scan recursively
             include_hidden: Whether to include hidden files
+            exclude_patterns: Directory patterns to exclude during scan
 
         Yields:
             Path objects for matching files
@@ -371,62 +378,158 @@ class FileUtilities:
             logger.warning(f"Directory does not exist: {dir_path}")
             return
 
+        # Use default exclusion patterns if none provided
+        if exclude_patterns is None:
+            exclude_patterns = self.DEFAULT_EXCLUSION_PATTERNS
+
         try:
-            if patterns is None:
-                patterns = ['*']
+            if recursive:
+                # Custom recursive scan that respects exclusions
+                yield from self._recursive_scan_with_exclusions(
+                    dir_path, patterns or ['*'], include_hidden, exclude_patterns
+                )
+            else:
+                # Non-recursive scan
+                if patterns is None:
+                    patterns = ['*']
 
-            for pattern in patterns:
-                if recursive:
-                    files = dir_path.rglob(pattern)
-                else:
+                for pattern in patterns:
                     files = dir_path.glob(pattern)
+                    for file_path in files:
+                        if file_path.is_file():
+                            if not include_hidden and self.is_hidden_file(file_path):
+                                continue
+                            yield file_path
 
-                for file_path in files:
+        except (OSError, PermissionError) as e:
+            logger.error(f"Error scanning directory: {e}", dir_path=str(dir_path))
+
+    def _recursive_scan_with_exclusions(self, dir_path: Path, patterns: List[str], 
+                                       include_hidden: bool, exclude_patterns: List[str]) -> Iterator[Path]:
+        """Recursively scan directory while excluding specified patterns."""
+        try:
+            # Check if current directory should be excluded
+            if self._should_exclude_directory(dir_path, exclude_patterns):
+                return
+
+            # Scan files in current directory
+            for pattern in patterns:
+                for file_path in dir_path.glob(pattern):
                     if file_path.is_file():
                         if not include_hidden and self.is_hidden_file(file_path):
                             continue
                         yield file_path
 
-        except (OSError, PermissionError) as e:
-            logger.error(f"Error scanning directory: {e}", dir_path=str(dir_path))
+            # Recursively scan subdirectories
+            for subdir in dir_path.iterdir():
+                if subdir.is_dir():
+                    if not self._should_exclude_directory(subdir, exclude_patterns):
+                        yield from self._recursive_scan_with_exclusions(
+                            subdir, patterns, include_hidden, exclude_patterns
+                        )
+
+        except (OSError, PermissionError):
+            # Skip directories we can't access
+            pass
+
+    def _should_exclude_directory(self, dir_path: Path, exclude_patterns: List[str]) -> bool:
+        """Check if a directory should be excluded from scanning."""
+        dir_name = dir_path.name
+        
+        for pattern in exclude_patterns:
+            # Skip file patterns (those with extensions or wildcards for files)
+            if '.' in pattern and not pattern.startswith('.'):
+                continue
+                
+            # Direct name match
+            if pattern == dir_name:
+                return True
+                
+            # Pattern match for directories
+            if pattern.startswith('.') and dir_name.startswith('.'):
+                if pattern == dir_name or (len(pattern) == 1 and pattern == '.'):
+                    return True
+                    
+            # Common directory exclusions
+            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env', 
+                          'vendor', 'target', 'build', 'dist', '.tox', '.pytest_cache',
+                          '.vscode', '.idea', '.cache']:
+                if dir_name == pattern:
+                    return True
+        
+        return False
 
     def find_source_files(self, dir_path: Path, languages: Optional[List[str]] = None,
-                         exclude_patterns: Optional[List[str]] = None) -> List[Path]:
+                         exclude_patterns: Optional[List[str]] = None, 
+                         progress_callback=None) -> List[Path]:
         """
-        Find source code files in a directory.
+        Find source code files in a directory with progress feedback.
 
         Args:
             dir_path: Directory to search
             languages: List of languages to include (default: all)
             exclude_patterns: Additional exclusion patterns
+            progress_callback: Optional callback for progress updates
 
         Returns:
             List of source code file paths
+            
+        Raises:
+            FileUtilityError: If directory cannot be accessed
         """
+        if not dir_path.exists() or not dir_path.is_dir():
+            raise FileUtilityError(f"Directory does not exist or is not accessible: {dir_path}")
+        
+        logger.info(f"Starting file discovery in {dir_path}")
+        
+        if progress_callback:
+            progress_callback(f"Scanning directory: {dir_path}")
+        
         source_files = []
         exclusion_patterns = self.DEFAULT_EXCLUSION_PATTERNS.copy()
+        files_processed = 0
 
         if exclude_patterns:
             exclusion_patterns.extend(exclude_patterns)
 
-        for file_path in self.scan_directory(dir_path, recursive=True):
-            # Check if it's a source code file
-            if not self.is_source_code_file(file_path):
-                continue
-
-            # Check language filter
-            if languages:
-                file_language = self.get_language_from_file(file_path)
-                if file_language not in languages:
+        try:
+            # Pass exclusion patterns to scan_directory to avoid scanning excluded directories
+            for file_path in self.scan_directory(dir_path, recursive=True, exclude_patterns=exclusion_patterns):
+                files_processed += 1
+                
+                # Provide progress feedback every 50 files for more responsive feedback
+                if progress_callback and files_processed % 50 == 0:
+                    progress_callback(f"Processed {files_processed} files, found {len(source_files)} source files")
+                
+                # Check if it's a source code file
+                if not self.is_source_code_file(file_path):
                     continue
 
-            # Check exclusion patterns
-            if self._matches_exclusion_patterns(file_path, exclusion_patterns):
-                continue
+                # Check language filter
+                if languages:
+                    file_language = self.get_language_from_file(file_path)
+                    if file_language not in languages:
+                        continue
 
-            source_files.append(file_path)
+                # Final exclusion check for file patterns (not directory patterns)
+                if self._matches_file_exclusion_patterns(file_path, exclusion_patterns):
+                    continue
 
-        return source_files
+                source_files.append(file_path)
+
+            if progress_callback:
+                progress_callback(f"✅ Completed: found {len(source_files)} source files in {files_processed} total files")
+            
+            logger.info(f"File discovery completed: found {len(source_files)} source files")
+            return source_files
+            
+        except Exception as e:
+            logger.error(f"File discovery failed: {e}", dir_path=str(dir_path))
+            if progress_callback:
+                progress_callback(f"❌ File discovery failed: {e}")
+            raise FileUtilityError(f"Could not discover files in {dir_path}: {e}") from e
+    
+# Remove the internal implementation method - it's now in the main method
 
     def apply_exclusion_patterns(self, files: List[Path],
                                 patterns: List[str]) -> List[Path]:
@@ -443,29 +546,33 @@ class FileUtilities:
         return [f for f in files if not self._matches_exclusion_patterns(f, patterns)]
 
     def _matches_exclusion_patterns(self, file_path: Path, patterns: List[str]) -> bool:
-        """Check if a file matches any exclusion pattern."""
+        """Check if a file matches any exclusion pattern (legacy method)."""
+        return self._matches_file_exclusion_patterns(file_path, patterns)
+
+    def _matches_file_exclusion_patterns(self, file_path: Path, patterns: List[str]) -> bool:
+        """Check if a file matches any file-specific exclusion pattern."""
         file_str = str(file_path)
         file_name = file_path.name
 
         for pattern in patterns:
+            # Skip directory-only patterns
+            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env',
+                          'vendor', 'target', 'build', 'dist', '.tox', '.pytest_cache',
+                          '.vscode', '.idea', '.cache']:
+                continue
+
             # Direct name match
             if pattern == file_name:
                 return True
 
-            # Directory name match
-            if pattern in file_path.parts:
-                return True
-
-            # Glob pattern match
+            # Glob pattern match for files
             if file_path.match(pattern):
                 return True
 
-            # Simple wildcard match
+            # Simple wildcard match for files
             if '*' in pattern:
                 import fnmatch
                 if fnmatch.fnmatch(file_name, pattern):
-                    return True
-                if fnmatch.fnmatch(file_str, pattern):
                     return True
 
         return False
@@ -820,9 +927,10 @@ def get_file_info(file_path: Path) -> FileInfo:
     return file_utilities.get_file_info(file_path)
 
 
-def find_source_files(dir_path: Path, languages: Optional[List[str]] = None) -> List[Path]:
-    """Find source code files in directory."""
-    return file_utilities.find_source_files(dir_path, languages)
+def find_source_files(dir_path: Path, languages: Optional[List[str]] = None, 
+                     progress_callback=None) -> List[Path]:
+    """Find source code files in directory with progress feedback."""
+    return file_utilities.find_source_files(dir_path, languages, progress_callback=progress_callback)
 
 
 def safe_read_file(file_path: Path, encoding: str = 'utf-8') -> str:
