@@ -86,6 +86,8 @@ def test_load_testing():
         assert results.total_operations > 0, "No operations performed"
         assert results.success_rate >= 0, "Invalid success rate"
         assert results.duration_seconds > 0, "Invalid duration"
+        assert results.peak_memory_mb > 0, "Invalid memory usage"
+        assert results.peak_memory_mb < 8000, "Memory usage too high for Mac Mini M4"  # 8GB limit
         
         print(f"   📊 Load test completed:")
         print(f"      Operations: {results.total_operations}")

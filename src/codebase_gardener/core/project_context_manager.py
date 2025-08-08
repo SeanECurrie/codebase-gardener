@@ -358,6 +358,25 @@ class ProjectContextManager:
         with self._lock:
             return self._active_context.project_id if self._active_context else None
 
+    def get_context(self, project_id: str) -> ProjectContext:
+        """Get context for a specific project (for load testing compatibility)."""
+        with self._lock:
+            # Check if it's in cache
+            if project_id in self._context_cache:
+                context = self._context_cache.pop(project_id)
+                self._context_cache[project_id] = context  # Move to end (LRU)
+                context.last_accessed = datetime.now()
+                return context
+            
+            # Load from disk or create new
+            context = self._load_context(project_id)
+            
+            # Add to cache and manage size
+            self._context_cache[project_id] = context
+            self._manage_cache()
+            
+            return context
+
     def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None) -> None:
         """Add a message to the current project's conversation."""
         with self._lock:

@@ -279,10 +279,14 @@ class PerformanceMonitor:
             # CPU metrics
             cpu_percent = psutil.cpu_percent(interval=None)
             
-            # Memory metrics
-            memory = psutil.virtual_memory()
-            memory_mb = memory.used / (1024 * 1024)
-            memory_percent = memory.percent
+            # Memory metrics - focus on current process instead of system
+            current_process = psutil.Process()
+            memory_info = current_process.memory_info()
+            memory_mb = memory_info.rss / (1024 * 1024)  # Resident Set Size in MB
+            
+            # System memory for context
+            system_memory = psutil.virtual_memory()
+            memory_percent = (memory_mb / (system_memory.total / (1024 * 1024))) * 100
             
             # Disk metrics
             disk = psutil.disk_usage('/')

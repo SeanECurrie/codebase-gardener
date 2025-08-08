@@ -1,22 +1,22 @@
 {
   "startup_time": {
     "benchmark_name": "startup_time",
-    "timestamp": 1754593427.832072,
-    "duration_seconds": 0.0006930828094482422,
+    "timestamp": 1754596804.094789,
+    "duration_seconds": 0.0002300739288330078,
     "success": true,
-    "response_time_avg": 0.0006930828094482422,
-    "response_time_p95": 0.0006930828094482422,
-    "response_time_p99": 0.0006930828094482422,
-    "throughput_ops_per_sec": 1442.829033367733,
-    "memory_usage_mb": 6095.375,
-    "cpu_usage_percent": 19.1,
+    "response_time_avg": 0.0002300739288330078,
+    "response_time_p95": 0.0002300739288330078,
+    "response_time_p99": 0.0002300739288330078,
+    "throughput_ops_per_sec": 4346.429015544041,
+    "memory_usage_mb": 6327.328125,
+    "cpu_usage_percent": 36.1,
     "baseline_comparison": {
-      "response_time_avg_change": 62.311557788944725,
-      "response_time_p95_change": 62.311557788944725,
-      "response_time_p99_change": 62.311557788944725,
-      "throughput_change": -38.39009287925697,
-      "memory_change": -2.790901660586488,
-      "cpu_change": -9.47867298578199
+      "response_time_avg_change": -66.80426556587548,
+      "response_time_p95_change": -66.80426556587548,
+      "response_time_p99_change": -66.80426556587548,
+      "throughput_change": 201.24352331606215,
+      "memory_change": 3.8053954842811146,
+      "cpu_change": 89.00523560209423
     },
     "details": {
       "startup_components": "all"
@@ -24,22 +24,22 @@
   },
   "project_switching": {
     "benchmark_name": "project_switching",
-    "timestamp": 1754593429.898186,
-    "duration_seconds": 1.0557360649108887,
+    "timestamp": 1754596806.135411,
+    "duration_seconds": 1.0352208614349365,
     "success": true,
-    "response_time_avg": 0.10556623935699463,
-    "response_time_p95": 0.11007046699523926,
-    "response_time_p99": 0.1100893497467041,
-    "throughput_ops_per_sec": 9.4720644035629,
-    "memory_usage_mb": 6111.359375,
-    "cpu_usage_percent": 22.3,
+    "response_time_avg": 0.1035165786743164,
+    "response_time_p95": 0.10507912635803222,
+    "response_time_p99": 0.10509003639221191,
+    "throughput_ops_per_sec": 9.659774423535898,
+    "memory_usage_mb": 6250.75,
+    "cpu_usage_percent": 30.7,
     "baseline_comparison": {
-      "response_time_avg_change": -1.7978495978225741,
-      "response_time_p95_change": 0.02006168426288188,
-      "response_time_p99_change": 0.03607595518089423,
-      "throughput_change": 1.8304781442422609,
-      "memory_change": -2.2395129059429575,
-      "cpu_change": -19.20289855072464
+      "response_time_avg_change": -1.9415872869610007,
+      "response_time_p95_change": -4.534677442063472,
+      "response_time_p99_change": -4.541141687179293,
+      "throughput_change": 1.9817223783063764,
+      "memory_change": 2.2808448406783475,
+      "cpu_change": 37.66816143497757
     },
     "details": {
       "switches_performed": 10
@@ -47,22 +47,22 @@
   },
   "load_test": {
     "benchmark_name": "load_test",
-    "timestamp": 1754593431.874646,
-    "duration_seconds": 1.0155720710754395,
+    "timestamp": 1754596808.111264,
+    "duration_seconds": 1.005047082901001,
     "success": false,
     "response_time_avg": 0,
     "response_time_p95": 0,
     "response_time_p99": 0,
     "throughput_ops_per_sec": 0.0,
-    "memory_usage_mb": 6095.1875,
-    "cpu_usage_percent": 15.6,
+    "memory_usage_mb": 6287.8125,
+    "cpu_usage_percent": 41.5,
     "baseline_comparison": {
       "response_time_avg_change": 0.0,
       "response_time_p95_change": 0.0,
       "response_time_p99_change": 0.0,
       "throughput_change": 0.0,
-      "memory_change": -3.173425139682831,
-      "cpu_change": -38.095238095238095
+      "memory_change": 3.1602801390441226,
+      "cpu_change": 166.02564102564102
     },
     "details": {
       "total_operations": 0,

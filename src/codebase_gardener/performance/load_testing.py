@@ -160,9 +160,12 @@ class LoadTestRunner:
         """Setup test projects and environment."""
         print("📋 Setting up test environment...")
         
+        # Create unique timestamp for this test run to avoid conflicts
+        timestamp = int(time.time() * 1000)  # milliseconds for uniqueness
+        
         # Create test projects with varying sizes
         for i in range(self.config.max_concurrent_projects):
-            project_id = f"load_test_project_{i}"
+            project_id = f"load_test_project_{i}_{timestamp}"
             self._create_test_project(project_id, size_factor=i + 1)
             self.test_projects.append(project_id)
         
@@ -181,9 +184,18 @@ class LoadTestRunner:
             file_path = temp_dir / f"test_file_{file_idx}.py"
             self._generate_test_file(file_path, lines_per_file)
         
-        # Register project
+        # Register project (remove existing if present)
         registry = get_project_registry()
-        registry.register_project(project_id, str(temp_dir))
+        
+        # Remove existing project if it exists to prevent conflicts
+        existing_project = registry.get_project(project_id)
+        if existing_project:
+            try:
+                registry.remove_project(project_id)
+            except Exception as e:
+                print(f"⚠️  Warning: Could not remove existing project {project_id}: {e}")
+        
+        registry.register_project(project_id, temp_dir)
     
     def _generate_test_file(self, file_path: Path, num_lines: int):
         """Generate a test Python file with specified number of lines."""
@@ -254,8 +266,9 @@ class LoadTestRunner:
         """Test handling large codebases."""
         print("📊 Running large codebase test...")
         
-        # Create a large test project
-        large_project_id = "large_codebase_test"
+        # Create a large test project with unique name
+        timestamp = int(time.time() * 1000)
+        large_project_id = f"large_codebase_test_{timestamp}"
         self._create_large_test_project(large_project_id)
         
         # Test operations on large project
@@ -288,9 +301,18 @@ class LoadTestRunner:
             if file_idx % 10 == 0:
                 print(f"   Generated {file_idx}/{num_files} files...")
         
-        # Register project
+        # Register project (remove existing if present)
         registry = get_project_registry()
-        registry.register_project(project_id, str(temp_dir))
+        
+        # Remove existing project if it exists to prevent conflicts
+        existing_project = registry.get_project(project_id)
+        if existing_project:
+            try:
+                registry.remove_project(project_id)
+            except Exception as e:
+                print(f"⚠️  Warning: Could not remove existing project {project_id}: {e}")
+        
+        registry.register_project(project_id, temp_dir)
         self.test_projects.append(project_id)
     
     def _run_concurrent_operations_test(self):
@@ -451,7 +473,7 @@ class LoadTestRunner:
     def _perform_analysis_request(self, project_id: str):
         """Simulate code analysis request."""
         vector_manager = get_project_vector_store_manager()
-        vector_manager.switch_to_project(project_id)
+        vector_manager.switch_project(project_id)
         
         # Simulate vector search
         # Note: This would normally perform actual vector operations
@@ -559,10 +581,15 @@ class LoadTestRunner:
         for project_id in self.test_projects:
             try:
                 project_info = registry.get_project(project_id)
-                if project_info and Path(project_info.source_path).exists():
-                    shutil.rmtree(project_info.source_path)
-                registry.remove_project(project_id)
+                if project_info:
+                    source_path = Path(project_info.source_path)
+                    if source_path.exists():
+                        shutil.rmtree(source_path)
+                    registry.remove_project(project_id)
             except Exception as e:
                 print(f"⚠️  Cleanup warning for {project_id}: {str(e)}")
+        
+        # Clear the test projects list to prevent conflicts in subsequent runs
+        self.test_projects.clear()
         
         print("✅ Test environment cleaned up")

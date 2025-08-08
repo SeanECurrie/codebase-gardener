@@ -10,6 +10,24 @@
 - **WHEN** optimizing performance → READ `.kiro/steering/ai-ml-architecture-context.md` for architecture context
 - **WHEN** starting any task → READ previous memory files in `.kiro/memory/`
 
+Dynamic Gap Closure Framework (Enhanced as of Task 04)
+
+**CRITICAL**: All tasks now use a two-phase gap closure system to prevent gap accumulation:
+
+### Gap Management Process
+
+1. **Gap Validation Phase** (start of task): Review `.kiro/docs/task_completion_test_log.md` and address gaps from previous task that align with current scope
+2. **Gap Closure Phase** (end of task): Apply decision criteria to close quick wins (<30min, low risk) before completion
+3. **Target**: >60% gap closure rate within 2 tasks of identification
+
+### Quick Reference
+
+- **Quick Win** → Implement now (improves current validation)
+- **Next Task** → Document for next task (aligns with scope)
+- **Defer** → Document with rationale (out of scope/major changes)
+
+**See `.kiro/docs/gap-closure-criteria.md` for complete framework and templates.**
+
 ## Production Readiness Tasks
 
 - [x] 1. Comprehensive System Audit and Code Review
@@ -63,22 +81,22 @@
 
   Test deployment procedures in clean environment, validate all scripts and automation work correctly, ensure monitoring and alerting function properly, verify backup and recovery procedures, create production deployment checklist, update `.kiro/docs/production-deployment-guide.md` with complete procedures, commit deployment kit and documentation, and complete memory file with deployment best practices and operational procedures.
 
-- [x] 4. Performance Optimization and Production Load Testing
+- [ ] 4. Performance Optimization and Production Load Testing
 
-  Analyze current performance metrics from task completion test log, review Mac Mini M4 optimization targets from steering documents, examine system resource usage patterns, and create feature branch `git checkout -b perf/production-optimization`. Use MCP tools to research performance testing tools and optimization techniques, create memory file `performance_optimization_task4.md`.
+  Validate system performance under realistic load conditions and optimize for production deployment on Mac Mini M4. Analyze current system capabilities from tasks 1-3, create realistic performance benchmarks for implemented functionality, and create feature branch `git checkout -b perf/load-testing-optimization`. Use MCP tools to research performance testing best practices and optimization techniques, create memory file `performance_optimization_task4.md`.
 
   **Implementation:**
 
-  - Implement comprehensive load testing for multiple projects and large codebases
-  - Optimize memory usage and resource management for production workloads
-  - Validate performance targets under realistic production conditions
-  - Implement performance monitoring and alerting for production deployment
-  - Create capacity planning guidelines and scaling recommendations
-  - Optimize startup time and project switching performance
-  - Implement performance regression testing and benchmarking
+  - Create realistic load testing framework that tests actual implemented functionality (project registry, component initialization, basic operations)
+  - Establish performance benchmarks for Mac Mini M4 deployment (memory usage <500MB, initialization <5s, operation response <1s)
+  - Implement comprehensive integration testing under load conditions with concurrent operations
+  - Optimize memory usage and resource management for production deployment
+  - Create performance monitoring and diagnostic tools for ongoing optimization
+  - Validate component coordination and error handling under stress conditions
+  - Document performance characteristics and optimization recommendations for production
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  Run comprehensive performance tests under various load conditions, validate all optimization targets are met or exceeded, ensure performance monitoring works correctly, create performance tuning guidelines, update `.kiro/docs/performance-guide.md` with optimization procedures, commit performance improvements and monitoring, and complete memory file with performance optimization strategies and benchmarking results.
+  Test all performance optimizations under realistic load conditions, validate memory usage stays within Mac Mini M4 constraints, ensure all integration tests achieve >95% success rate, verify component coordination works correctly under stress, create performance documentation and monitoring procedures, update `.kiro/docs/performance-guide.md` with optimization results, commit performance improvements and testing framework, and complete memory file with performance best practices and optimization strategies.
 
 - [ ] 5. Operational Readiness and Monitoring Setup
 

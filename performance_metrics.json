@@ -1,193 +1,193 @@
 {
-  "export_timestamp": 1754593421.1761851,
+  "export_timestamp": 1754596797.512598,
   "duration_seconds": 10,
   "metrics_count": 11,
   "metrics": [
     {
-      "timestamp": 1754593416.064134,
-      "cpu_usage_percent": 23.3,
-      "memory_usage_mb": 6311.734375,
+      "timestamp": 1754596792.408077,
+      "cpu_usage_percent": 34.6,
+      "memory_usage_mb": 6368.859375,
       "memory_usage_percent": 80.3,
-      "disk_usage_percent": 92.1,
+      "disk_usage_percent": 90.7,
       "disk_io_read_mb": 0.0,
       "disk_io_write_mb": 0.0,
       "network_sent_mb": 0.0,
       "network_recv_mb": 0.0,
-      "process_count": 568,
+      "process_count": 580,
       "load_average": [
-        2.908203125,
-        3.0947265625,
-        3.13623046875
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593416.56755,
-      "cpu_usage_percent": 27.6,
-      "memory_usage_mb": 6324.984375,
-      "memory_usage_percent": 80.5,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.42677174304279464,
-      "disk_io_write_mb": 3.7711103112508764,
-      "network_sent_mb": 0.01163922935571258,
-      "network_recv_mb": 0.00969935779642715,
-      "process_count": 568,
+      "timestamp": 1754596792.9116192,
+      "cpu_usage_percent": 23.0,
+      "memory_usage_mb": 6365.53125,
+      "memory_usage_percent": 80.3,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 4.786403845816945,
+      "disk_io_write_mb": 0.8843598677846544,
+      "network_sent_mb": 0.0019393856749663472,
+      "network_recv_mb": 0.0019393856749663472,
+      "process_count": 580,
       "load_average": [
-        2.908203125,
-        3.0947265625,
-        3.13623046875
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593417.079844,
-      "cpu_usage_percent": 25.9,
-      "memory_usage_mb": 6316.890625,
-      "memory_usage_percent": 80.4,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.03050006119931103,
-      "disk_io_write_mb": 1.037002080776575,
-      "network_sent_mb": 0.015250030599655516,
-      "network_recv_mb": 0.009531269124784697,
-      "process_count": 568,
-      "load_average": [
-        2.908203125,
-        3.0947265625,
-        3.13623046875
-      ]
-    },
-    {
-      "timestamp": 1754593417.585877,
-      "cpu_usage_percent": 23.6,
-      "memory_usage_mb": 6288.859375,
-      "memory_usage_percent": 80.2,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.21614205429935884,
-      "disk_io_write_mb": 0.28561628603843847,
-      "network_sent_mb": 0.030877436328479838,
-      "network_recv_mb": 0.011579038623179938,
-      "process_count": 568,
-      "load_average": [
-        2.908203125,
-        3.0947265625,
-        3.13623046875
-      ]
-    },
-    {
-      "timestamp": 1754593418.0966039,
-      "cpu_usage_percent": 19.8,
-      "memory_usage_mb": 6280.28125,
-      "memory_usage_percent": 80.1,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.1529682411639927,
-      "disk_io_write_mb": 0.5353888440739745,
-      "network_sent_mb": 0.0019121030145499089,
-      "network_recv_mb": 0.0076484120581996355,
-      "process_count": 568,
-      "load_average": [
-        2.908203125,
-        3.0947265625,
-        3.13623046875
-      ]
-    },
-    {
-      "timestamp": 1754593418.6060202,
-      "cpu_usage_percent": 26.5,
-      "memory_usage_mb": 6356.953125,
-      "memory_usage_percent": 81.0,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.0460085358039957,
-      "disk_io_write_mb": 0.28371930412464014,
-      "network_sent_mb": 0.0019170223251664875,
-      "network_recv_mb": 0.0019170223251664875,
-      "process_count": 568,
-      "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
-      ]
-    },
-    {
-      "timestamp": 1754593419.113666,
-      "cpu_usage_percent": 18.8,
-      "memory_usage_mb": 6357.109375,
-      "memory_usage_percent": 81.0,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 0.0,
+      "timestamp": 1754596793.4177432,
+      "cpu_usage_percent": 25.7,
+      "memory_usage_mb": 6369.40625,
+      "memory_usage_percent": 80.3,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 1.3969525700972,
       "disk_io_write_mb": 0.0,
-      "network_sent_mb": 0.001923708248227873,
-      "network_recv_mb": 0.003847416496455746,
-      "process_count": 568,
+      "network_sent_mb": 0.0019294925001342542,
+      "network_recv_mb": 0.0038589850002685084,
+      "process_count": 580,
       "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593419.626147,
-      "cpu_usage_percent": 33.6,
-      "memory_usage_mb": 6345.171875,
-      "memory_usage_percent": 81.9,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 40.496930217757516,
-      "disk_io_write_mb": 1.9284252484646436,
-      "network_sent_mb": 0.009527792729568397,
-      "network_recv_mb": 0.007622234183654718,
-      "process_count": 568,
+      "timestamp": 1754596793.921528,
+      "cpu_usage_percent": 26.7,
+      "memory_usage_mb": 6372.1875,
+      "memory_usage_percent": 80.3,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.1240608851661621,
+      "disk_io_write_mb": 0.038769026614425654,
+      "network_sent_mb": 0.0019384513307212827,
+      "network_recv_mb": 0.0019384513307212827,
+      "process_count": 580,
       "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593420.138697,
-      "cpu_usage_percent": 72.3,
-      "memory_usage_mb": 6724.546875,
-      "memory_usage_percent": 85.9,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 109.74541699421803,
-      "disk_io_write_mb": 660.3473195056262,
-      "network_sent_mb": 0.003810604756743682,
-      "network_recv_mb": 0.003810604756743682,
-      "process_count": 575,
+      "timestamp": 1754596794.429706,
+      "cpu_usage_percent": 27.1,
+      "memory_usage_mb": 6380.1875,
+      "memory_usage_percent": 80.4,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.48426683581575575,
+      "disk_io_write_mb": 1.6603434370825911,
+      "network_sent_mb": 0.021138631722116323,
+      "network_recv_mb": 0.009608468964598329,
+      "process_count": 580,
       "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593420.6405802,
-      "cpu_usage_percent": 54.3,
-      "memory_usage_mb": 6718.984375,
-      "memory_usage_percent": 85.5,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 96.68271600070497,
-      "disk_io_write_mb": 7.611954294694048,
-      "network_sent_mb": 0.06810286306602548,
-      "network_recv_mb": 0.11674776525604368,
-      "process_count": 576,
+      "timestamp": 1754596794.93365,
+      "cpu_usage_percent": 24.2,
+      "memory_usage_mb": 6369.453125,
+      "memory_usage_percent": 80.4,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.4030706431489137,
+      "disk_io_write_mb": 0.007751358522094494,
+      "network_sent_mb": 0.0,
+      "network_recv_mb": 0.003875679261047247,
+      "process_count": 580,
       "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
+        4.2451171875,
+        3.796875,
+        3.330078125
       ]
     },
     {
-      "timestamp": 1754593421.152268,
-      "cpu_usage_percent": 32.4,
-      "memory_usage_mb": 6643.6875,
-      "memory_usage_percent": 84.9,
-      "disk_usage_percent": 92.1,
-      "disk_io_read_mb": 22.696031169886506,
-      "disk_io_write_mb": 1.572614336023081,
-      "network_sent_mb": 0.009542562718586656,
-      "network_recv_mb": 0.03435322578691197,
-      "process_count": 577,
+      "timestamp": 1754596795.43975,
+      "cpu_usage_percent": 24.5,
+      "memory_usage_mb": 6368.4375,
+      "memory_usage_percent": 80.4,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 2.0222043522113196,
+      "disk_io_write_mb": 0.0077183372221806094,
+      "network_sent_mb": 0.0019295843055451524,
+      "network_recv_mb": 0.009647921527725761,
+      "process_count": 580,
       "load_average": [
-        2.91552734375,
-        3.0927734375,
-        3.13525390625
+        4.14501953125,
+        3.783203125,
+        3.328125
+      ]
+    },
+    {
+      "timestamp": 1754596795.946662,
+      "cpu_usage_percent": 24.3,
+      "memory_usage_mb": 6371.78125,
+      "memory_usage_percent": 80.4,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.33135682783331133,
+      "disk_io_write_mb": 7.929445949778542,
+      "network_sent_mb": 0.0019264931850773914,
+      "network_recv_mb": 0.0,
+      "process_count": 580,
+      "load_average": [
+        4.14501953125,
+        3.783203125,
+        3.328125
+      ]
+    },
+    {
+      "timestamp": 1754596796.44869,
+      "cpu_usage_percent": 26.6,
+      "memory_usage_mb": 6397.40625,
+      "memory_usage_percent": 80.2,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.12449505095319373,
+      "disk_io_write_mb": 2.521024781802173,
+      "network_sent_mb": 0.001945235171143652,
+      "network_recv_mb": 0.003890470342287304,
+      "process_count": 580,
+      "load_average": [
+        4.14501953125,
+        3.783203125,
+        3.328125
+      ]
+    },
+    {
+      "timestamp": 1754596796.951356,
+      "cpu_usage_percent": 24.7,
+      "memory_usage_mb": 6404.15625,
+      "memory_usage_percent": 80.2,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.15542129472844435,
+      "disk_io_write_mb": 0.007771064736422218,
+      "network_sent_mb": 0.0019427661841055544,
+      "network_recv_mb": 0.0019427661841055544,
+      "process_count": 580,
+      "load_average": [
+        4.14501953125,
+        3.783203125,
+        3.328125
+      ]
+    },
+    {
+      "timestamp": 1754596797.4580128,
+      "cpu_usage_percent": 26.7,
+      "memory_usage_mb": 6406.390625,
+      "memory_usage_percent": 80.2,
+      "disk_usage_percent": 90.7,
+      "disk_io_read_mb": 0.007709852790939417,
+      "disk_io_write_mb": 0.007709852790939417,
+      "network_sent_mb": 0.0019274631977348542,
+      "network_recv_mb": 0.0038549263954697085,
+      "process_count": 580,
+      "load_average": [
+        4.14501953125,
+        3.783203125,
+        3.328125
       ]
     }
   ]
