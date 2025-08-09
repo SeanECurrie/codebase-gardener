@@ -27,9 +27,9 @@ class SimpleFileUtilities:
     DEFAULT_EXCLUSION_PATTERNS = [
         # Version control
         '.git', '.svn', '.hg', '.bzr',
-        # Dependencies
-        'node_modules', '__pycache__', '.pytest_cache', 'venv', 'env', '.env',
-        'vendor', 'target', 'build', 'dist', '.tox',
+        # Dependencies and virtual environments
+        'node_modules', '__pycache__', '.pytest_cache', 'venv', 'env', '.env', '.venv',
+        'vendor', 'target', 'build', 'dist', '.tox', 'site-packages',
         # IDE files
         '.vscode', '.idea', '*.swp', '*.swo', '*~', '.DS_Store',
         # Compiled files
@@ -65,9 +65,9 @@ class SimpleFileUtilities:
                     return True
                     
             # Common directory exclusions
-            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env', 
+            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env', '.venv',
                           'vendor', 'target', 'build', 'dist', '.tox', '.pytest_cache',
-                          '.vscode', '.idea', '.cache']:
+                          '.vscode', '.idea', '.cache', 'site-packages']:
                 if dir_name == pattern:
                     return True
         

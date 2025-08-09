@@ -15,6 +15,14 @@ if [ "$(printf '%s\n' "$required_version" "$python_version" | sort -V | head -n1
     exit 1
 fi
 
+# Create and activate virtual environment if not already active
+if [ -z "${VIRTUAL_ENV:-}" ]; then
+  echo "Creating virtual environment in .venv..."
+  python3 -m venv .venv
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
+
 # Install dependencies
 echo "Installing Python dependencies..."
 pip install --upgrade pip setuptools wheel

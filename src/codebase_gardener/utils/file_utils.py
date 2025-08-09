@@ -20,6 +20,7 @@ from enum import Enum
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
+import time as _time
 
 import structlog
 
@@ -30,6 +31,10 @@ logger = structlog.get_logger(__name__)
 
 
 # Remove timeout functionality - we want progress, not timeouts
+
+
+class FileDiscoveryTimeoutError(Exception):
+    """Raised when file discovery exceeds the provided timeout."""
 
 
 class FileType(Enum):
@@ -460,8 +465,8 @@ class FileUtilities:
         return False
 
     def find_source_files(self, dir_path: Path, languages: Optional[List[str]] = None,
-                         exclude_patterns: Optional[List[str]] = None, 
-                         progress_callback=None) -> List[Path]:
+                         exclude_patterns: Optional[List[str]] = None,
+                         progress_callback=None, timeout: Optional[int] = None) -> List[Path]:
         """
         Find source code files in a directory with progress feedback.
 
@@ -470,6 +475,7 @@ class FileUtilities:
             languages: List of languages to include (default: all)
             exclude_patterns: Additional exclusion patterns
             progress_callback: Optional callback for progress updates
+            timeout: Optional maximum number of seconds to run before aborting
 
         Returns:
             List of source code file paths
@@ -488,6 +494,7 @@ class FileUtilities:
         source_files = []
         exclusion_patterns = self.DEFAULT_EXCLUSION_PATTERNS.copy()
         files_processed = 0
+        start_time = _time.time()
 
         if exclude_patterns:
             exclusion_patterns.extend(exclude_patterns)
@@ -495,6 +502,14 @@ class FileUtilities:
         try:
             # Pass exclusion patterns to scan_directory to avoid scanning excluded directories
             for file_path in self.scan_directory(dir_path, recursive=True, exclude_patterns=exclusion_patterns):
+                # Enforce optional timeout
+                if timeout is not None and (_time.time() - start_time) >= timeout:
+                    if progress_callback:
+                        progress_callback("⏰ File discovery timeout reached, aborting scan")
+                    raise FileDiscoveryTimeoutError(
+                        f"File discovery exceeded timeout of {timeout} seconds"
+                    )
+
                 files_processed += 1
                 
                 # Provide progress feedback every 50 files for more responsive feedback

@@ -7,7 +7,7 @@ This guide provides detailed instructions for setting up the Codebase Gardener M
 ### System Requirements
 
 - **Operating System**: macOS 12+ (optimized for Mac Mini M4)
-- **Python**: 3.8 or higher
+- **Python**: 3.11 or higher
 - **Memory**: 8GB RAM minimum, 16GB recommended
 - **Storage**: 10GB free space for models and data
 - **Network**: Internet connection for initial setup
@@ -61,12 +61,12 @@ cd codebase-gardener-mvp
 
 ```bash
 # Create virtual environment
-python3 -m venv venv
+python3 -m venv .venv
 
 # Activate virtual environment
-source venv/bin/activate  # macOS/Linux
+source .venv/bin/activate  # macOS/Linux
 # or
-venv\Scripts\activate     # Windows
+.venv\Scripts\activate     # Windows
 ```
 
 ### 3. Install Dependencies
