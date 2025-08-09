@@ -132,189 +132,177 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 
 ---
 
-- [ ] **Task 2: Implement DirectGPTOSSClient with HuggingFace Integration**
+- [ ] **Task 2: Add Streaming Support to Existing OllamaClient**
 
-**Priority**: High | **Effort**: 4 hours | **Dependencies**: Task 1
+**Priority**: High | **Effort**: 2 hours | **Dependencies**: Task 1
 
 **🚨 CRITICAL REMINDER: Read your core-development-principles.md steering file RIGHT NOW before starting**
 
-**Objective**: Create direct HuggingFace Transformers integration for gpt-oss:20b with 8-bit quantization and streaming support.
+**Objective**: Enhance the existing working OllamaClient to support streaming responses and better user feedback.
 
-**Context**: Replace Ollama middleman with direct model access for better control, streaming, and memory efficiency on Mac Mini M4.
+**Context**: You already have a working OllamaClient with gpt-oss model. Instead of rebuilding with HuggingFace (which caused disk space issues), enhance what works.
 
-**⚠️ BEFORE YOU DO ANYTHING: What's actually broken? What's the simplest fix? Don't build complex solutions!**
+**⚠️ CORE PRINCIPLE: Make it work first - enhance existing working code, don't rebuild**
 
 **Implementation Steps**:
 
-1. **🔍 READ CODE FIRST - DON'T TEST YET** (MANDATORY FIRST STEPS)
+1. **🔍 READ EXISTING CODE FIRST** (MANDATORY FIRST STEPS)
 
-   **🚨 STOP: Check your core-development-principles.md - are you about to overthink this?**
+   **🚨 REMINDER: You already have working OllamaClient - enhance, don't rebuild**
    
-   - Read existing `src/codebase_gardener/core/ollama_client.py` - what interface exists?
-   - Read existing `src/codebase_gardener/main.py` - how is OllamaClient used?
-   - **REMINDER**: You already have a working OllamaClient - enhance, don't rebuild
-   - Use Sequential Thinking to analyze what's actually needed vs what seems complex
-   - Use Context7 to get HuggingFace Transformers documentation
-   - Use Bright Data to find simple gpt-oss:20b examples (not complex ones!)
+   - Read existing `src/codebase_gardener/models/ollama_client.py` completely
+   - Check what streaming support Ollama already provides
+   - **EXISTING CODE**: You have a working client that connects to gpt-oss
+   - Use Sequential Thinking: What's the simplest way to add streaming?
+   - Use Context7 to get Ollama streaming API documentation
+   - Use Bright Data to find Ollama streaming examples
 
-2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
+2. **🎯 IDENTIFY WHAT'S ACTUALLY MISSING**
 
-   **🚨 REMINDER: Focus on broken functionality, not performance optimization**
+   **🚨 Focus on functionality gaps, not architectural changes**
    
-   - Is OllamaClient not working? Or is it just not optimal?
-   - What specific user workflow is broken that this fixes?
-   - **CHECK**: Does the user actually need direct HuggingFace integration to work?
-   - **EXISTING CODE**: You have `src/codebase_gardener/core/ollama_client.py` working
+   - Does OllamaClient support streaming? If not, add it
+   - Does the user see progress during long responses? If not, add it
+   - **CHECK**: What specific user experience is broken that streaming fixes?
+   - **EXISTING PATTERNS**: Follow the same interface patterns already established
 
-3. **🔧 SIMPLEST FIX FIRST**
+3. **🔧 ENHANCE EXISTING CLIENT**
 
-   **⚠️ REMINDER: Don't build elaborate solutions - what's the obvious fix?**
+   **⚠️ REMINDER: Enhance existing code, don't rebuild from scratch**
    
    ```python
-   # SIMPLE: Extend existing pattern, don't rebuild
-   class DirectGPTOSSClient:
-       def __init__(self, settings: Settings):
-           # Follow EXACT same pattern as OllamaClient
-           self.settings = settings
-           self.model = None
-           self.tokenizer = None
+   # SIMPLE: Add streaming method to existing OllamaClient
+   class OllamaClient:
+       # Keep all existing methods working
+       
+       def generate_stream(self, prompt: str, **kwargs) -> Iterator[str]:
+           """Add streaming to existing client"""
+           response = ollama.generate(
+               model=self.model_name,
+               prompt=prompt,
+               stream=True,  # Use Ollama's built-in streaming
+               **kwargs
+           )
+           for chunk in response:
+               yield chunk['response']
    ```
 
-   **🚨 STOP: Are you building complex quantization logic? Keep it simple first!**
+   **🚨 STOP: Are you rebuilding the whole client? Just add streaming method!**
 
-4. **✅ VERIFY IT WORKS**
+4. **✅ VERIFY STREAMING WORKS**
 
-   **REMINDER: Make it work first, optimize later**
+   **REMINDER: Test with existing working setup**
    
-   - Can you load the model at all?
-   - Can you generate a simple response?
-   - **DON'T**: Add streaming, quantization, optimization yet
-   - **DO**: Get basic model loading and generation working
+   - Can you get streaming responses from existing gpt-oss model?
+   - Does it work with existing codebase analysis workflow?
+   - **DON'T**: Change existing non-streaming methods
+   - **DO**: Add streaming as additional option
 
-5. **🔄 THEN AND ONLY THEN: Add Features**
+5. **🔄 ADD PROGRESS FEEDBACK**
 
-   **🚨 Check core-development-principles.md again - are you optimizing before it works?**
+   **🚨 Only after basic streaming works**
    
-   - Add streaming only after basic generation works
-   - Add quantization only after streaming works
-   - **EXISTING PATTERNS**: Follow the same interface as OllamaClient
-
-**🚨 CYCLICAL REMINDER: Every 30 minutes, ask yourself:**
-- Am I fixing what's actually broken?
-- Am I building the simplest solution that works?
-- Have I read the existing code to understand what's there?
+   - Add progress indicators during analysis
+   - Show tokens being generated in real-time
+   - **EXISTING PATTERNS**: Use existing logging and UI patterns
 
 **Real Testing Requirements**:
 
-1. **Test Basic Loading First**: Can you load gpt-oss:20b at all? Don't worry about optimization yet
-2. **Test Simple Generation**: Can you get any response from the model?
-3. **THEN Test Streaming**: Only after basic generation works
+1. **Test with Existing Setup**: Use current gpt-oss model via Ollama - no new downloads
+2. **Test Streaming Response**: User can see response generating token by token
+3. **Test with Real Codebase**: Stream analysis of `/Users/seancurrie/Desktop/MCP/notion_schema_tool/`
 
 **Task Complete When User Can**:
 
-- Load the DirectGPTOSSClient and get a basic response (streaming can come later)
-- See that it works at all before worrying about performance
-- **REMINDER**: Working functionality > Fast functionality
+- See streaming responses in the chat interface (tokens appearing in real-time)
+- Get progress feedback during codebase analysis
+- Use existing gpt-oss model without any new downloads or disk space issues
+- **REMINDER**: Working streaming > Perfect streaming
 
-**🚨 FINAL REMINDER: Check your core-development-principles.md before marking complete**
+**🚨 FINAL REMINDER: Enhance existing working code, don't rebuild from scratch**
 
 ---
 
-- [ ] **Task 3: Enhance Gradio Interface with Streaming Support**
+- [ ] **Task 3: Enhance Gradio Interface with Streaming Chat**
 
-**Priority**: High | **Effort**: 3 hours | **Dependencies**: Task 2
+**Priority**: High | **Effort**: 2 hours | **Dependencies**: Task 2
 
 **🚨 CRITICAL REMINDER: Read your core-development-principles.md steering file RIGHT NOW**
 
-**Objective**: Add streaming chat interface and parameter controls to the existing Gradio UI.
+**Objective**: Connect the streaming OllamaClient to the existing Gradio interface for real-time chat.
 
-**Context**: Enhance existing Gradio interface to support streaming responses and provide controls for model parameters.
+**Context**: You have working OllamaClient (Task 1) and streaming support (Task 2). Now connect them to the existing Gradio UI.
 
-**⚠️ STOP: What's actually broken with the current UI? Don't add features until basic functionality works!**
+**⚠️ CORE PRINCIPLE: Enhance existing working UI, don't rebuild**
 
 **Implementation Steps**:
 
-1. **🔍 READ EXISTING CODE FIRST - NO TESTING YET**
+1. **🔍 READ EXISTING CODE FIRST**
 
-   **🚨 REMINDER: You already have a working Gradio interface - don't rebuild it!**
+   **🚨 REMINDER: You already have a working Gradio interface - enhance it**
    
-   - Read `src/codebase_gardener/ui/gradio_app.py` completely
-   - Read `src/codebase_gardener/main.py` to see how UI is launched
-   - **EXISTING CODE**: You have a working Gradio interface from Task 16
-   - **CHECK**: Does the current interface work at all? Fix that first!
-   - Use Sequential Thinking: What's the simplest way to add streaming?
+   - Read existing `src/codebase_gardener/ui/gradio_app.py` completely
+   - Check how current chat function works
+   - **EXISTING CODE**: You have working UI components from previous tasks
+   - Use Sequential Thinking: What's the simplest way to add streaming to existing chat?
 
-2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
+2. **🎯 IDENTIFY WHAT NEEDS CONNECTING**
 
-   **🚨 Check core-development-principles.md: Are you optimizing before it works?**
+   **🚨 Focus on connecting working pieces, not rebuilding**
    
-   - Does the current chat interface work with basic responses?
-   - Can users actually chat with the system right now?
-   - **REMINDER**: Fix broken functionality before adding streaming
-   - **SIMPLE QUESTION**: What's the most obvious thing that needs to work?
+   - Does current chat interface connect to OllamaClient?
+   - Can you replace non-streaming calls with streaming calls?
+   - **SIMPLE QUESTION**: What's the minimal change to show streaming responses?
 
-3. **🔧 SIMPLEST FIX FIRST**
+3. **🔧 CONNECT STREAMING TO EXISTING CHAT**
 
-   **⚠️ REMINDER: Don't build elaborate streaming systems - what's the obvious approach?**
+   **⚠️ REMINDER: Modify existing chat function, don't rebuild interface**
    
    ```python
-   # SIMPLE: Enhance existing chat function, don't rebuild
-   def enhanced_chat(message, history, codebase):
-       # Use EXISTING chat logic first
-       response = existing_chat_function(message, history, codebase)
-       return response  # Get this working before streaming
+   # SIMPLE: Update existing chat function to use streaming
+   def chat_with_streaming(message, history, codebase_path):
+       # Use existing codebase analysis logic
+       context = get_existing_context(codebase_path)
+       
+       # Replace: response = ollama_client.generate(prompt)
+       # With: streaming response
+       response_parts = []
+       for chunk in ollama_client.generate_stream(prompt):
+           response_parts.append(chunk)
+           yield "".join(response_parts)  # Show partial response
    ```
 
-   **🚨 STOP: Are you building complex streaming logic? Make basic chat work first!**
+4. **✅ VERIFY STREAMING CHAT WORKS**
 
-4. **✅ VERIFY BASIC CHAT WORKS**
-
-   **REMINDER: Make it work, then make it stream**
+   **REMINDER: Test with existing working components**
    
-   - Can user open the interface?
-   - Can user send a message and get any response?
-   - **DON'T**: Add streaming, sliders, fancy features yet
-   - **DO**: Get basic question/answer working
+   - Can user see responses appearing token by token?
+   - Does it work with existing codebase analysis?
+   - **DON'T**: Add complex UI features yet
+   - **DO**: Get basic streaming chat working
 
-5. **🔄 THEN ADD STREAMING (IF BASIC WORKS)**
+5. **🔄 ADD SIMPLE PROGRESS FEEDBACK**
 
-   **🚨 Check core-development-principles.md: Still focusing on what works?**
+   **🚨 Only after streaming works**
    
-   ```python
-   # ONLY after basic chat works
-   def add_streaming_to_working_chat():
-       # Enhance the working chat, don't rebuild
-       pass
-   ```
-
-**🚨 CYCLICAL REMINDER: Every 20 minutes, ask yourself:**
-- Does the basic chat interface work at all?
-- Am I adding features to something that's already broken?
-- Have I tested the simplest possible interaction first?
-
-**⚠️ MID-TASK CHECKPOINT: Check your core-development-principles.md again**
-
-6. **🎛️ ADD SIMPLE CONTROLS (ONLY IF CHAT WORKS)**
-
-   **REMINDER: Simple sliders, not complex parameter systems**
-   
-   - Add one slider at a time
-   - Test each slider works before adding the next
-   - **EXISTING PATTERNS**: Follow the same UI patterns already in the code
+   - Show "Analyzing codebase..." during file discovery
+   - Show "Generating response..." during model inference
+   - **EXISTING PATTERNS**: Use existing UI feedback patterns
 
 **Real Testing Requirements**:
 
-1. **Test Basic Chat First**: Can user ask a question and get any response?
-2. **Test Interface Loading**: Does the Gradio interface open without errors?
-3. **THEN Test Streaming**: Only after basic chat works
+1. **Test Streaming Chat**: User sees response appearing word by word
+2. **Test with Real Codebase**: Stream analysis of actual codebase directory
+3. **Test Existing Features Still Work**: Non-streaming features remain functional
 
 **Task Complete When User Can**:
 
-- Open the interface and have a basic conversation (streaming is bonus)
-- Get responses that make sense (fancy features are bonus)
-- **REMINDER**: Working chat > Streaming chat
+- Open the web interface and see streaming responses in real-time
+- Analyze a codebase and see streaming feedback about the code
+- Get immediate visual feedback that the system is working
+- **REMINDER**: Working streaming > Perfect streaming
 
-**🚨 FINAL REMINDER: Check your core-development-principles.md before marking complete**
+**🚨 FINAL REMINDER: Connect existing working pieces, don't rebuild**
 
 ---
 

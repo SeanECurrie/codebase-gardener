@@ -23,8 +23,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from ..config.settings import Settings
 from ..core.project_registry import ProjectRegistry, get_project_registry
-from ..models.ollama_client import OllamaClient
-from ..models.peft_manager import PeftManager
+# DISABLED: Complex components not needed for simple auditor
+# from ..models.ollama_client import OllamaClient
+# from ..models.peft_manager import PeftManager
 from ..utils.error_handling import (
     CodebaseGardenerError,
     ModelError,
@@ -87,8 +88,8 @@ class DynamicModelLoader:
     def __init__(
         self,
         settings: Settings,
-        ollama_client: Optional[OllamaClient] = None,
-        peft_manager: Optional[PeftManager] = None,
+        ollama_client: Optional[Any] = None,  # DISABLED: Complex component
+        peft_manager: Optional[Any] = None,  # DISABLED: Complex component
         project_registry: Optional[ProjectRegistry] = None
     ):
         """
@@ -96,13 +97,14 @@ class DynamicModelLoader:
 
         Args:
             settings: Application settings
-            ollama_client: Optional Ollama client instance
-            peft_manager: Optional PEFT manager instance
+            ollama_client: DISABLED - Complex component not needed for simple auditor
+            peft_manager: DISABLED - Complex component not needed for simple auditor
             project_registry: Optional project registry instance
         """
         self.settings = settings
-        self.ollama_client = ollama_client or OllamaClient(settings)
-        self.peft_manager = peft_manager or PeftManager(settings)
+        # DISABLED: Complex components not needed for simple auditor
+        self.ollama_client = None  # ollama_client or OllamaClient(settings)
+        self.peft_manager = None   # peft_manager or PeftManager(settings)
         self.project_registry = project_registry or get_project_registry()
 
         # Adapter cache with LRU ordering
