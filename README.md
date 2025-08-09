@@ -20,18 +20,12 @@ python codebase_auditor.py
 # Quick development workflow
 ruff check --fix && pytest -q
 
-# Code quality checks
-black . && isort . && mypy src/ && ruff .
+# Testing
+pytest -q tests/test_single_file_auditor.py
+python -m pytest -q tests/test_project_structure.py
 
-# Run all tests
-pytest
-
-# Run specific test categories
-pytest -m unit          # Unit tests only
-pytest -m integration   # Integration tests only
-
-# Smoke test CLI functionality
-python scripts/smoke_cli.py
+# Smoke test (no Ollama needed)
+PYTHONPATH=. python scripts/smoke_cli.py
 
 # Setup development environment
 pip install -e ".[dev]"
@@ -71,19 +65,19 @@ Available commands: analyze, chat, export, status, help, quit
 
 ## Troubleshooting
 
-**Ollama not running:** Start with `ollama serve`  
-**Model missing:** Install with `ollama pull llama3.2:3b`  
-**Import errors:** Ensure dependencies with `pip install ollama`  
+**Ollama not running:** Start with `ollama serve`
+**Model missing:** Install with `ollama pull llama3.2:3b`
+**Import errors:** Ensure dependencies with `pip install ollama`
 **Permission errors:** Check file/directory access permissions
 
 ## Development Status
 
-✅ **Working:** Interactive CLI analysis tool  
-🚧 **In Progress:** Enhanced file processing and analysis depth  
+✅ **Working:** Interactive CLI analysis tool
+🚧 **In Progress:** Enhanced file processing and analysis depth
 📋 **Planned:** VS Code extension, multi-project comparison
 
 ## Architecture Notes
 
-**Current Focus:** Single-file CLI tool (`codebase_auditor.py`)  
-**Deferred:** Complex multi-project system with LoRA training, vector stores, and web UI  
+**Current Focus:** Single-file CLI tool (`codebase_auditor.py`)
+**Deferred:** Complex multi-project system with LoRA training, vector stores, and web UI
 **Rationale:** Prioritizing working CLI functionality over advanced features

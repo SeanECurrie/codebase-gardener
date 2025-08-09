@@ -2,30 +2,42 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## MVP Scope
 
-Codebase Gardener is an AI-powered codebase analysis tool that creates project-specific intelligence through specialized LoRA adapters. The project has two main interfaces:
+**Current Focus**: Single-file CLI tool only (`codebase_auditor.py` + `simple_file_utils.py`)
 
-1. **Single-file Auditor** (`codebase_auditor.py`) - A simple, working interactive CLI tool for immediate codebase analysis
-2. **Full Gardener System** (`src/codebase_gardener/`) - A complex multi-project system (partially implemented/disabled components)
+The project is scoped to MVP - a working interactive CLI for immediate codebase analysis. Complex system components in `*_DISABLED/` directories are parked for post-MVP development.
+
+**Core Components:**
+1. **Single-file Auditor** (`codebase_auditor.py`) - Main interactive CLI with retry logic
+2. **File Utilities** (`simple_file_utils.py`) - Source file discovery and filtering
 
 ## Quick Development Commands
 
-### Testing and Validation
+## How to Run
+
+### Lint/Format
 ```bash
-# Run all tests
-pytest
-
-# Run specific test categories
-pytest -m unit        # Unit tests only
-pytest -m integration # Integration tests only
-
-# Run single-file auditor tests
-python tests/test_single_file_auditor.py
-
-# Test basic project structure
-python -m pytest tests/test_project_structure.py -v
+ruff check --fix && ruff format
 ```
+
+### Tests
+```bash
+pytest -q tests/test_single_file_auditor.py
+python -m pytest -q tests/test_project_structure.py
+```
+
+### Smoke (no Ollama needed)
+```bash
+PYTHONPATH=. python scripts/smoke_cli.py
+```
+
+### Run CLI (requires Ollama running & model present)
+```bash
+python codebase_auditor.py
+```
+
+**Note:** CLI now includes retry behavior for Ollama connections with exponential backoff and clearer error messages.
 
 ### Code Quality
 ```bash
@@ -104,7 +116,7 @@ The codebase uses a multi-stage file filtering approach:
 2. **Filtering**: Exclude dependencies, build files, binaries using patterns in `EXCLUDE_PATTERNS`
 3. **Size-based Analysis**: Different analysis depth based on project size:
    - Small (≤5 files): Brief analysis
-   - Medium (6-100 files): Comprehensive analysis  
+   - Medium (6-100 files): Comprehensive analysis
    - Large (>100 files): High-level overview
 
 ### AI Integration
@@ -123,7 +135,7 @@ from simple_file_utils import SimpleFileUtilities
 utils = SimpleFileUtilities()
 files = utils.discover_files(directory_path)
 
-# Use enhanced FileUtilities for advanced operations  
+# Use enhanced FileUtilities for advanced operations
 from codebase_gardener.utils.file_utils import FileUtilities
 utils = FileUtilities()
 ```
