@@ -20,7 +20,9 @@ from pathlib import Path
 from typing import Any
 
 # Add the src directory to Python path for imports
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+src_path = str(Path(__file__).parent / "src")
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
 
 try:
     import ollama

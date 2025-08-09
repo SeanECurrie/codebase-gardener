@@ -163,7 +163,7 @@ class SimpleFileUtilities:
 
             return source_files
 
-        except Exception as e:
+        except (OSError, PermissionError, UnicodeDecodeError) as e:
             if progress_callback:
                 progress_callback(f"❌ File discovery failed: {e}")
             raise ValueError(f"Could not discover files in {dir_path}: {e}")
