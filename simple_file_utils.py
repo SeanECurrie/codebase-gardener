@@ -166,7 +166,7 @@ class SimpleFileUtilities:
         except (OSError, PermissionError, UnicodeDecodeError) as e:
             if progress_callback:
                 progress_callback(f"❌ File discovery failed: {e}")
-            raise ValueError(f"Could not discover files in {dir_path}: {e}")
+            raise ValueError(f"Could not discover files in {dir_path}: {e}") from e
 
 
 def test_simple_file_utils():

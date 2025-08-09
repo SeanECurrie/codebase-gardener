@@ -3,7 +3,7 @@
 Codebase Intelligence Auditor - Single File Implementation
 
 A simple, pragmatic codebase analysis tool that uses gpt-oss-20b via Ollama
-to provide comprehensive intelligence about code architecture, tech debt, 
+to provide comprehensive intelligence about code architecture, tech debt,
 and documentation gaps.
 
 Usage:
@@ -40,7 +40,7 @@ except ImportError:
 class CodebaseAuditor:
     """
     Single-file codebase auditor that analyzes code using gpt-oss-20b.
-    
+
     Provides comprehensive analysis, chat functionality, and markdown export.
     """
 
@@ -101,7 +101,7 @@ Keep the analysis concise and proportional to the codebase size."""
         elif depth == "focused":
             specific_prompt = """This is a focused project. Analyze the main aspects:
 - **Primary Purpose**: What this codebase accomplishes
-- **Architecture**: Key components and their relationships  
+- **Architecture**: Key components and their relationships
 - **Code Quality**: Notable patterns, issues, or strengths
 - **Recommendations**: 2-3 most important improvements"""
 
@@ -141,11 +141,11 @@ Focus on the big picture rather than detailed code issues."""
     def analyze_codebase(self, directory_path: str, progress_callback=None) -> str:
         """
         Analyze the entire codebase and store results.
-        
+
         Args:
             directory_path: Path to the codebase directory
             progress_callback: Optional callback for progress updates
-            
+
         Returns:
             Summary message about the analysis
         """
@@ -315,10 +315,10 @@ Focus on the big picture rather than detailed code issues."""
     def chat(self, question: str) -> str:
         """
         Ask questions about the analyzed codebase.
-        
+
         Args:
             question: User's question about the codebase
-            
+
         Returns:
             AI response based on the analysis
         """
@@ -344,7 +344,7 @@ Focus on the big picture rather than detailed code issues."""
     def export_markdown(self) -> str:
         """
         Export analysis results as formatted markdown.
-        
+
         Returns:
             Markdown-formatted analysis report
         """
@@ -355,8 +355,8 @@ Focus on the big picture rather than detailed code issues."""
 
         markdown_report = f"""# Codebase Analysis Report
 
-**Generated:** {timestamp}  
-**Directory:** `{self.analysis_results['directory_path']}`  
+**Generated:** {timestamp}
+**Directory:** `{self.analysis_results['directory_path']}`
 **Files Analyzed:** {self.analysis_results['file_count']}
 
 ---
@@ -491,7 +491,7 @@ def main():
                     else:
                         print(f"📝 {msg}")
 
-                result = auditor.analyze_codebase(directory, progress_callback=progress_callback)
+                auditor.analyze_codebase(directory, progress_callback=progress_callback)
                 print("\n✅ Analysis complete!")
                 print(f"{format_analysis_summary(auditor.analysis_results)}")
 

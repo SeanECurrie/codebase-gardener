@@ -335,7 +335,7 @@ def create_crotchety_interface() -> gr.Blocks:
             gr.Markdown("# ❌ Setup Required")
             gr.Markdown("""
             The gpt-oss:20b model is not available. Please:
-            
+
             1. Make sure Ollama is running: `brew services start ollama`
             2. Install the model: `ollama pull gpt-oss:20b`
             3. Restart this application
@@ -347,11 +347,11 @@ def create_crotchety_interface() -> gr.Blocks:
         title="Crotchety Code Auditor",
         theme=gr.themes.Monochrome(),
         css="""
-        .crotchety-header { 
-            background: #2d3748; 
-            color: #e2e8f0; 
-            padding: 20px; 
-            border-radius: 8px; 
+        .crotchety-header {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
             margin-bottom: 20px;
         }
         .analysis-result {
@@ -366,9 +366,9 @@ def create_crotchety_interface() -> gr.Blocks:
         # Header
         gr.Markdown("""
         # 👴 Crotchety Code Auditor
-        
+
         *A brutally honest AI code reviewer powered by gpt-oss:20b*
-        
+
         I'm a veteran software engineer with 30+ years of experience. I hate clever code, love simple solutions, and will tell you exactly what's wrong with your codebase. No sugar-coating.
         """, elem_classes=["crotchety-header"])
 
