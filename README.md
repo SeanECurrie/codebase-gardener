@@ -25,6 +25,9 @@ python codebase_auditor.py
 
 # Smoke test (note: requires PYTHONPATH or sys.path fix)
 python scripts/smoke_cli.py
+
+# Install pre-commit hooks
+pip install pre-commit && pre-commit install
 ```
 
 ## Environment Variables
