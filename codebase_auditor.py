@@ -33,7 +33,9 @@ except ImportError:
 try:
     from simple_file_utils import SimpleFileUtilities
 except ImportError:
-    print("Error: Could not import SimpleFileUtilities. Make sure simple_file_utils.py is in the same directory.")
+    print(
+        "Error: Could not import SimpleFileUtilities. Make sure simple_file_utils.py is in the same directory."
+    )
     sys.exit(1)
 
 
@@ -51,7 +53,9 @@ class CodebaseAuditor:
         - OLLAMA_HOST: base URL for Ollama (default http://localhost:11434)
         - OLLAMA_MODEL: model name to use (default gpt-oss-20b)
         """
-        ollama_host = ollama_host or os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        ollama_host = ollama_host or os.environ.get(
+            "OLLAMA_HOST", "http://localhost:11434"
+        )
         self.model_name = model_name or os.environ.get("OLLAMA_MODEL", "gpt-oss-20b")
 
         self.client = ollama.Client(ollama_host)
@@ -133,10 +137,18 @@ Keep the analysis concise and proportional to the codebase size."""
 - **Strategic Recommendations**: Most important areas for improvement
 Focus on the big picture rather than detailed code issues."""
 
-        return base_prompt.format(
-            file_count=file_count,
-            size_desc=f"~{total_bytes//1024}KB" if total_bytes < 1024*1024 else f"~{total_bytes//(1024*1024)}MB"
-        ) + specific_prompt + "\n\nCodebase to analyze:\n{file_contents}"
+        return (
+            base_prompt.format(
+                file_count=file_count,
+                size_desc=(
+                    f"~{total_bytes // 1024}KB"
+                    if total_bytes < 1024 * 1024
+                    else f"~{total_bytes // (1024 * 1024)}MB"
+                ),
+            )
+            + specific_prompt
+            + "\n\nCodebase to analyze:\n{file_contents}"
+        )
 
     def analyze_codebase(self, directory_path: str, progress_callback=None) -> str:
         """
@@ -153,14 +165,21 @@ Focus on the big picture rather than detailed code issues."""
             # Input validation and sanitization
             if not directory_path or not directory_path.strip():
                 return "Error: Directory path cannot be empty."
-            
+
             dir_path = Path(directory_path).resolve()
-            
+
             # Security: Validate resolved path is safe
             try:
                 # Ensure we're not accessing system directories
                 str_path = str(dir_path)
-                if str_path in ['/', '/etc', '/usr', '/bin', '/sbin', '/root'] or str_path.startswith('/proc'):
+                if str_path in [
+                    "/",
+                    "/etc",
+                    "/usr",
+                    "/bin",
+                    "/sbin",
+                    "/root",
+                ] or str_path.startswith("/proc") or str_path.startswith("/private/etc"):
                     return "Error: Access to system directories is not allowed."
             except Exception:
                 return "Error: Invalid directory path."
@@ -174,8 +193,7 @@ Focus on the big picture rather than detailed code issues."""
             # Find source files using existing FileUtilities
             print("🔍 Discovering source files...")
             source_files = self.file_utils.find_source_files(
-                dir_path,
-                progress_callback=progress_callback
+                dir_path, progress_callback=progress_callback
             )
 
             if not source_files:
@@ -185,7 +203,9 @@ Focus on the big picture rather than detailed code issues."""
 
             # Optional preflight: verify model is available with a tiny check
             if progress_callback:
-                progress_callback(f"Verifying model '{self.model_name}' is available...")
+                progress_callback(
+                    f"Verifying model '{self.model_name}' is available..."
+                )
             if not self._preflight_model_check():
                 warn_msg = (
                     f"⚠️ Preflight for model '{self.model_name}' failed. Continuing anyway. "
@@ -198,7 +218,9 @@ Focus on the big picture rather than detailed code issues."""
 
             # Read and combine file contents with simple caps
             if progress_callback:
-                progress_callback(f"Reading up to {min(len(source_files), self.max_files)} source files (caps applied)...")
+                progress_callback(
+                    f"Reading up to {min(len(source_files), self.max_files)} source files (caps applied)..."
+                )
 
             file_contents, stats = self._read_and_combine_files_with_caps(
                 source_files, progress_callback, base_dir=dir_path
@@ -210,36 +232,39 @@ Focus on the big picture rather than detailed code issues."""
             # Send to model for analysis
             print(f"🤖 Analyzing codebase with {self.model_name}...")
             if progress_callback:
-                progress_callback(f"Sending codebase to {self.model_name} for analysis...")
+                progress_callback(
+                    f"Sending codebase to {self.model_name} for analysis..."
+                )
 
             # Generate context-appropriate prompt
-            analysis_prompt = self._generate_analysis_prompt(len(source_files), stats['bytes_included'])
+            analysis_prompt = self._generate_analysis_prompt(
+                len(source_files), stats["bytes_included"]
+            )
             full_prompt = analysis_prompt.format(file_contents=file_contents)
 
-            response = self.client.generate(
-                model=self.model_name,
-                prompt=full_prompt
-            )
+            response = self.client.generate(model=self.model_name, prompt=full_prompt)
 
-            analysis_text = response['response']
+            analysis_text = response["response"]
 
             # Store results
             self.analysis_results = {
-                'full_analysis': analysis_text,
-                'file_list': [str(f) for f in source_files],
-                'directory_path': str(dir_path),
-                'timestamp': datetime.now().isoformat(),
-                'file_count': len(source_files),
-                'caps': stats
+                "full_analysis": analysis_text,
+                "file_list": [str(f) for f in source_files],
+                "directory_path": str(dir_path),
+                "timestamp": datetime.now().isoformat(),
+                "file_count": len(source_files),
+                "caps": stats,
             }
 
             print("✅ Analysis complete!")
             if progress_callback:
-                progress_callback("Analysis complete! You can now ask questions or export the report.")
+                progress_callback(
+                    "Analysis complete! You can now ask questions or export the report."
+                )
 
             return f"Analysis complete! Analyzed {len(source_files)} files. Ask me questions or export markdown report."
 
-        except Exception as e:
+        except Exception:
             # Security: Avoid exposing sensitive system information
             error_msg = "Analysis failed due to an internal error."
             print(f"❌ {error_msg}")
@@ -251,7 +276,7 @@ Focus on the big picture rather than detailed code issues."""
         self,
         source_files: list[Path],
         progress_callback=None,
-        base_dir: Path | None = None
+        base_dir: Path | None = None,
     ) -> tuple[str, dict[str, Any]]:
         """Read and combine files with simple caps to avoid huge prompts."""
         combined_content: list[str] = []
@@ -266,28 +291,34 @@ Focus on the big picture rather than detailed code issues."""
                 # Progress feedback every 10 files
                 if progress_callback and idx % 10 == 0:
                     progress_callback(
-                        f"Reading files... {idx}/{len(limited_files)} (total ~{total_bytes//1024} KB)"
+                        f"Reading files... {idx}/{len(limited_files)} (total ~{total_bytes // 1024} KB)"
                     )
 
-                with open(file_path, encoding='utf-8', errors='replace') as f:
+                with open(file_path, encoding="utf-8", errors="replace") as f:
                     content = f.read()
 
                 # Enforce per-file cap
-                content_bytes = content.encode('utf-8')
+                content_bytes = content.encode("utf-8")
                 if len(content_bytes) > self.max_file_bytes:
-                    content = content_bytes[: self.max_file_bytes].decode('utf-8', errors='ignore')
+                    content = content_bytes[: self.max_file_bytes].decode(
+                        "utf-8", errors="ignore"
+                    )
                     truncated_files += 1
                     content += "\n... [TRUNCATED] ...\n"
-                    content_bytes = content.encode('utf-8')
+                    content_bytes = content.encode("utf-8")
 
                 # Enforce total cap
                 if total_bytes + len(content_bytes) > self.max_total_bytes:
-                    combined_content.append("\n... [GLOBAL CONTENT LIMIT REACHED, REMAINING FILES SKIPPED] ...\n")
+                    combined_content.append(
+                        "\n... [GLOBAL CONTENT LIMIT REACHED, REMAINING FILES SKIPPED] ...\n"
+                    )
                     break
 
                 # Add file header and content
                 root = base_dir or (
-                    Path(self.analysis_results['directory_path']) if self.analysis_results else file_path.parent
+                    Path(self.analysis_results["directory_path"])
+                    if self.analysis_results
+                    else file_path.parent
                 )
                 try:
                     relative_path = file_path.relative_to(root)
@@ -303,16 +334,18 @@ Focus on the big picture rather than detailed code issues."""
                 continue
 
         if progress_callback:
-            progress_callback(f"Included {files_read} files (~{total_bytes//1024} KB). Truncated: {truncated_files}")
+            progress_callback(
+                f"Included {files_read} files (~{total_bytes // 1024} KB). Truncated: {truncated_files}"
+            )
 
         stats = {
-            'max_files': self.max_files,
-            'max_file_bytes': self.max_file_bytes,
-            'max_total_bytes': self.max_total_bytes,
-            'files_included': files_read,
-            'bytes_included': total_bytes,
-            'files_truncated': truncated_files,
-            'files_skipped': max(0, len(source_files) - files_read),
+            "max_files": self.max_files,
+            "max_file_bytes": self.max_file_bytes,
+            "max_total_bytes": self.max_total_bytes,
+            "files_included": files_read,
+            "bytes_included": total_bytes,
+            "files_truncated": truncated_files,
+            "files_skipped": max(0, len(source_files) - files_read),
         }
 
         return "\n".join(combined_content), stats
@@ -322,7 +355,7 @@ Focus on the big picture rather than detailed code issues."""
         try:
             test_prompt = "You are alive? Answer 'yes'."
             resp = self.client.generate(model=self.model_name, prompt=test_prompt)
-            return bool(resp and isinstance(resp, dict) and resp.get('response'))
+            return bool(resp and isinstance(resp, dict) and resp.get("response"))
         except Exception:
             return False
 
@@ -341,16 +374,13 @@ Focus on the big picture rather than detailed code issues."""
 
         try:
             full_prompt = self.chat_prompt.format(
-                previous_analysis=self.analysis_results['full_analysis'],
-                user_question=question
+                previous_analysis=self.analysis_results["full_analysis"],
+                user_question=question,
             )
 
-            response = self.client.generate(
-                model=self.model_name,
-                prompt=full_prompt
-            )
+            response = self.client.generate(model=self.model_name, prompt=full_prompt)
 
-            return response['response']
+            return response["response"]
 
         except Exception as e:
             return f"Chat failed: {str(e)}"
@@ -365,30 +395,38 @@ Focus on the big picture rather than detailed code issues."""
         if not self.analysis_results:
             return "Error: No analysis results to export. Please run analyze_codebase() first."
 
-        timestamp = datetime.fromisoformat(self.analysis_results['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.fromisoformat(self.analysis_results["timestamp"]).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
         markdown_report = f"""# Codebase Analysis Report
 
 **Generated:** {timestamp}
-**Directory:** `{self.analysis_results['directory_path']}`
-**Files Analyzed:** {self.analysis_results['file_count']}
+**Directory:** `{self.analysis_results["directory_path"]}`
+**Files Analyzed:** {self.analysis_results["file_count"]}
 
 ---
 
-{self.analysis_results['full_analysis']}
+{self.analysis_results["full_analysis"]}
 
 ---
 
 ## Files Analyzed
 
-The following {self.analysis_results['file_count']} source files were included in this analysis:
+The following {self.analysis_results["file_count"]} source files were included in this analysis:
 
 """
 
         # Add file list
-        for file_path in sorted(self.analysis_results['file_list']):
-            relative_path = Path(file_path).relative_to(self.analysis_results['directory_path'])
-            markdown_report += f"- `{relative_path}`\n"
+        for file_path in sorted(self.analysis_results["file_list"]):
+            try:
+                relative_path = Path(file_path).relative_to(
+                    self.analysis_results["directory_path"]
+                )
+                markdown_report += f"- `{relative_path}`\n"
+            except ValueError:
+                # Fallback to just the filename if relative path fails
+                markdown_report += f"- `{Path(file_path).name}`\n"
 
         markdown_report += """
 ---
@@ -430,11 +468,11 @@ def format_analysis_summary(analysis_results):
     if not analysis_results:
         return "No analysis completed yet."
 
-    caps = analysis_results.get('caps', {})
-    files_included = caps.get('files_included', 0)
-    files_skipped = caps.get('files_skipped', 0)
-    bytes_included = caps.get('bytes_included', 0)
-    files_truncated = caps.get('files_truncated', 0)
+    caps = analysis_results.get("caps", {})
+    files_included = caps.get("files_included", 0)
+    files_skipped = caps.get("files_skipped", 0)
+    bytes_included = caps.get("bytes_included", 0)
+    files_truncated = caps.get("files_truncated", 0)
 
     total_files = files_included + files_skipped
     truncated_note = f" ({files_truncated} truncated)" if files_truncated > 0 else ""
@@ -460,17 +498,17 @@ def main():
             if not command:
                 continue
 
-            if command.lower() in ['quit', 'exit', 'q']:
+            if command.lower() in ["quit", "exit", "q"]:
                 print("👋 Goodbye!")
                 break
 
-            elif command.lower() == 'help':
+            elif command.lower() == "help":
                 print_help()
 
-            elif command.lower() == 'status':
+            elif command.lower() == "status":
                 if auditor.analysis_results:
                     print(f"\n✅ {format_analysis_summary(auditor.analysis_results)}")
-                    files_list = auditor.analysis_results.get('file_list', [])
+                    files_list = auditor.analysis_results.get("file_list", [])
                     if files_list:
                         print(f"📁 Files analyzed: {len(files_list)} files")
                         if len(files_list) <= 10:
@@ -481,22 +519,24 @@ def main():
                                 print(f"   - {f}")
                             print(f"   ... and {len(files_list) - 5} more files")
                 else:
-                    print("❌ No analysis completed yet. Use 'analyze <directory>' to start.")
+                    print(
+                        "❌ No analysis completed yet. Use 'analyze <directory>' to start."
+                    )
 
-            elif command.startswith('analyze '):
+            elif command.startswith("analyze "):
                 directory = command[8:].strip()
                 if not directory:
                     print("❌ Please specify a directory to analyze")
                     print("   Example: analyze ./my-project")
                     continue
-                
+
                 # Input validation for directory argument
                 if len(directory) > 1000:  # Reasonable path length limit
                     print("❌ Directory path too long")
                     continue
-                
+
                 # Basic sanitization - remove potentially dangerous characters
-                if any(char in directory for char in ['|', '&', ';', '`', '$']):
+                if any(char in directory for char in ["|", "&", ";", "`", "$"]):
                     print("❌ Invalid characters in directory path")
                     continue
 
@@ -519,13 +559,13 @@ def main():
                 print("\n✅ Analysis complete!")
                 print(f"{format_analysis_summary(auditor.analysis_results)}")
 
-            elif command.startswith('chat '):
+            elif command.startswith("chat "):
                 question = command[5:].strip()
                 if not question:
                     print("❌ Please ask a question")
                     print("   Example: chat What are the main issues in this codebase?")
                     continue
-                
+
                 # Input validation for question
                 if len(question) > 5000:  # Reasonable question length limit
                     print("❌ Question too long (max 5000 characters)")
@@ -539,27 +579,27 @@ def main():
                 response = auditor.chat(question)
                 print(f"\n💭 Response:\n{response}")
 
-            elif command.startswith('export'):
+            elif command.startswith("export"):
                 if not auditor.analysis_results:
                     print("❌ No analysis available. Run 'analyze <directory>' first.")
                     continue
 
                 # Parse optional filename
-                parts = command.split(' ', 1)
+                parts = command.split(" ", 1)
                 if len(parts) > 1 and parts[1].strip():
                     filename = parts[1].strip()
-                    if not filename.endswith('.md'):
-                        filename += '.md'
+                    if not filename.endswith(".md"):
+                        filename += ".md"
                 else:
                     filename = f"codebase_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
                 report = auditor.export_markdown()
                 try:
-                    with open(filename, 'w', encoding='utf-8') as f:
+                    with open(filename, "w", encoding="utf-8") as f:
                         f.write(report)
                     print(f"📄 Report exported to: {filename}")
                     print(f"   Size: {len(report):,} characters")
-                except (OSError, IOError):
+                except OSError:
                     print("❌ Failed to write report file")
 
             else:

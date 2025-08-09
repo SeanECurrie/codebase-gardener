@@ -1,0 +1,319 @@
+{
+  "mvp_scope_version": "1.0",
+  "created": "2025-08-09T11:22:10.375441",
+  "description": "MVP scope configuration for Codebase Local LLM Advisor",
+  "mvp_components": {
+    "codebase_auditor.py": "Single-file interactive CLI tool - primary MVP interface",
+    "simple_file_utils.py": "File discovery and processing utilities",
+    "start_auditor.sh": "Shell script to start the auditor",
+    "pyproject.toml": "Project configuration and dependencies",
+    "requirements.txt": "Python dependencies",
+    "requirements-min.txt": "Minimal dependencies for MVP",
+    "setup.sh": "Environment setup script",
+    "README.md": "Main project documentation",
+    "CLAUDE.md": "Claude Code guidance",
+    "LICENSE": "Project license",
+    "tests/test_single_file_auditor.py": "Tests for MVP auditor",
+    "tests/test_project_structure.py": "Basic project structure tests",
+    "test_simple_auditor.py": "Simple auditor tests",
+    "test_basic_file_discovery.py": "File discovery tests",
+    "scripts/smoke_cli.py": "CLI smoke tests"
+  },
+  "non_mvp_components": {
+    "src/codebase_gardener_DISABLED/": "Complex multi-project system (already disabled)",
+    "deployment_DISABLED/": "Deployment infrastructure (already disabled)",
+    "scripts_DISABLED/": "Non-essential scripts (already disabled)",
+    "docs/": "Advanced documentation beyond MVP needs",
+    "CONTRIBUTING.md": "Contribution guidelines (not essential for MVP)",
+    "TODO.md": "Development todos (not essential for MVP)",
+    "TEST_PLAN.md": "Complex test planning (beyond MVP scope)",
+    "codebase-gardener-analysis.md": "Generated analysis report",
+    "codebase_audit_report.md": "Generated audit report",
+    "real-codebase-analysis.md": "Generated analysis",
+    "project-analysis.md": "Generated analysis",
+    "notion-schema-tool-analysis.md": "Generated analysis",
+    "final-demo.md": "Demo documentation",
+    "final-validation.md": "Validation documentation",
+    "test-report.md": "Test report",
+    "CLEANUP_CHANGES_LOG.md": "Cleanup log",
+    "ENHANCED_CROTCHETY_AUDITOR_SUMMARY.md": "Legacy auditor summary",
+    "crotchety_code_auditor.py": "Alternative auditor implementation",
+    "debug_file_discovery.py": "Debug utility",
+    "test_critical_fixes.py": "Critical fixes test",
+    "tests/integration/": "Integration tests beyond MVP scope",
+    "tests/performance/": "Performance tests beyond MVP scope",
+    "tests/test_config/": "Complex configuration tests",
+    "tests/test_core/": "Complex core system tests",
+    "tests/test_data/": "Data layer tests",
+    "tests/test_models/": "Model layer tests",
+    "tests/test_ui/": "UI tests",
+    "tests/test_utils/": "Utility tests beyond simple file utils"
+  },
+  "analysis": {
+    "mvp_present": [
+      {
+        "path": "codebase_auditor.py",
+        "description": "Single-file interactive CLI tool - primary MVP interface",
+        "type": "file"
+      },
+      {
+        "path": "simple_file_utils.py",
+        "description": "File discovery and processing utilities",
+        "type": "file"
+      },
+      {
+        "path": "start_auditor.sh",
+        "description": "Shell script to start the auditor",
+        "type": "file"
+      },
+      {
+        "path": "pyproject.toml",
+        "description": "Project configuration and dependencies",
+        "type": "file"
+      },
+      {
+        "path": "requirements.txt",
+        "description": "Python dependencies",
+        "type": "file"
+      },
+      {
+        "path": "requirements-min.txt",
+        "description": "Minimal dependencies for MVP",
+        "type": "file"
+      },
+      {
+        "path": "setup.sh",
+        "description": "Environment setup script",
+        "type": "file"
+      },
+      {
+        "path": "README.md",
+        "description": "Main project documentation",
+        "type": "file"
+      },
+      {
+        "path": "CLAUDE.md",
+        "description": "Claude Code guidance",
+        "type": "file"
+      },
+      {
+        "path": "LICENSE",
+        "description": "Project license",
+        "type": "file"
+      },
+      {
+        "path": "tests/test_single_file_auditor.py",
+        "description": "Tests for MVP auditor",
+        "type": "file"
+      },
+      {
+        "path": "tests/test_project_structure.py",
+        "description": "Basic project structure tests",
+        "type": "file"
+      },
+      {
+        "path": "test_simple_auditor.py",
+        "description": "Simple auditor tests",
+        "type": "file"
+      },
+      {
+        "path": "test_basic_file_discovery.py",
+        "description": "File discovery tests",
+        "type": "file"
+      },
+      {
+        "path": "scripts/smoke_cli.py",
+        "description": "CLI smoke tests",
+        "type": "file"
+      }
+    ],
+    "mvp_missing": [],
+    "non_mvp_present": [
+      {
+        "path": "docs/",
+        "description": "Advanced documentation beyond MVP needs",
+        "type": "directory"
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "description": "Contribution guidelines (not essential for MVP)",
+        "type": "file"
+      },
+      {
+        "path": "TODO.md",
+        "description": "Development todos (not essential for MVP)",
+        "type": "file"
+      },
+      {
+        "path": "TEST_PLAN.md",
+        "description": "Complex test planning (beyond MVP scope)",
+        "type": "file"
+      },
+      {
+        "path": "codebase-gardener-analysis.md",
+        "description": "Generated analysis report",
+        "type": "file"
+      },
+      {
+        "path": "codebase_audit_report.md",
+        "description": "Generated audit report",
+        "type": "file"
+      },
+      {
+        "path": "real-codebase-analysis.md",
+        "description": "Generated analysis",
+        "type": "file"
+      },
+      {
+        "path": "project-analysis.md",
+        "description": "Generated analysis",
+        "type": "file"
+      },
+      {
+        "path": "notion-schema-tool-analysis.md",
+        "description": "Generated analysis",
+        "type": "file"
+      },
+      {
+        "path": "final-demo.md",
+        "description": "Demo documentation",
+        "type": "file"
+      },
+      {
+        "path": "final-validation.md",
+        "description": "Validation documentation",
+        "type": "file"
+      },
+      {
+        "path": "test-report.md",
+        "description": "Test report",
+        "type": "file"
+      },
+      {
+        "path": "CLEANUP_CHANGES_LOG.md",
+        "description": "Cleanup log",
+        "type": "file"
+      },
+      {
+        "path": "ENHANCED_CROTCHETY_AUDITOR_SUMMARY.md",
+        "description": "Legacy auditor summary",
+        "type": "file"
+      },
+      {
+        "path": "crotchety_code_auditor.py",
+        "description": "Alternative auditor implementation",
+        "type": "file"
+      },
+      {
+        "path": "debug_file_discovery.py",
+        "description": "Debug utility",
+        "type": "file"
+      },
+      {
+        "path": "test_critical_fixes.py",
+        "description": "Critical fixes test",
+        "type": "file"
+      },
+      {
+        "path": "tests/integration/",
+        "description": "Integration tests beyond MVP scope",
+        "type": "directory"
+      },
+      {
+        "path": "tests/performance/",
+        "description": "Performance tests beyond MVP scope",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_config/",
+        "description": "Complex configuration tests",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_core/",
+        "description": "Complex core system tests",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_data/",
+        "description": "Data layer tests",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_models/",
+        "description": "Model layer tests",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_ui/",
+        "description": "UI tests",
+        "type": "directory"
+      },
+      {
+        "path": "tests/test_utils/",
+        "description": "Utility tests beyond simple file utils",
+        "type": "directory"
+      }
+    ],
+    "non_mvp_already_disabled": [
+      {
+        "path": "src/codebase_gardener_DISABLED/",
+        "description": "Complex multi-project system (already disabled)",
+        "type": "directory"
+      },
+      {
+        "path": "deployment_DISABLED/",
+        "description": "Deployment infrastructure (already disabled)",
+        "type": "directory"
+      },
+      {
+        "path": "scripts_DISABLED/",
+        "description": "Non-essential scripts (already disabled)",
+        "type": "directory"
+      }
+    ],
+    "unknown_files": [
+      {
+        "path": "mvp_scope.py",
+        "type": "file"
+      },
+      {
+        "path": "tests",
+        "type": "directory"
+      },
+      {
+        "path": "__pycache__",
+        "type": "directory"
+      },
+      {
+        "path": "docs",
+        "type": "directory"
+      },
+      {
+        "path": "deployment_DISABLED",
+        "type": "directory"
+      },
+      {
+        "path": "scripts_DISABLED",
+        "type": "directory"
+      },
+      {
+        "path": "scripts",
+        "type": "directory"
+      },
+      {
+        "path": "AGENTS.md",
+        "type": "file"
+      },
+      {
+        "path": "src",
+        "type": "directory"
+      }
+    ]
+  },
+  "commands": {
+    "run_mvp": "python codebase_auditor.py",
+    "test_mvp": "python tests/test_single_file_auditor.py",
+    "smoke_test": "python scripts/smoke_cli.py"
+  }
+}

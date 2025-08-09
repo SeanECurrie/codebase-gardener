@@ -214,3 +214,22 @@ tree-sitter-*/
 # Local configuration overrides
 local_config.yaml
 local_settings.py
+
+# Disabled/archived directories and files
+*_DISABLED/
+*_DISABLED.py
+*_DISABLED.md
+*_DISABLED.txt
+*_DISABLED.json
+*_DISABLED.yaml
+*_DISABLED.yml
+
+# Backup directories
+mvp_backup/
+backup/
+backups/
+
+# Temporary and cache files specific to this project
+.kiro/
+*.tmp
+*.cache

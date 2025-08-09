@@ -12,6 +12,7 @@ def test_basic_file_discovery(tmp_path: Path):
     (tmp_path / "node_modules" / "dep.js").write_text("// dependency")
 
     import sys
+
     sys.path.insert(0, str(Path(__file__).parents[1]))
     from simple_file_utils import SimpleFileUtilities
 
@@ -26,6 +27,7 @@ def test_basic_file_discovery(tmp_path: Path):
 def test_analysis_prompt_generation(tmp_path: Path):
     """Test analysis prompts adapt to project size."""
     import sys
+
     sys.path.insert(0, str(Path(__file__).parents[1]))
     from codebase_auditor import CodebaseAuditor
 
@@ -47,6 +49,7 @@ def test_analysis_prompt_generation(tmp_path: Path):
 def test_chat_functionality():
     """Test chat requires analysis first."""
     import sys
+
     sys.path.insert(0, str(Path(__file__).parents[1]))
 
     with patch("ollama.Client") as mock_client_cls:
@@ -54,6 +57,7 @@ def test_chat_functionality():
         mock_client.generate.return_value = {"response": "Mock chat response"}
 
         from codebase_auditor import CodebaseAuditor
+
         auditor = CodebaseAuditor(model_name="test-model")
 
         # Should fail without analysis
@@ -79,6 +83,7 @@ def test_single_file_auditor_basic(tmp_path: Path):
 
         # Import auditor
         import sys
+
         sys.path.insert(0, str(Path(__file__).parents[1]))
         from codebase_auditor import CodebaseAuditor
 
@@ -96,4 +101,3 @@ def test_single_file_auditor_basic(tmp_path: Path):
         md = auditor.export_markdown()
         assert "# Codebase Analysis Report" in md
         assert "Files Analyzed:" in md
-

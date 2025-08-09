@@ -14,20 +14,28 @@ python codebase_auditor.py
 ## Scripts
 
 ```bash
-# Lint and fix issues
-ruff check --fix
-
-# Run tests quickly
-pytest -q
-
-# Start interactive CLI
+# Start interactive CLI (main tool)
 python codebase_auditor.py
 
-# Smoke test (note: requires PYTHONPATH or sys.path fix)
+# Quick development workflow
+ruff check --fix && pytest -q
+
+# Code quality checks
+black . && isort . && mypy src/ && ruff .
+
+# Run all tests
+pytest
+
+# Run specific test categories
+pytest -m unit          # Unit tests only
+pytest -m integration   # Integration tests only
+
+# Smoke test CLI functionality
 python scripts/smoke_cli.py
 
-# Install pre-commit hooks
-pip install pre-commit && pre-commit install
+# Setup development environment
+pip install -e ".[dev]"
+pre-commit install
 ```
 
 ## Environment Variables
@@ -38,39 +46,44 @@ pip install pre-commit && pre-commit install
 ## Example Usage
 
 ```bash
-🔍 > analyze ./my-project
+$ python codebase_auditor.py
+🔍 Codebase Auditor - Interactive CLI
+
+> analyze ./my-project
 📊 Analysis Summary: 28/28 files, 156,789 bytes processed
 
-🔍 > chat What are the main architectural patterns?
-💭 Response: This React application follows component-based architecture...
+> chat What are the main architectural patterns?
+💭 This React application follows component-based architecture...
 
-🔍 > export project-analysis.md
+> export project-analysis.md
 📄 Report exported to: project-analysis.md
+
+> help
+Available commands: analyze, chat, export, status, help, quit
 ```
 
-**Features:**
-- Context-aware analysis (adapts to project size)
-- Smart file filtering (excludes node_modules, .git, etc.)
-- Interactive chat with your codebase
-- Markdown report export
+**Key Features:**
+- 🎯 Context-aware analysis (adapts to project size)
+- 🔍 Smart file filtering (excludes node_modules, .git, etc.)
+- 💬 Interactive chat with your codebase
+- 📄 Markdown report export
+- ⚡ Local-first (works offline with Ollama)
 
 ## Troubleshooting
 
-**Ollama not running:** Start with `ollama serve`
-**Model missing:** Install with `ollama pull llama3.2:3b`
+**Ollama not running:** Start with `ollama serve`  
+**Model missing:** Install with `ollama pull llama3.2:3b`  
+**Import errors:** Ensure dependencies with `pip install ollama`  
+**Permission errors:** Check file/directory access permissions
 
-## Roadmap
+## Development Status
 
-**Now:** Interactive CLI analysis  
-**Next:** VS Code extension  
-**Later:** Multi-project comparison
+✅ **Working:** Interactive CLI analysis tool  
+🚧 **In Progress:** Enhanced file processing and analysis depth  
+📋 **Planned:** VS Code extension, multi-project comparison
 
-## Deferred Components
+## Architecture Notes
 
-The following components are parked for post-MVP development:
-
-- `deployment_DISABLED/` - Docker & production deployment configs
-- `scripts_DISABLED/` - Advanced automation scripts  
-- `src/codebase_gardener_DISABLED/` - Complex multi-project system with LoRA training, vector stores, and web UI
-
-These were excluded to focus on the working CLI tool.
+**Current Focus:** Single-file CLI tool (`codebase_auditor.py`)  
+**Deferred:** Complex multi-project system with LoRA training, vector stores, and web UI  
+**Rationale:** Prioritizing working CLI functionality over advanced features

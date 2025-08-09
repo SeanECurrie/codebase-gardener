@@ -10,7 +10,6 @@ Simple Codebase Chat - The Core Experience
 from pathlib import Path
 
 import gradio as gr
-
 from src.codebase_gardener.config.settings import get_settings
 from src.codebase_gardener.core.training_pipeline import LoRATrainingPipeline
 

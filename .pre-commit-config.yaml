@@ -1,13 +1,20 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.0
+    rev: v0.1.15
     hooks:
       - id: ruff
         args: [--fix]
+        exclude: ^(.*_DISABLED/.*|.*_DISABLED\..*)$
       - id: ruff-format
+        exclude: ^(.*_DISABLED/.*|.*_DISABLED\..*)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: end-of-file-fixer
+        exclude: ^(.*_DISABLED/.*|.*_DISABLED\..*)$
       - id: trailing-whitespace
+        exclude: ^(.*_DISABLED/.*|.*_DISABLED\..*)$
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict

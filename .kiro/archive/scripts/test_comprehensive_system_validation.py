@@ -211,7 +211,6 @@ def test_performance_characteristics():
         import os
 
         import psutil
-
         from src.codebase_gardener.main import ApplicationContext
 
         process = psutil.Process(os.getpid())

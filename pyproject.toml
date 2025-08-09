@@ -138,6 +138,8 @@ extend-exclude = '''
   | \.venv
   | build
   | dist
+  | .*_DISABLED
+  | mvp_backup
 )/
 '''
 
@@ -147,6 +149,7 @@ profile = "black"
 multi_line_output = 3
 line_length = 88
 known_first_party = ["codebase_gardener"]
+skip_glob = ["*_DISABLED/*", "mvp_backup/*"]
 
 # MyPy configuration
 [tool.mypy]
@@ -219,7 +222,7 @@ exclude_lines = [
 [tool.ruff]
 target-version = "py311"
 line-length = 88
-extend-exclude = ["*_DISABLED/", ".kiro/"]
+extend-exclude = ["*_DISABLED/", ".kiro/", "mvp_backup/", "*_DISABLED.*"]
 
 [tool.ruff.lint]
 select = [
@@ -236,4 +239,4 @@ ignore = [
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
 ]
-per-file-ignores = {"__init__.py" = ["F401"], "tests/*" = ["B011"]}
+per-file-ignores = {"__init__.py" = ["F401"], "tests/*" = ["B011"], "*_DISABLED/*" = ["ALL"], "*_DISABLED.*" = ["ALL"]}

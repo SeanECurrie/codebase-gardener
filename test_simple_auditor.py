@@ -12,6 +12,7 @@ from pathlib import Path
 # Add src to path so we can import our modules
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+
 def test_file_utilities():
     """Test that FileUtilities works as expected."""
     print("Testing FileUtilities...")
@@ -30,8 +31,7 @@ def test_file_utilities():
 
         print(f"Testing file discovery in: {current_dir.absolute()}")
         source_files = file_utils.find_source_files(
-            current_dir,
-            progress_callback=progress_callback
+            current_dir, progress_callback=progress_callback
         )
 
         print(f"✓ Found {len(source_files)} source files")
@@ -40,7 +40,7 @@ def test_file_utilities():
         if source_files:
             print("  Example files found:")
             for i, file_path in enumerate(source_files[:5]):
-                print(f"    {i+1}. {file_path}")
+                print(f"    {i + 1}. {file_path}")
 
         return True
 
@@ -56,6 +56,7 @@ def test_basic_imports():
     try:
         # Test settings import
         from codebase_gardener.config.settings import Settings
+
         settings = Settings()
         print(f"✓ Settings loaded (data_dir: {settings.data_dir})")
 
@@ -75,10 +76,11 @@ def test_ollama_direct_usage():
 
     try:
         import ollama
+
         print("✓ ollama package is available")
 
         # Try to create a client (won't connect unless Ollama is running)
-        client = ollama.Client('http://localhost:11434')
+        ollama.Client("http://localhost:11434")
         print("✓ ollama.Client created successfully")
 
         print("  Note: Actual connection test requires Ollama to be running")

@@ -20,10 +20,8 @@ def test_enhanced_main_application():
     try:
         # Import the enhanced main application
         from click.testing import CliRunner
-        from codebase_gardener.main import (
-            ApplicationContext,
-            cli,
-        )
+
+        from codebase_gardener.main import ApplicationContext, cli
 
         print("1. Testing ApplicationContext initialization...")
 
@@ -205,6 +203,7 @@ def test_gap_closure_integration():
 
     try:
         from click.testing import CliRunner
+
         from codebase_gardener.main import cli
 
         runner = CliRunner()

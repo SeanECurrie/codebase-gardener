@@ -28,7 +28,7 @@ def test_basic_discovery():
 
         # Show first few files
         for i, file_path in enumerate(source_files[:5]):
-            print(f"  {i+1}. {file_path}")
+            print(f"  {i + 1}. {file_path}")
 
         if len(source_files) > 5:
             print(f"  ... and {len(source_files) - 5} more")
@@ -38,6 +38,7 @@ def test_basic_discovery():
     except Exception as e:
         print(f"❌ Failed: {e}")
         return False
+
 
 def test_target_directory():
     """Test with the target directory."""
@@ -60,13 +61,14 @@ def test_target_directory():
 
         # Show all files since it should be a smaller project
         for i, file_path in enumerate(source_files):
-            print(f"  {i+1}. {file_path}")
+            print(f"  {i + 1}. {file_path}")
 
         return len(source_files) > 0
 
     except Exception as e:
         print(f"❌ Failed: {e}")
         return False
+
 
 def test_simple_scan():
     """Test the most basic directory scan."""
@@ -90,7 +92,9 @@ def test_simple_scan():
         for i, file_path in enumerate(all_files[:10]):
             file_type = file_utils.detect_file_type(file_path)
             is_source = file_utils.is_source_code_file(file_path)
-            print(f"  {i+1}. {file_path.name} (type: {file_type}, source: {is_source})")
+            print(
+                f"  {i + 1}. {file_path.name} (type: {file_type}, source: {is_source})"
+            )
 
         if len(all_files) > 10:
             print(f"  ... and {len(all_files) - 10} more")
@@ -100,6 +104,7 @@ def test_simple_scan():
     except Exception as e:
         print(f"❌ Failed: {e}")
         return False
+
 
 if __name__ == "__main__":
     print("🧪 Basic File Discovery Test")
