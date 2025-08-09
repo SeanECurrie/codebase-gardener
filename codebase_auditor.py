@@ -15,9 +15,28 @@ Usage:
 
 import os
 import sys
+import time
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
+
+T = TypeVar("T")
+
+
+def with_retries(fn: Callable[[], T], attempts: int = 5, base_sleep: float = 0.5) -> T:
+    """
+    Retry `fn` with exponential backoff. Raises last error if all attempts fail.
+    """
+    last = None
+    for i in range(attempts):
+        try:
+            return fn()
+        except Exception as e:  # narrow this if you have a specific Ollama error class
+            last = e
+            time.sleep(base_sleep * (2**i))
+    raise last
+
 
 # Add the src directory to Python path for imports
 src_path = str(Path(__file__).parent / "src")
@@ -172,14 +191,19 @@ Focus on the big picture rather than detailed code issues."""
             try:
                 # Ensure we're not accessing system directories
                 str_path = str(dir_path)
-                if str_path in [
-                    "/",
-                    "/etc",
-                    "/usr",
-                    "/bin",
-                    "/sbin",
-                    "/root",
-                ] or str_path.startswith("/proc") or str_path.startswith("/private/etc"):
+                if (
+                    str_path
+                    in [
+                        "/",
+                        "/etc",
+                        "/usr",
+                        "/bin",
+                        "/sbin",
+                        "/root",
+                    ]
+                    or str_path.startswith("/proc")
+                    or str_path.startswith("/private/etc")
+                ):
                     return "Error: Access to system directories is not allowed."
             except Exception:
                 return "Error: Invalid directory path."
@@ -242,7 +266,9 @@ Focus on the big picture rather than detailed code issues."""
             )
             full_prompt = analysis_prompt.format(file_contents=file_contents)
 
-            response = self.client.generate(model=self.model_name, prompt=full_prompt)
+            response = with_retries(
+                lambda: self.client.generate(model=self.model_name, prompt=full_prompt)
+            )
 
             analysis_text = response["response"]
 
@@ -264,13 +290,17 @@ Focus on the big picture rather than detailed code issues."""
 
             return f"Analysis complete! Analyzed {len(source_files)} files. Ask me questions or export markdown report."
 
-        except Exception:
-            # Security: Avoid exposing sensitive system information
-            error_msg = "Analysis failed due to an internal error."
+        except Exception as e:
+            # Better error messaging with retry context
+            error_msg = (
+                "Ollama connection failed after retries. "
+                f"Ensure Ollama is running and model is pulled. "
+                f"Host={self.host}, Model={self.model_name}, Error={e}"
+            )
             print(f"❌ {error_msg}")
             if progress_callback:
                 progress_callback(f"❌ {error_msg}")
-            return error_msg
+            return f"Analysis failed: {error_msg}"
 
     def _read_and_combine_files_with_caps(
         self,
