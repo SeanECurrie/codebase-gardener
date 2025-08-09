@@ -219,6 +219,7 @@ exclude_lines = [
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+extend-exclude = ["*_DISABLED/", ".kiro/"]
 
 [tool.ruff.lint]
 select = [
