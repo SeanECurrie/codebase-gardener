@@ -150,10 +150,23 @@ Focus on the big picture rather than detailed code issues."""
             Summary message about the analysis
         """
         try:
+            # Input validation and sanitization
+            if not directory_path or not directory_path.strip():
+                return "Error: Directory path cannot be empty."
+            
             dir_path = Path(directory_path).resolve()
+            
+            # Security: Validate resolved path is safe
+            try:
+                # Ensure we're not accessing system directories
+                str_path = str(dir_path)
+                if str_path in ['/', '/etc', '/usr', '/bin', '/sbin', '/root'] or str_path.startswith('/proc'):
+                    return "Error: Access to system directories is not allowed."
+            except Exception:
+                return "Error: Invalid directory path."
 
             if not dir_path.exists() or not dir_path.is_dir():
-                return f"Error: Directory '{directory_path}' does not exist or is not accessible."
+                return "Error: Directory does not exist or is not accessible."
 
             if progress_callback:
                 progress_callback("Starting codebase analysis...")
@@ -227,7 +240,8 @@ Focus on the big picture rather than detailed code issues."""
             return f"Analysis complete! Analyzed {len(source_files)} files. Ask me questions or export markdown report."
 
         except Exception as e:
-            error_msg = f"Analysis failed: {str(e)}"
+            # Security: Avoid exposing sensitive system information
+            error_msg = "Analysis failed due to an internal error."
             print(f"❌ {error_msg}")
             if progress_callback:
                 progress_callback(f"❌ {error_msg}")
@@ -255,7 +269,7 @@ Focus on the big picture rather than detailed code issues."""
                         f"Reading files... {idx}/{len(limited_files)} (total ~{total_bytes//1024} KB)"
                     )
 
-                with open(file_path, encoding='utf-8', errors='ignore') as f:
+                with open(file_path, encoding='utf-8', errors='replace') as f:
                     content = f.read()
 
                 # Enforce per-file cap
@@ -475,9 +489,19 @@ def main():
                     print("❌ Please specify a directory to analyze")
                     print("   Example: analyze ./my-project")
                     continue
+                
+                # Input validation for directory argument
+                if len(directory) > 1000:  # Reasonable path length limit
+                    print("❌ Directory path too long")
+                    continue
+                
+                # Basic sanitization - remove potentially dangerous characters
+                if any(char in directory for char in ['|', '&', ';', '`', '$']):
+                    print("❌ Invalid characters in directory path")
+                    continue
 
                 if not os.path.exists(directory):
-                    print(f"❌ Directory not found: {directory}")
+                    print("❌ Directory not found")
                     continue
 
                 print(f"\n🔄 Starting analysis of: {directory}")
@@ -500,6 +524,11 @@ def main():
                 if not question:
                     print("❌ Please ask a question")
                     print("   Example: chat What are the main issues in this codebase?")
+                    continue
+                
+                # Input validation for question
+                if len(question) > 5000:  # Reasonable question length limit
+                    print("❌ Question too long (max 5000 characters)")
                     continue
 
                 if not auditor.analysis_results:
@@ -525,10 +554,13 @@ def main():
                     filename = f"codebase_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
                 report = auditor.export_markdown()
-                with open(filename, 'w', encoding='utf-8') as f:
-                    f.write(report)
-                print(f"📄 Report exported to: {filename}")
-                print(f"   Size: {len(report):,} characters")
+                try:
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(report)
+                    print(f"📄 Report exported to: {filename}")
+                    print(f"   Size: {len(report):,} characters")
+                except (OSError, IOError):
+                    print("❌ Failed to write report file")
 
             else:
                 print(f"❌ Unknown command: {command}")
@@ -537,8 +569,8 @@ def main():
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
             break
-        except Exception as e:
-            print(f"❌ Error: {e}")
+        except Exception:
+            print("❌ An unexpected error occurred")
             print("   Type 'help' for available commands")
 
 

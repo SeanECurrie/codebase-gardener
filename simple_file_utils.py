@@ -97,7 +97,7 @@ class SimpleFileUtilities:
                         )
 
         except (OSError, PermissionError):
-            # Skip directories we can't access
+            # Skip directories we can't access - no logging to avoid info disclosure
             pass
 
     def find_source_files(self, dir_path: Path, languages: list[str] | None = None,
@@ -163,10 +163,10 @@ class SimpleFileUtilities:
 
             return source_files
 
-        except (OSError, PermissionError, UnicodeDecodeError) as e:
+        except (OSError, PermissionError, UnicodeDecodeError):
             if progress_callback:
-                progress_callback(f"❌ File discovery failed: {e}")
-            raise ValueError(f"Could not discover files in {dir_path}: {e}") from e
+                progress_callback("❌ File discovery failed due to access or encoding issues")
+            raise ValueError(f"Could not discover files in {dir_path}: Access denied or encoding error")
 
 
 def test_simple_file_utils():
