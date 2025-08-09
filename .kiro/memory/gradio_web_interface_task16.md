@@ -138,15 +138,15 @@ def initialize_components():
 def switch_project(project_id: str, progress=gr.Progress()) -> Tuple[str, str, str]:
     """Handle project switching across all components."""
     progress(0.1, desc="Starting project switch...")
-    
+
     # Update current project
     app_state["current_project"] = project_id
-    
+
     # Switch each component with progress updates
     progress(0.3, desc="Switching conversation context...")
     if app_state["context_manager"]:
         context_success = app_state["context_manager"].switch_project(project_id)
-    
+
     # Continue with other components...
     progress(1.0, desc="Project switch complete!")
     return status, success_msg, ""
@@ -160,7 +160,7 @@ def handle_chat(message: str, history: List[Dict[str, str]], project_id: str) ->
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "Please select a project first."})
         return history, ""
-    
+
     # Process message and add to history
     history.append({"role": "user", "content": message})
     history.append({"role": "assistant", "content": response})

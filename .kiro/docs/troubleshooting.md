@@ -539,23 +539,23 @@ if [ "$confirm" = "yes" ]; then
     echo "Stopping services..."
     pkill -f "python.*codebase_gardener"
     pkill ollama
-    
+
     echo "Removing data directory..."
     rm -rf ~/.codebase-gardener/
-    
+
     echo "Clearing Python cache..."
     find . -name "__pycache__" -exec rm -rf {} + 2>/dev/null
     find . -name "*.pyc" -delete 2>/dev/null
-    
+
     echo "Reinstalling application..."
     pip uninstall -y codebase-gardener
     pip install -e ".[dev]"
-    
+
     echo "Restarting Ollama..."
     ollama serve &
     sleep 5
     ollama pull codellama:7b
-    
+
     echo "System reset complete!"
 else
     echo "Reset cancelled."
@@ -610,28 +610,28 @@ echo "Collecting debug information..."
     echo "=== System Information ==="
     uname -a
     sw_vers
-    
+
     echo "=== Python Environment ==="
     python --version
     which python
     pip list | grep -E "(codebase|ollama|lance|tree|gradio)"
-    
+
     echo "=== Configuration ==="
     env | grep CODEBASE_GARDENER
-    
+
     echo "=== Directory Structure ==="
     ls -la ~/.codebase-gardener/ 2>/dev/null || echo "Directory not found"
-    
+
     echo "=== Recent Logs ==="
     tail -50 ~/.codebase-gardener/logs/app.log 2>/dev/null || echo "No logs found"
-    
+
     echo "=== Process Information ==="
     ps aux | grep -E "(python.*codebase|ollama)" | grep -v grep
-    
+
     echo "=== System Resources ==="
     top -l 1 -n 0 | head -10
     df -h
-    
+
 } > "$DEBUG_FILE"
 
 echo "Debug information saved to: $DEBUG_FILE"

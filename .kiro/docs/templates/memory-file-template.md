@@ -86,7 +86,7 @@
 class ExamplePattern:
     def __init__(self, param: Type):
         self.param = param
-    
+
     def method(self) -> ReturnType:
         # Implementation pattern
         pass
@@ -125,7 +125,7 @@ class InputInterface:
     def method(self, param: Type) -> Type:
         pass
 
-# Output interfaces  
+# Output interfaces
 class OutputInterface:
     def method(self, param: Type) -> Type:
         pass

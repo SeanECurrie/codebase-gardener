@@ -28,20 +28,20 @@ class TestCodePreprocessor:
     @pytest.fixture
     def preprocessor(self):
         return CodePreprocessor()
-    
+
     def test_chunk_python_function(self, preprocessor):
         """Test that Python functions are chunked correctly"""
         code = "def hello():\n    return 'world'"
         chunks = preprocessor.chunk_code(code, language="python")
-        
+
         assert len(chunks) == 1
         assert chunks[0].content == code
         assert chunks[0].chunk_type == "function"
-    
+
     def test_invalid_code_handling(self, preprocessor):
         """Test handling of malformed code"""
         invalid_code = "def incomplete_function("
-        
+
         with pytest.raises(CodeParsingError):
             preprocessor.chunk_code(invalid_code, language="python")
 ```
@@ -73,20 +73,20 @@ class TestLoRATrainingPipeline:
         code_dir.mkdir()
         (code_dir / "main.py").write_text("def hello(): return 'world'")
         return code_dir
-    
+
     @patch('codebase_gardener.models.peft_manager.PEFTManager')
     def test_training_pipeline_success(self, mock_peft, sample_codebase):
         """Test successful LoRA training pipeline"""
         pipeline = LoRATrainingPipeline()
-        
+
         # Mock successful training
         mock_peft.return_value.train.return_value = True
-        
+
         result = pipeline.train_project_adapter(
             project_path=sample_codebase,
             project_name="test_project"
         )
-        
+
         assert result.success is True
         assert result.adapter_path.exists()
         mock_peft.return_value.train.assert_called_once()
@@ -115,7 +115,7 @@ class TestProjectWorkflow:
     def app(self):
         """Initialize application for testing"""
         return CodebaseGardener(test_mode=True)
-    
+
     def test_complete_project_addition_workflow(self, app, sample_codebase):
         """Test adding a project and performing analysis"""
         # Add project
@@ -123,16 +123,16 @@ class TestProjectWorkflow:
             name="test_project",
             path=sample_codebase
         )
-        
+
         # Wait for training to complete
         app.wait_for_training(project_id, timeout=300)
-        
+
         # Switch to project
         app.switch_project(project_id)
-        
+
         # Perform analysis
         response = app.analyze_code("How does the hello function work?")
-        
+
         assert project_id in app.list_projects()
         assert "hello" in response.lower()
         assert response != "I don't have information about this codebase"
@@ -146,11 +146,11 @@ def test_embedding_deterministic():
     """Test that embeddings are deterministic"""
     embedder = NomicEmbedder()
     code_sample = "def add(a, b): return a + b"
-    
+
     # Generate embeddings multiple times
     embedding1 = embedder.embed(code_sample)
     embedding2 = embedder.embed(code_sample)
-    
+
     # Should be identical
     assert np.allclose(embedding1, embedding2, rtol=1e-10)
 ```
@@ -160,15 +160,15 @@ def test_embedding_deterministic():
 def test_semantic_similarity():
     """Test that semantically similar code has similar embeddings"""
     embedder = NomicEmbedder()
-    
+
     similar_functions = [
         "def add(a, b): return a + b",
         "def sum_two(x, y): return x + y",
         "def plus(num1, num2): return num1 + num2"
     ]
-    
+
     embeddings = [embedder.embed(func) for func in similar_functions]
-    
+
     # All pairs should have high similarity
     for i in range(len(embeddings)):
         for j in range(i + 1, len(embeddings)):
@@ -181,13 +181,13 @@ def test_semantic_similarity():
 def test_model_loading_performance():
     """Test that model loading stays within acceptable bounds"""
     loader = DynamicModelLoader()
-    
+
     start_time = time.time()
     loader.load_adapter("test_adapter.bin")
     load_time = time.time() - start_time
-    
+
     assert load_time < 5.0, f"Model loading took {load_time:.2f}s, expected <5s"
-    
+
     # Test memory usage
     memory_usage = psutil.Process().memory_info().rss / 1024 / 1024
     assert memory_usage < 4096, f"Memory usage {memory_usage:.1f}MB exceeds 4GB limit"
@@ -214,7 +214,7 @@ def mock_embeddings():
         # Return deterministic embedding based on text hash
         hash_val = hash(text) % 1000
         return [hash_val / 1000.0] * 384
-    
+
     with patch('codebase_gardener.models.nomic_embedder.embed', side_effect=mock_embed):
         yield
 ```
@@ -227,11 +227,11 @@ def mock_file_system(tmp_path):
     # Create temporary directory structure
     project_dir = tmp_path / "test_project"
     project_dir.mkdir()
-    
+
     # Create sample files
     (project_dir / "main.py").write_text("def main(): pass")
     (project_dir / "utils.py").write_text("def helper(): pass")
-    
+
     return project_dir
 ```
 
@@ -245,7 +245,7 @@ def python_project(tmp_path):
     """Create a sample Python project"""
     project = tmp_path / "python_project"
     project.mkdir()
-    
+
     # Main module
     (project / "main.py").write_text("""
 def main():
@@ -258,7 +258,7 @@ def calculate_sum(a, b):
 if __name__ == "__main__":
     main()
 """)
-    
+
     # Utility module
     (project / "utils.py").write_text("""
 import json
@@ -271,7 +271,7 @@ def save_config(config, path):
     with open(path, 'w') as f:
         json.dump(config, f, indent=2)
 """)
-    
+
     return project
 
 @pytest.fixture
@@ -279,7 +279,7 @@ def javascript_project(tmp_path):
     """Create a sample JavaScript project"""
     project = tmp_path / "js_project"
     project.mkdir()
-    
+
     (project / "index.js").write_text("""
 function main() {
     console.log("Hello, World!");
@@ -292,7 +292,7 @@ function calculateSum(a, b) {
 
 module.exports = { main, calculateSum };
 """)
-    
+
     return project
 ```
 
@@ -314,14 +314,14 @@ def temp_workspace(tmp_path):
     """Create temporary workspace for tests"""
     workspace = tmp_path / "workspace"
     workspace.mkdir()
-    
+
     # Create .codebase-gardener directory
     cg_dir = workspace / ".codebase-gardener"
     cg_dir.mkdir()
     (cg_dir / "base_models").mkdir()
     (cg_dir / "projects").mkdir()
     (cg_dir / "active_project.json").write_text("{}")
-    
+
     return workspace
 ```
 
@@ -344,27 +344,27 @@ class TestPerformanceBenchmarks:
             "class MyClass: pass",
             "import os; print(os.getcwd())"
         ] * 100  # 300 samples
-        
+
         def generate_embeddings():
             return [embedder.embed(code) for code in code_samples]
-        
+
         result = benchmark(generate_embeddings)
-        
+
         # Assertions about performance
         assert benchmark.stats.mean < 10.0  # Should complete in <10 seconds
-    
+
     def test_memory_usage_benchmark(self):
         """Test memory usage during typical operations"""
         process = psutil.Process()
         initial_memory = process.memory_info().rss
-        
+
         # Perform memory-intensive operations
         loader = DynamicModelLoader()
         loader.load_adapter("test_adapter.bin")
-        
+
         peak_memory = process.memory_info().rss
         memory_increase = (peak_memory - initial_memory) / 1024 / 1024
-        
+
         assert memory_increase < 500, f"Memory increase {memory_increase:.1f}MB too high"
 ```
 
@@ -374,10 +374,10 @@ def test_concurrent_project_switching():
     """Test system behavior under concurrent load"""
     import threading
     import queue
-    
+
     app = CodebaseGardener()
     results = queue.Queue()
-    
+
     def switch_projects():
         try:
             for _ in range(10):
@@ -388,15 +388,15 @@ def test_concurrent_project_switching():
             results.put("success")
         except Exception as e:
             results.put(f"error: {e}")
-    
+
     # Start multiple threads
     threads = [threading.Thread(target=switch_projects) for _ in range(3)]
     for thread in threads:
         thread.start()
-    
+
     for thread in threads:
         thread.join()
-    
+
     # Check results
     while not results.empty():
         result = results.get()
@@ -449,25 +449,25 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: macos-latest
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-    
+
     - name: Install dependencies
       run: |
         pip install -e ".[dev]"
-    
+
     - name: Run unit tests
       run: pytest tests/unit/ -v --cov=src/
-    
+
     - name: Run integration tests
       run: pytest tests/integration/ -v
-    
+
     - name: Run performance tests
       run: pytest tests/performance/ --benchmark-only
 ```

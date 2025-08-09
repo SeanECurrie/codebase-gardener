@@ -43,7 +43,7 @@ This framework ensures continuity between tasks, proper validation of previous w
 **Read these in EXACT order before any implementation:**
 
 1. **Core Principles**: Read `.kiro/steering/core-development-principles.md` completely
-2. **Task Guidelines**: Read `.kiro/steering/Task Guidelines.md` completely  
+2. **Task Guidelines**: Read `.kiro/steering/Task Guidelines.md` completely
 3. **Previous Task Memory**: Read `.kiro/memory/[component]_task[N-1].md` completely
 4. **Gap Closure Framework**: Read `.kiro/docs/gap-closure-criteria.md` completely
 
@@ -52,7 +52,7 @@ This framework ensures continuity between tasks, proper validation of previous w
 **ALWAYS use these MCP tools in this specific order:**
 
 1. **Sequential Thinking FIRST** - Break down complex problems and architectural decisions
-2. **Context7 SECOND** - Get precise library documentation and API references  
+2. **Context7 SECOND** - Get precise library documentation and API references
 3. **Bright Data THIRD** - Find real-world code examples and implementation patterns
 4. **Basic Memory FOURTH** - Maintain context and patterns across tasks
 
@@ -103,7 +103,7 @@ This framework ensures continuity between tasks, proper validation of previous w
 
 2. **[Approach 2]**:
    - Pros: [Benefits]
-   - Cons: [Drawbacks]  
+   - Cons: [Drawbacks]
    - Decision: [Chosen/Rejected] - [Rationale]
 
 ### Chosen Approach
@@ -179,7 +179,7 @@ This framework ensures continuity between tasks, proper validation of previous w
 # Input interfaces
 [Code showing what this component expects]
 
-# Output interfaces  
+# Output interfaces
 [Code showing what this component provides]
 ```
 
@@ -293,7 +293,7 @@ git push origin feat/[component-name]-task[N]
 
 ### Functional Criteria
 1. **Real Working Code**: Code works with actual systems/models
-2. **Real Data**: Tested with actual data/codebases  
+2. **Real Data**: Tested with actual data/codebases
 3. **Real User Interaction**: Can be used through actual interface
 4. **User Validation**: User can see and verify it works as intended
 5. **Actionable Usage**: Clear explanation of how user uses the new functionality
@@ -335,7 +335,7 @@ git push origin feat/[component-name]-task[N]
 
 This framework ensures:
 - ✅ Continuity between tasks
-- ✅ Proper validation of previous work  
+- ✅ Proper validation of previous work
 - ✅ Systematic research and decision making
 - ✅ Comprehensive documentation
 - ✅ Git/GitHub integration

@@ -210,19 +210,19 @@ from codebase_gardener.utils import FileUtilities
 
 def analyze_project(project_path: Path):
     file_utils = FileUtilities()
-    
+
     # Find all source files
     source_files = file_utils.find_source_files(project_path)
-    
+
     # Analyze each file
     for file_path in source_files:
         file_info = file_utils.get_file_info(file_path)
         print(f"{file_path.name}: {file_info.file_type.value}, {file_info.size} bytes")
-        
+
         if file_info.file_type == FileType.SOURCE_CODE:
             language = file_utils.get_language_from_file(file_path)
             print(f"  Language: {language}")
-    
+
     # Create snapshot for monitoring
     snapshot = file_utils.create_file_snapshot(project_path)
     print(f"Project snapshot: {snapshot.file_count} files, {snapshot.total_size} bytes")
@@ -242,10 +242,10 @@ def update_config(config_path: Path, updates: dict):
         config = json.loads(config_text)
     except FileUtilityError:
         config = {}
-    
+
     # Apply updates
     config.update(updates)
-    
+
     # Atomically write updated config with backup
     atomic_write_file(config_path, json.dumps(config, indent=2), backup=True)
 ```
@@ -258,16 +258,16 @@ from codebase_gardener.utils import FileUtilities
 
 def monitor_project_changes(project_path: Path):
     file_utils = FileUtilities()
-    
+
     # Create initial snapshot
     initial_snapshot = file_utils.create_file_snapshot(project_path)
-    
+
     # ... time passes, files are modified ...
-    
+
     # Create new snapshot and compare
     current_snapshot = file_utils.create_file_snapshot(project_path)
     changes = file_utils.compare_snapshots(initial_snapshot, current_snapshot)
-    
+
     for change in changes:
         print(f"{change.change_type}: {change.path.name} at {change.timestamp}")
 ```

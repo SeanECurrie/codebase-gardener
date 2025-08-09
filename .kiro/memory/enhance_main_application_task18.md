@@ -126,14 +126,14 @@ class ApplicationContext:
         self.file_utilities = None
         self._initialized = False
         self._shutdown_handlers = []
-    
+
     def initialize(self) -> bool:
         """Initialize all components with proper error handling."""
         # Initialize components in dependency order
         # Add shutdown handlers for cleanup
         # Validate configuration
         # Return success status
-    
+
     def shutdown(self) -> None:
         """Graceful shutdown with resource cleanup."""
         # Call all shutdown handlers
@@ -148,14 +148,14 @@ class ApplicationContext:
 def serve(ctx, host: str, port: int) -> None:
     """Start the Gradio web interface for project analysis."""
     app_context = get_or_create_app_context(ctx)
-    
+
     if not app_context.initialize():
         console.print("[red]Failed to initialize application components[/red]")
         sys.exit(1)
-    
+
     # Add shutdown handler
     ctx.call_on_close(app_context.shutdown)
-    
+
     # Start Gradio with proper integration
     # ... rest of implementation
 ```
@@ -168,10 +168,10 @@ def serve(ctx, host: str, port: int) -> None:
 def switch(ctx, project_id: str) -> None:
     """Switch active project context across all components."""
     app_context = get_or_create_app_context(ctx)
-    
+
     with console.status(f"Switching to project {project_id}..."):
         success = app_context.switch_project(project_id)
-    
+
     if success:
         console.print(f"[green]✓ Switched to project '{project_id}'[/green]")
     else:
@@ -187,9 +187,9 @@ def switch(ctx, project_id: str) -> None:
 def status(ctx, detailed: bool) -> None:
     """Show system health and component status."""
     app_context = get_or_create_app_context(ctx)
-    
+
     health_report = app_context.health_check()
-    
+
     # Display health report with Rich formatting
     # Include file monitoring as quick win
     # Show component status and integration health

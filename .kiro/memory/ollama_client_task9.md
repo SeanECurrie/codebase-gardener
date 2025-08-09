@@ -126,7 +126,7 @@ except ollama.ResponseError as e:
 # Pattern 3: Health check with caching
 def health_check(self, force: bool = False) -> bool:
     now = datetime.now()
-    if (not force and self._last_health_check and 
+    if (not force and self._last_health_check and
         (now - self._last_health_check).seconds < self._health_check_interval):
         return True
     # Perform actual health check
@@ -158,7 +158,7 @@ def health_check(self, force: bool = False) -> bool:
 from codebase_gardener.config.settings import Settings
 from codebase_gardener.utils.error_handling import CodebaseGardenerError, ModelError
 
-# Output interfaces  
+# Output interfaces
 class OllamaClient:
     def chat(self, model: str, messages: List[Dict], **kwargs) -> Dict
     def generate(self, model: str, prompt: str, **kwargs) -> Dict

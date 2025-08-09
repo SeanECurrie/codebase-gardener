@@ -114,7 +114,7 @@ class DynamicModelLoader:
         self._adapter_cache: OrderedDict[str, AdapterInfo] = OrderedDict()
         self._lock = threading.RLock()
         self._memory_limit_mb = 4096  # Mac Mini M4 constraint
-    
+
     def _manage_cache(self) -> None:
         while len(self._adapter_cache) > self._max_cache_size:
             oldest_id, oldest_info = self._adapter_cache.popitem(last=False)
@@ -129,11 +129,11 @@ def load_adapter(self, project_id: str, adapter_name: str = "default") -> bool:
         # Check memory availability
         if not self._check_memory_availability(estimated_size):
             self._manage_cache()
-        
+
         # Verify compatibility
         if not self._verify_adapter_compatibility(adapter_path, base_model):
             logger.warning("Compatibility check failed, proceeding with fallback")
-        
+
         # Load adapter with proper error handling
 ```
 

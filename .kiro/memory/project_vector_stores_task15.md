@@ -109,7 +109,7 @@ class ProjectVectorStoreManager:
     def _get_table_name(self, project_id: str) -> str:
         sanitized_id = project_id.replace("-", "_").replace(" ", "_")
         return f"project_{sanitized_id}"
-    
+
     def get_project_vector_store(self, project_id: str) -> VectorStore:
         # Check cache first, create if needed, manage cache size
         pass

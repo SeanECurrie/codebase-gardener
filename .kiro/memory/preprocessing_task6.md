@@ -117,7 +117,7 @@ def _extract_dependencies(self, element: CodeElement, module_info: Dict[str, Any
     dependencies = []
     for import_info in module_info.get("imports", []):
         dependencies.append(import_info["name"])
-    
+
     # Use regex patterns for function calls and imports
     patterns = [r'(\w+)\(', r'from\s+(\w+(?:\.\w+)*)', r'(\w+)\.(\w+)']
     # Filter out language keywords and common built-ins
@@ -218,7 +218,7 @@ class CodeChunk:
 
 4. **Quality Tests**:
    - `test_has_docstring`: Test docstring detection
-   - `test_has_comments`: Test comment detection  
+   - `test_has_comments`: Test comment detection
    - `test_is_well_formatted`: Test code formatting quality checks
    - `test_remove_duplicate_chunks`: Test duplicate removal logic
 

@@ -101,7 +101,7 @@ class TreeSitterParser:
         self.language = SupportedLanguage(language) if isinstance(language, str) else language
         self._language_obj = None
         self._setup_language()
-    
+
     def _setup_language(self) -> None:
         if self.language == SupportedLanguage.PYTHON:
             import tree_sitter_python as tspython
@@ -120,10 +120,10 @@ def parse(self, code: str, file_path: Optional[Path] = None, old_tree: Optional[
             tree = self.parser.parse(code_bytes, old_tree)
         else:
             tree = self.parser.parse(code_bytes)
-        
+
         if tree is None:
             raise ParsingError("Tree-sitter returned None - parsing failed completely")
-        
+
         errors = self._extract_errors(tree, code)
         structure = self._extract_structure(tree, code)
         return ParseResult(tree=tree, structure=structure, errors=errors)
@@ -136,16 +136,16 @@ def parse(self, code: str, file_path: Optional[Path] = None, old_tree: Optional[
 def _extract_structure(self, tree: Tree, code: str) -> CodeStructure:
     structure = CodeStructure()
     element_types = self.ELEMENT_NODE_TYPES.get(self.language, {})
-    
+
     def traverse_node(node: Node):
         if node.type in element_types:
             element = self._create_code_element(node, code, element_types[node.type])
             if element:
                 structure.add_element(element)
-        
+
         for child in node.children:
             traverse_node(child)
-    
+
     traverse_node(tree.root_node)
     return structure
 ```
@@ -160,7 +160,7 @@ def _extract_structure(self, tree: Tree, code: str) -> CodeStructure:
 ### Dependencies Added
 - **tree-sitter**: Latest version - Core parsing library with new API
 - **tree-sitter-python**: Latest version - Python language grammar
-- **tree-sitter-javascript**: Latest version - JavaScript language grammar  
+- **tree-sitter-javascript**: Latest version - JavaScript language grammar
 - **tree-sitter-typescript**: Latest version - TypeScript language grammar
 
 ## Integration Points

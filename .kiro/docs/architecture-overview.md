@@ -11,64 +11,64 @@ graph TB
         PS[Project Selector]
         AC[Analysis Components]
     end
-    
+
     subgraph "Application Layer"
         API[Application API]
         PCM[Project Context Manager]
         DML[Dynamic Model Loader]
     end
-    
+
     subgraph "Core Services Layer"
         PR[Project Registry]
         LTP[LoRA Training Pipeline]
         ES[Embedding Service]
         CA[Codebase Analyzer]
     end
-    
+
     subgraph "Data Processing Layer"
         TS[Tree-sitter Parser]
         PP[Code Preprocessor]
         NE[Nomic Embedder]
         PVS[Project Vector Stores]
     end
-    
+
     subgraph "AI/ML Layer"
         OC[Ollama Client]
         PM[PEFT Manager]
         LA[LoRA Adapters]
         LDB[LanceDB]
     end
-    
+
     subgraph "Infrastructure Layer"
         CFG[Configuration]
         LOG[Logging]
         EH[Error Handling]
         FU[File Utils]
     end
-    
+
     UI --> API
     PS --> PCM
     AC --> ES
-    
+
     API --> PR
     PCM --> DML
     PCM --> PVS
-    
+
     PR --> LTP
     LTP --> PM
     ES --> NE
     CA --> TS
-    
+
     TS --> PP
     PP --> NE
     NE --> PVS
     PVS --> LDB
-    
+
     DML --> OC
     DML --> LA
     PM --> LA
     OC --> LA
-    
+
     CFG --> API
     LOG --> API
     EH --> API

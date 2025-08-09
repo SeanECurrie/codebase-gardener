@@ -16,7 +16,7 @@ Implement comprehensive file utilities and helper functions to support the codeb
 ### Gap Validation Phase Analysis
 From Task 16 completion test log, identified gaps that align with current scope:
 - ⚠️ **File Upload**: No interface for adding new projects through UI → **Integrate**: File utilities will enable project creation from file system
-- ⚠️ **Real Model Inference**: Need actual model integration → **Not applicable**: File utilities don't directly address model inference  
+- ⚠️ **Real Model Inference**: Need actual model integration → **Not applicable**: File utilities don't directly address model inference
 - ⚠️ **Embedding Generation**: Need actual embedding pipeline → **Quick validation**: File utilities can support embedding pipeline file operations
 
 Gap closure plan: Implement file utilities that enable project creation and management through the UI, supporting the embedding pipeline with robust file operations.
@@ -120,12 +120,12 @@ def detect_file_type(self, file_path: Path) -> FileType:
     extension = file_path.suffix.lower()
     if extension in self.SOURCE_CODE_EXTENSIONS:
         return FileType.SOURCE_CODE
-    
+
     # Use MIME type detection (reliable)
     mime_type, _ = self._mime_types.guess_type(str(file_path))
     if mime_type and mime_type.startswith('text/'):
         return FileType.TEXT
-    
+
     # Fallback to content-based detection (thorough)
     if file_path.stat().st_size < 1024 * 1024:  # 1MB limit
         with file_path.open('rb') as f:
@@ -139,7 +139,7 @@ def atomic_write_file(self, file_path: Path, content: str, backup: bool = True) 
     backup_path = None
     if backup and file_path.exists():
         backup_path = self.create_backup(file_path)
-    
+
     temp_path = file_path.with_suffix(file_path.suffix + '.tmp')
     try:
         with temp_path.open('w', encoding=encoding) as f:
@@ -172,7 +172,7 @@ def is_hidden_file(self, file_path: Path) -> bool:
     # Unix-style hidden files (start with dot)
     if file_path.name.startswith('.'):
         return True
-    
+
     # Windows hidden files
     if os.name == 'nt':
         try:
@@ -181,7 +181,7 @@ def is_hidden_file(self, file_path: Path) -> bool:
             return attrs != -1 and attrs & 2  # FILE_ATTRIBUTE_HIDDEN
         except (AttributeError, OSError):
             pass
-    
+
     return False
 ```
 

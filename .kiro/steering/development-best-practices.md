@@ -11,7 +11,7 @@
 
 ### Decision Criteria Quick Reference
 - **Quick Win** (<30min, low risk, improves validation) → Implement now
-- **Next Task** (aligns with scope, requires research) → Document for next task  
+- **Next Task** (aligns with scope, requires research) → Document for next task
 - **Defer** (out of scope, major changes, low priority) → Document with rationale
 
 **See `.kiro/docs/gap-closure-criteria.md` for complete framework and templates.**
@@ -23,7 +23,7 @@
 **ALWAYS use these MCP tools in this specific order for every task:**
 
 1. **Sequential Thinking FIRST** - Break down complex problems and architectural decisions
-2. **Context7 FORTH** - Get precise library documentation and API references  
+2. **Context7 FORTH** - Get precise library documentation and API references
 3. **Bright Data SECOND** - Find real-world code examples and implementation patterns
 4. **Basic Memory THIRD** - Maintain context and patterns across tasks
 
@@ -215,7 +215,7 @@ class LoRAAdapter:
         self.adapter_path = adapter_path
         self.base_model = base_model
         self._loaded = False
-    
+
     def load(self) -> None:
         """Load adapter with proper error handling"""
         try:
@@ -224,7 +224,7 @@ class LoRAAdapter:
         except AdapterLoadError as e:
             logger.error(f"Failed to load adapter: {e}")
             raise
-    
+
     def unload(self) -> None:
         """Clean unload with memory cleanup"""
         # Implementation
@@ -241,10 +241,10 @@ class CodeChunk:
     file_path: Path
     start_line: int
     end_line: int
-    
+
     def __post_init__(self):
         self.validate()
-    
+
     def validate(self) -> None:
         """Validate chunk data integrity"""
         if not self.content.strip():
@@ -259,7 +259,7 @@ class ModelConfig(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     max_context_length: int = 4096
     embedding_batch_size: int = 32
-    
+
     @validator('embedding_batch_size')
     def validate_batch_size(cls, v):
         if v < 1 or v > 128:
@@ -296,11 +296,11 @@ class ModelConfig(BaseSettings):
 def test_code_chunking_deterministic():
     """Test that chunking produces consistent results"""
     code_sample = "def hello():\n    return 'world'"
-    
+
     # Run chunking multiple times
     chunks1 = chunk_code(code_sample)
     chunks2 = chunk_code(code_sample)
-    
+
     assert chunks1 == chunks2  # Should be deterministic
 ```
 
@@ -312,10 +312,10 @@ def test_embedding_quality():
         "def add(a, b): return a + b",
         "def sum_two(x, y): return x + y"
     ]
-    
+
     embeddings = [embed_code(func) for func in similar_functions]
     similarity = cosine_similarity(embeddings[0], embeddings[1])
-    
+
     assert similarity > 0.8  # Should be semantically similar
 ```
 
@@ -324,10 +324,10 @@ def test_embedding_quality():
 def test_model_loading_performance():
     """Test that model loading stays within acceptable bounds"""
     start_time = time.time()
-    
+
     adapter = LoRAAdapter("test_adapter.bin", "base_model")
     adapter.load()
-    
+
     load_time = time.time() - start_time
     assert load_time < 5.0  # Should load within 5 seconds
 ```
@@ -354,7 +354,7 @@ def mock_embeddings():
     def mock_embed(text: str) -> List[float]:
         # Return deterministic embedding based on text hash
         return [hash(text) % 100 / 100.0] * 384
-    
+
     with patch('nomic_embed.embed', side_effect=mock_embed):
         yield
 ```

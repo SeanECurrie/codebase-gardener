@@ -86,7 +86,7 @@ Implementing comprehensive documentation audit with:
 
 ### Existing Documentation Inventory
 - **`.kiro/docs/`**: 12 files including API reference, architecture overview, troubleshooting
-- **`docs/`**: 1 file (setup-guide.md) with installation and setup instructions  
+- **`docs/`**: 1 file (setup-guide.md) with installation and setup instructions
 - **`README.md`**: Main project documentation with overview and quick start
 - **Memory Files**: 25+ files documenting implementation decisions and patterns
 

@@ -107,7 +107,7 @@ class PeftManager:
         self._adapters_cache: Dict[str, PeftModel] = {}
         self._adapter_metadata: Dict[str, AdapterMetadata] = {}
         self._max_cache_size = 3  # Memory optimization
-    
+
     @retry_with_backoff(max_attempts=3)
     def create_adapter(self, project_name: str, training_data: List[Dict]) -> str:
         # Implementation with error handling and retry logic
@@ -168,7 +168,7 @@ from codebase_gardener.config.settings import Settings
 from codebase_gardener.utils.error_handling import CodebaseGardenerError, ModelError
 from codebase_gardener.models.ollama_client import OllamaClient
 
-# Output interfaces  
+# Output interfaces
 class PeftManager:
     def create_adapter(self, project_name: str, training_data: List[Dict]) -> str
     def load_adapter(self, project_name: str, adapter_name: str) -> bool

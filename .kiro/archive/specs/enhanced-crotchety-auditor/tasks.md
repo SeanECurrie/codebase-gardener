@@ -149,7 +149,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST** (MANDATORY FIRST STEPS)
 
    **🚨 REMINDER: You already have working OllamaClient - enhance, don't rebuild**
-   
+
    - Read existing `src/codebase_gardener/models/ollama_client.py` completely
    - Check what streaming support Ollama already provides
    - **EXISTING CODE**: You have a working client that connects to gpt-oss
@@ -160,7 +160,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT'S ACTUALLY MISSING**
 
    **🚨 Focus on functionality gaps, not architectural changes**
-   
+
    - Does OllamaClient support streaming? If not, add it
    - Does the user see progress during long responses? If not, add it
    - **CHECK**: What specific user experience is broken that streaming fixes?
@@ -169,12 +169,12 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 ENHANCE EXISTING CLIENT**
 
    **⚠️ REMINDER: Enhance existing code, don't rebuild from scratch**
-   
+
    ```python
    # SIMPLE: Add streaming method to existing OllamaClient
    class OllamaClient:
        # Keep all existing methods working
-       
+
        def generate_stream(self, prompt: str, **kwargs) -> Iterator[str]:
            """Add streaming to existing client"""
            response = ollama.generate(
@@ -192,7 +192,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY STREAMING WORKS**
 
    **REMINDER: Test with existing working setup**
-   
+
    - Can you get streaming responses from existing gpt-oss model?
    - Does it work with existing codebase analysis workflow?
    - **DON'T**: Change existing non-streaming methods
@@ -201,7 +201,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 ADD PROGRESS FEEDBACK**
 
    **🚨 Only after basic streaming works**
-   
+
    - Add progress indicators during analysis
    - Show tokens being generated in real-time
    - **EXISTING PATTERNS**: Use existing logging and UI patterns
@@ -240,7 +240,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST**
 
    **🚨 REMINDER: You already have a working Gradio interface - enhance it**
-   
+
    - Read existing `src/codebase_gardener/ui/gradio_app.py` completely
    - Check how current chat function works
    - **EXISTING CODE**: You have working UI components from previous tasks
@@ -249,7 +249,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT NEEDS CONNECTING**
 
    **🚨 Focus on connecting working pieces, not rebuilding**
-   
+
    - Does current chat interface connect to OllamaClient?
    - Can you replace non-streaming calls with streaming calls?
    - **SIMPLE QUESTION**: What's the minimal change to show streaming responses?
@@ -257,13 +257,13 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 CONNECT STREAMING TO EXISTING CHAT**
 
    **⚠️ REMINDER: Modify existing chat function, don't rebuild interface**
-   
+
    ```python
    # SIMPLE: Update existing chat function to use streaming
    def chat_with_streaming(message, history, codebase_path):
        # Use existing codebase analysis logic
        context = get_existing_context(codebase_path)
-       
+
        # Replace: response = ollama_client.generate(prompt)
        # With: streaming response
        response_parts = []
@@ -275,7 +275,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY STREAMING CHAT WORKS**
 
    **REMINDER: Test with existing working components**
-   
+
    - Can user see responses appearing token by token?
    - Does it work with existing codebase analysis?
    - **DON'T**: Add complex UI features yet
@@ -284,7 +284,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 ADD SIMPLE PROGRESS FEEDBACK**
 
    **🚨 Only after streaming works**
-   
+
    - Show "Analyzing codebase..." during file discovery
    - Show "Generating response..." during model inference
    - **EXISTING PATTERNS**: Use existing UI feedback patterns
@@ -323,7 +323,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST - DON'T BUILD YET**
 
    **🚨 REMINDER: You already have PEFT components - don't rebuild them!**
-   
+
    - Read `src/codebase_gardener/core/training_pipeline.py` - what exists?
    - Read `src/codebase_gardener/data/preprocessor.py` - how does it work?
    - **EXISTING CODE**: You have FileUtilities.find_source_files() working
@@ -333,7 +333,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
 
    **🚨 Check core-development-principles.md: Are you building features before basics work?**
-   
+
    - Can the user chat with gpt-oss:20b at all yet?
    - Does the DirectGPTOSSClient from Task 2 actually work?
    - **REMINDER**: Don't train models that can't generate responses yet
@@ -342,7 +342,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 SIMPLEST APPROACH FIRST**
 
    **⚠️ REMINDER: Don't build elaborate training pipelines - what's the obvious start?**
-   
+
    ```python
    # SIMPLE: Can you even load PEFT at all?
    class SimpleLoRATrainer:
@@ -357,7 +357,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY BASIC PEFT WORKS**
 
    **REMINDER: Make PEFT load before training anything**
-   
+
    - Can you import PEFT libraries without errors?
    - Can you create a basic LoraConfig?
    - **DON'T**: Build training loops, data preparation, complex logic yet
@@ -366,7 +366,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 THEN TRY SIMPLE TRAINING (IF PEFT LOADS)**
 
    **🚨 Check core-development-principles.md: Still focusing on what works?**
-   
+
    ```python
    # ONLY after PEFT loads successfully
    def try_simple_training():
@@ -386,7 +386,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 6. **📊 ADD SIMPLE PROGRESS (ONLY IF TRAINING WORKS)**
 
    **REMINDER: Simple progress messages, not complex monitoring systems**
-   
+
    - Print "Training started" and "Training finished"
    - **EXISTING PATTERNS**: Use the same progress patterns from file discovery
 
@@ -423,7 +423,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST - NO DATABASE DESIGN YET**
 
    **🚨 REMINDER: You already have ProjectContextManager - don't rebuild it!**
-   
+
    - Read `src/codebase_gardener/core/project_context_manager.py` completely
    - Read how conversations are currently handled
    - **EXISTING CODE**: You have conversation management from Task 14
@@ -433,7 +433,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
 
    **🚨 Check core-development-principles.md: Are you building storage for non-existent data?**
-   
+
    - Do users have working conversations to store?
    - Does the chat interface from Task 3 actually work?
    - **REMINDER**: Don't build databases for conversations that don't happen
@@ -442,7 +442,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 SIMPLEST STORAGE FIRST**
 
    **⚠️ REMINDER: Don't build elaborate database schemas - what's the obvious approach?**
-   
+
    ```python
    # SIMPLE: Can you save ONE conversation to a file?
    class SimpleMemory:
@@ -457,7 +457,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY BASIC SAVING WORKS**
 
    **REMINDER: Make file saving work before databases**
-   
+
    - Can you save a simple message to a text file?
    - Can you read it back?
    - **DON'T**: Build SQL schemas, complex retrieval, indexing yet
@@ -466,7 +466,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 THEN TRY SQLITE (IF FILE SAVING WORKS)**
 
    **🚨 Check core-development-principles.md: Still focusing on what works?**
-   
+
    ```python
    # ONLY after file saving works
    def try_simple_sqlite():
@@ -486,7 +486,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 6. **📁 ADD SIMPLE RETRIEVAL (ONLY IF SAVING WORKS)**
 
    **REMINDER: Simple file reading, not complex queries**
-   
+
    - Read conversations from the file you can write to
    - **EXISTING PATTERNS**: Use the same file patterns from FileUtilities
 
@@ -523,7 +523,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST - NO OPTIMIZATION YET**
 
    **🚨 REMINDER: You already have CodePreprocessor - don't rebuild it!**
-   
+
    - Read `src/codebase_gardener/data/preprocessor.py` completely
    - Test the existing preprocessor with a simple file
    - **EXISTING CODE**: You have working preprocessing from Task 6
@@ -533,7 +533,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
 
    **🚨 Check core-development-principles.md: Are you optimizing before it works?**
-   
+
    - Does the current preprocessor process files without errors?
    - Can it handle the files from `/Users/seancurrie/Desktop/MCP/notion_schema_tool/`?
    - **REMINDER**: Fix broken functionality before optimizing context windows
@@ -542,7 +542,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 SIMPLEST FIX FIRST**
 
    **⚠️ REMINDER: Don't build elaborate chunk combination - what's the obvious issue?**
-   
+
    ```python
    # SIMPLE: Can you process ONE file with current settings?
    def test_current_preprocessor():
@@ -557,7 +557,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY BASIC PROCESSING WORKS**
 
    **REMINDER: Make current preprocessing work before enhancing it**
-   
+
    - Can you process a single Python file?
    - Do you get any chunks back?
    - **DON'T**: Build 8k context logic, chunk combination, optimization yet
@@ -566,7 +566,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 THEN TRY LARGER CHUNKS (IF BASIC WORKS)**
 
    **🚨 Check core-development-principles.md: Still focusing on what works?**
-   
+
    ```python
    # ONLY after basic processing works
    def try_larger_chunks():
@@ -586,7 +586,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 6. **📊 TEST LARGER CHUNKS (ONLY IF CURRENT WORKS)**
 
    **REMINDER: Test one change at a time**
-   
+
    - Try processing the same file with larger chunks
    - **EXISTING PATTERNS**: Use the same testing approach from file discovery
 
@@ -623,7 +623,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 1. **🔍 READ EXISTING CODE FIRST - NO ORCHESTRATION YET**
 
    **🚨 REMINDER: You already have working components - don't rebuild them!**
-   
+
    - Read `src/codebase_gardener/main.py` - how are components currently used?
    - Test each component individually: FileUtilities, CodePreprocessor, etc.
    - **EXISTING CODE**: You have working components from previous tasks
@@ -633,7 +633,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 2. **🎯 IDENTIFY WHAT'S ACTUALLY BROKEN**
 
    **🚨 Check core-development-principles.md: Are you orchestrating components that don't work?**
-   
+
    - Does FileUtilities.find_source_files() work from Task 1?
    - Does CodePreprocessor work from Task 6?
    - **REMINDER**: Don't orchestrate broken components
@@ -642,14 +642,14 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 3. **🔧 SIMPLEST COMBINATION FIRST**
 
    **⚠️ REMINDER: Don't build elaborate orchestrators - what's the obvious approach?**
-   
+
    ```python
    # SIMPLE: Can you use TWO existing components together?
    class SimpleCrotchetyAuditor:
        def __init__(self):
            self.file_utils = FileUtilities()  # Already works from Task 1
            # Don't add more until this works
-   
+
        def simple_analysis(self, path):
            files = self.file_utils.find_source_files(path)  # Use what works
            return f"Found {len(files)} files"  # Simple first
@@ -660,7 +660,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 4. **✅ VERIFY BASIC COMBINATION WORKS**
 
    **REMINDER: Make two components work together before adding more**
-   
+
    - Can you find files AND do something simple with them?
    - Does the basic workflow complete without errors?
    - **DON'T**: Add DirectGPTOSSClient, LoRATrainer, complex logic yet
@@ -669,7 +669,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 5. **🔄 THEN ADD ONE MORE COMPONENT (IF BASIC WORKS)**
 
    **🚨 Check core-development-principles.md: Still focusing on what works?**
-   
+
    ```python
    # ONLY after file discovery + one component works
    def add_one_more_component():
@@ -688,7 +688,7 @@ This document outlines the implementation tasks for enhancing the Crotchety Code
 6. **🎭 ADD SIMPLE CROTCHETY RESPONSES (ONLY IF COMPONENTS WORK)**
 
    **REMINDER: Simple hardcoded responses before complex AI integration**
-   
+
    ```python
    def simple_crotchety_response(self, files):
        return f"Well, you've got {len(files)} files. Most of them probably suck."

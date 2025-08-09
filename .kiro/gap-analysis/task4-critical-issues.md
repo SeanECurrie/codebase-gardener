@@ -19,7 +19,7 @@
 #### Integration Errors (Blocking)
 ```
 • 'ProjectVectorStoreManager' object has no attribute 'switch_to_project'
-• 'ProjectContextManager' object has no attribute 'get_context'  
+• 'ProjectContextManager' object has no attribute 'get_context'
 • Project registration conflicts: "Project with name 'load_test_project_0' already exists"
 • Multiple "Project not found" errors during switching
 ```

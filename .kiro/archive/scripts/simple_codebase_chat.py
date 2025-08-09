@@ -3,7 +3,7 @@
 Simple Codebase Chat - The Core Experience
 
 1. Ask user for codebase directory
-2. Train/customize model on that codebase  
+2. Train/customize model on that codebase
 3. Chat with the specialized AI
 """
 
@@ -143,8 +143,8 @@ class SimpleCodebaseChat:
                         context += f"\nFile: {chunk.file_path}\n```\n{chunk.content[:300]}...\n```\n"
 
             # Create prompt
-            prompt = f"""You are an AI assistant specialized in the codebase at {self.codebase_path}. 
-            
+            prompt = f"""You are an AI assistant specialized in the codebase at {self.codebase_path}.
+
 User question: {message}
 {context}
 

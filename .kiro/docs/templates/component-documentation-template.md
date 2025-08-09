@@ -109,7 +109,7 @@ flowchart TD
     B --> C[Core Processing]
     C --> D[Post-processing]
     D --> E[Output Generation]
-    
+
     C --> F{Error?}
     F -->|Yes| G[Error Handling]
     F -->|No| D
@@ -262,12 +262,12 @@ def monitor_performance(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
         start_memory = psutil.Process().memory_info().rss
-        
+
         result = func(*args, **kwargs)
-        
+
         end_time = time.time()
         end_memory = psutil.Process().memory_info().rss
-        
+
         logger.info(
             "Performance metrics",
             extra={

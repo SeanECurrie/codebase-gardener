@@ -159,13 +159,13 @@ models:
       - name: "llama2:13b"
         context_length: 2048
         temperature: 0.2
-  
+
   embedding:
     model: "nomic-embed-code"
     batch_size: 32
     max_length: 512
     cache_embeddings: true
-  
+
   training:
     epochs: 3
     learning_rate: 0.0001
@@ -229,7 +229,7 @@ ui:
   theme: "default"
   title: "Codebase Gardener"
   description: "AI-powered project-specific codebase analysis"
-  
+
 # Logging configuration
 logging:
   level: "INFO"

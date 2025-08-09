@@ -111,7 +111,7 @@ class TrainingPipeline:
         progress_tracker = TrainingProgressTracker(project_name, self.config)
         if progress_callback:
             progress_tracker.add_progress_callback(progress_callback)
-        
+
         # Start training in background thread
         training_thread = threading.Thread(
             target=self._run_training,
@@ -128,10 +128,10 @@ class TrainingProgressTracker:
     def update_progress(self, phase: TrainingPhase, progress_percent: float, message: str):
         with self._lock:
             self._current_progress = TrainingProgress(phase, progress_percent, message)
-            
+
             # Update registry status
             self.registry.update_training_status(self.project_name, status)
-            
+
             # Notify callbacks
             for callback in self._callbacks:
                 callback(self._current_progress)
@@ -143,10 +143,10 @@ class TrainingDataPreparator:
     def prepare_training_data(self, project_name: str) -> List[Dict[str, Any]]:
         chunks = self._load_code_chunks(project_name)
         quality_chunks = self._filter_quality_chunks(chunks)
-        
+
         if len(quality_chunks) < self.config.min_training_chunks:
             raise TrainingError("Insufficient training data")
-        
+
         return self._convert_to_training_format(quality_chunks)
 ```
 
@@ -249,7 +249,7 @@ def test_progress_callbacks(self):
     progress_updates = []
     def progress_callback(progress):
         progress_updates.append(progress)
-    
+
     # Verify callbacks are called with correct progress data
 ```
 

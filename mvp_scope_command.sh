@@ -27,7 +27,7 @@ python mvp_scope.py "$PROJECT_DIR"
 if [ $? -eq 0 ]; then
     echo ""
     echo "✅ MVP scoping complete!"
-    echo "📋 View the report: cat mvp_scope_report.md" 
+    echo "📋 View the report: cat mvp_scope_report.md"
     echo "🏃 Run MVP CLI: python codebase_auditor.py"
     echo "🧪 Test MVP: python scripts/smoke_cli.py"
 else

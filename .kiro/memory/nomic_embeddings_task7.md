@@ -145,14 +145,14 @@ def _process_batch(self, chunks: List[CodeChunk]) -> List[np.ndarray]:
     # Separate cached and uncached chunks
     cached_embeddings = {}
     uncached_chunks = []
-    
+
     for i, chunk in enumerate(chunks):
         cached_embedding = self.cache.get(chunk.content, self.model_name)
         if cached_embedding is not None:
             cached_embeddings[i] = cached_embedding
         else:
             uncached_chunks.append(chunk)
-    
+
     # Generate embeddings for uncached chunks only
     if uncached_chunks:
         uncached_embeddings = self._batch_embed([chunk.content for chunk in uncached_chunks])

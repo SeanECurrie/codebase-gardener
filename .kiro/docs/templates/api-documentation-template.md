@@ -17,15 +17,15 @@
 def __init__(self, param1: Type1, param2: Type2 = default_value) -> None:
     """
     Initialize [ClassName].
-    
+
     Args:
         param1: Description of parameter 1
         param2: Description of parameter 2 (optional, defaults to default_value)
-    
+
     Raises:
         ValueError: When param1 is invalid
         ConfigurationError: When configuration is missing
-    
+
     Example:
         >>> instance = ClassName("value1", param2="value2")
         >>> instance.method()
@@ -226,7 +226,7 @@ final_result = component2.transform(intermediate)
 
 ### Benchmarks
 - **Small Input** (< 1KB): ~10ms processing time
-- **Medium Input** (1-100KB): ~100ms processing time  
+- **Medium Input** (1-100KB): ~100ms processing time
 - **Large Input** (> 100KB): ~1s processing time
 
 ### Memory Usage
@@ -252,7 +252,7 @@ class TestComponentClass:
         component = ComponentClass("test_config")
         result = component.process("test_input")
         assert result == "expected_output"
-    
+
     def test_error_handling(self):
         component = ComponentClass("test_config")
         with pytest.raises(ComponentError):
@@ -283,7 +283,7 @@ def test_performance_benchmark(benchmark):
 #### Issue: Component fails to initialize
 **Symptoms**: `ConfigurationError` during initialization
 **Cause**: Missing or invalid configuration
-**Solution**: 
+**Solution**:
 ```python
 # Check configuration
 from codebase_gardener.config.settings import Settings

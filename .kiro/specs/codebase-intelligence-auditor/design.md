@@ -25,7 +25,7 @@ class CodebaseAuditor:
     def __init__(self):
         self.ollama_client = OllamaClient()  # Use existing
         self.analysis_results = None
-        
+
     def analyze_codebase(self, directory_path: str) -> str:
         """Main method - does everything"""
         # 1. Find files (use existing FileUtilities)
@@ -33,10 +33,10 @@ class CodebaseAuditor:
         # 3. Send to gpt-oss-20b with analysis prompt
         # 4. Store results
         # 5. Return summary
-        
+
     def chat(self, question: str) -> str:
         """Answer questions about the analysis"""
-        
+
     def export_markdown(self) -> str:
         """Generate markdown report"""
 ```
@@ -101,18 +101,18 @@ def analyze_codebase(self, directory_path: str) -> str:
         # Basic validation
         if not os.path.exists(directory_path):
             return "Directory not found"
-            
+
         # Find files
         files = self._find_files(directory_path)
         if not files:
             return "No source files found"
-            
+
         # Analyze with gpt-oss-20b
         analysis = self._analyze_with_ollama(files)
         self.analysis_results = analysis
-        
+
         return "Analysis complete. Ask me questions or export markdown."
-        
+
     except Exception as e:
         return f"Analysis failed: {str(e)}"
 ```

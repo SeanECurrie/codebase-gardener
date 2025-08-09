@@ -66,7 +66,7 @@
 - Must save adapters in project-specific directories
 - Must provide fallback to base model when training fails
 
-**Mac Mini M4 Constraints**: 
+**Mac Mini M4 Constraints**:
 - Memory efficiency is CRITICAL - LoRA adapters should be 1-10MB vs 1-10GB full models
 - Training should take minutes/hours, not days/weeks
 - Must support dynamic loading/unloading of adapters
@@ -112,7 +112,7 @@
 - Integration with conversation state management
 
 #### Required Interfaces for Future Tasks:
-- **Training Interface**: `train_adapter(project_id, training_data, config)` 
+- **Training Interface**: `train_adapter(project_id, training_data, config)`
 - **Loading Interface**: `load_adapter(adapter_path)`, `unload_adapter()`
 - **Status Interface**: `get_training_status(project_id)`, `get_adapter_info(adapter_path)`
 - **Validation Interface**: `verify_adapter_compatibility(adapter_path, base_model)`

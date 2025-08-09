@@ -125,7 +125,7 @@ def _ensure_connected(self) -> None:
         self.connect()
 
 @retry_with_exponential_backoff(max_retries=3)
-def search_similar(self, query_embedding: np.ndarray, limit: int = 10, 
+def search_similar(self, query_embedding: np.ndarray, limit: int = 10,
                   filters: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
     self._ensure_connected()  # Auto-connect if needed
     # Implementation...
@@ -140,7 +140,7 @@ if filters:
             filter_conditions.append(f"{key} = '{value}'")
         else:
             filter_conditions.append(f"{key} = {value}")
-    
+
     if filter_conditions:
         where_clause = " AND ".join(filter_conditions)
         search_query = search_query.where(where_clause)
@@ -152,11 +152,11 @@ if filters:
 def add_chunks(self, chunks: List[CodeChunk], embeddings: List[np.ndarray]) -> None:
     if len(chunks) != len(embeddings):
         raise VectorStoreError(f"Chunks and embeddings count mismatch")
-    
+
     self._ensure_connected()
-    
+
     try:
-        data = [self._chunk_to_schema(chunk, embedding) 
+        data = [self._chunk_to_schema(chunk, embedding)
                 for chunk, embedding in zip(chunks, embeddings)]
         self.table.add(data)
         logger.info(f"Added {len(chunks)} chunks to vector store")
@@ -266,12 +266,12 @@ def mock_lancedb():
     with patch('codebase_gardener.data.vector_store.lancedb') as mock_lancedb:
         mock_db = Mock()
         mock_table = Mock()
-        
+
         mock_lancedb.connect.return_value = mock_db
         mock_db.table_names.return_value = []
         mock_db.create_table.return_value = mock_table
         mock_table.search.return_value = Mock()
-        
+
         yield mock_lancedb, mock_db, mock_table
 
 # Mock pandas DataFrame for search results

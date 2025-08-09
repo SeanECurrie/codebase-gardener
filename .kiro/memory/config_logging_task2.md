@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     app_name: str = "Codebase Gardener"
     debug: bool = False
     log_level: str = "INFO"
-    
+
     class Config:
         env_prefix = "CODEBASE_GARDENER_"
         case_sensitive = False
@@ -106,7 +106,7 @@ def configure_logging(log_level: str, debug: bool = False):
         structlog.processors.add_log_level,
         structlog.processors.StackInfoRenderer(),
     ]
-    
+
     if debug:
         processors.append(structlog.dev.ConsoleRenderer())
     else:

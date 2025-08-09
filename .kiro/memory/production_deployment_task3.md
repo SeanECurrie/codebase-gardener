@@ -15,7 +15,7 @@ After researching deployment best practices using MCP tools (systemd documentati
 ```
 Production Deployment Stack:
 ├── Ollama Service (systemd)
-├── Codebase Gardener Service (systemd)  
+├── Codebase Gardener Service (systemd)
 ├── Installation Automation
 ├── Health Monitoring System
 ├── Backup & Recovery System

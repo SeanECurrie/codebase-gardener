@@ -105,7 +105,7 @@ class ConversationMessage:
     content: str
     timestamp: datetime
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             'role': self.role,
@@ -124,7 +124,7 @@ class ProjectContext:
     analysis_cache: Dict[str, Any]
     last_accessed: datetime
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def prune_history(self, max_messages: int = 50) -> None:
         if len(self.conversation_history) > max_messages:
             # Keep recent messages and important ones
@@ -138,17 +138,17 @@ class ProjectContextManager:
         self._active_context: Optional[ProjectContext] = None
         self._context_cache: OrderedDict[str, ProjectContext] = OrderedDict()
         self._lock = threading.RLock()
-        
+
     def switch_project(self, project_id: str) -> bool:
         with self._lock:
             # Save current context
             if self._active_context:
                 self._save_context(self._active_context)
-            
+
             # Load new context
             context = self._load_context(project_id)
             self._active_context = context
-            
+
             # Notify dynamic model loader
             self._notify_project_switch(project_id)
             return True

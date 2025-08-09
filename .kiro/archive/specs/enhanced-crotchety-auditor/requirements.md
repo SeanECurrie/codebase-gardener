@@ -110,10 +110,10 @@ class LoRATrainer:
     def train_on_codebase(self, codebase_path):
         # Use existing FileUtilities to find files
         files = self.file_utils.find_source_files(codebase_path)
-        
+
         # Use existing CodePreprocessor to parse
         chunks = self.preprocessor.process_files(files)
-        
+
         # Train LoRA adapter
         lora_config = LoraConfig(
             r=64,

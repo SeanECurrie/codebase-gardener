@@ -101,10 +101,10 @@ class OperationalMonitor:
     def __init__(self, data_dir: Path, app_context=None):
         self.db_path = self.data_dir / "operational_metrics.db"
         self._init_database()  # SQLite for local metrics storage
-        
+
     def store_metric(self, metric: MetricPoint):
         # Store metrics with JSON metadata, handling enum serialization
-        
+
     def get_metrics(self, component=None, metric_name=None, hours=24):
         # Retrieve metrics with flexible filtering
 ```
@@ -114,7 +114,7 @@ class OperationalMonitor:
 class LoggingManager:
     def log_performance_metric(self, operation: str, duration: float, metadata=None):
         # Store performance metrics in memory and log files
-        
+
     def search_logs(self, log_type='main', search_term=None, level=None, hours=24):
         # Search through structured JSON logs
 ```
@@ -124,7 +124,7 @@ class LoggingManager:
 class BackupManager:
     def create_backup(self, backup_type: BackupType, source_paths=None, metadata=None):
         # Create tar.gz backups with checksum validation
-        
+
     def validate_backup(self, backup_id: str):
         # Verify backup integrity with checksum and tar validation
 ```
@@ -134,7 +134,7 @@ class BackupManager:
 class MaintenanceManager:
     def schedule_maintenance(self, task_type: MaintenanceType, scheduled_time: datetime):
         # Schedule maintenance tasks with registry persistence
-        
+
     def execute_maintenance_task(self, task_id: str):
         # Execute tasks based on type with comprehensive error handling
 ```

@@ -86,7 +86,7 @@ Using pathlib.Path for directory operations with comprehensive error handling, p
 # Pattern 1: Directory creation with comprehensive error handling
 def _create_directory_structure(self) -> None:
     directories = [self.data_dir, self.projects_dir, self.base_models_dir, self.logs_dir]
-    
+
     for directory in directories:
         if directory:
             try:
@@ -101,7 +101,7 @@ def _create_directory_structure(self) -> None:
 # Pattern 2: Safe permission setting with graceful fallback
 def _set_directory_permissions(self) -> None:
     dir_permissions = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-    
+
     for directory in directories:
         if directory and directory.exists():
             try:
@@ -120,7 +120,7 @@ def update_active_project_state(self, state: Dict[str, Any]) -> None:
         backup_path = self.active_project_file.with_suffix('.json.backup')
         if self.active_project_file.exists():
             backup_path.write_text(self.active_project_file.read_text(encoding='utf-8'))
-        
+
         # Write new state
         with self.active_project_file.open('w', encoding='utf-8') as f:
             json.dump(state, f, indent=2, ensure_ascii=False)

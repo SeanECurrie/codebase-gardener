@@ -136,20 +136,20 @@ from codebase_gardener.utils.file_utils import FileUtilities
 
 def handle_project_upload(project_path: str):
     file_utils = FileUtilities()
-    
+
     # Validate project structure
     source_files = file_utils.find_source_files(Path(project_path))
     if not source_files:
         raise ValueError("No source files found in project")
-    
+
     # Create project snapshot
     snapshot = file_utils.create_file_snapshot(Path(project_path))
     return {
         'file_count': snapshot.file_count,
         'total_size': snapshot.total_size,
         'languages': list(set(
-            file_utils.get_language_from_file(f) 
-            for f in source_files 
+            file_utils.get_language_from_file(f)
+            for f in source_files
             if file_utils.get_language_from_file(f)
         ))
     }
@@ -286,7 +286,7 @@ file_utils.atomic_write_file(Path("output.txt"), "data", backup=True)
 ```python
 # Find and analyze source files
 source_files = file_utils.find_source_files(
-    Path("project/"), 
+    Path("project/"),
     languages=["python", "javascript"]
 )
 
