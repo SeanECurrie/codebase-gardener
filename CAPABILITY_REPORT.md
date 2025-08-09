@@ -169,10 +169,13 @@ ruff check && ruff format
 - Progress reporting for large projects
 - Memory-conscious processing
 
-### Analysis Speed
-- Small projects (≤5 files): Brief analysis
-- Medium projects (6-100 files): Comprehensive analysis
-- Large projects (>100 files): High-level overview with selective deep dives
+### Analysis Speed & Scale Limits
+- Small projects (≤5 files): Brief analysis (~5-10 seconds)
+- Medium projects (6-100 files): Comprehensive analysis (~30-60 seconds)
+- Large projects (>100 files): High-level overview (~2-5 minutes)
+- **Scale tested**: Up to 500 files, 2MB total content
+- **Memory usage**: ~50-100MB for typical analysis sessions
+- **Ollama retry**: 5 attempts with exponential backoff (max ~30 second delay)
 
 ## Known Limitations
 
