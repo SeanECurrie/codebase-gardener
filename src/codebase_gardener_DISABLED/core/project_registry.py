@@ -17,14 +17,13 @@ from pathlib import Path
 from threading import Lock
 
 import structlog
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 from codebase_gardener.config import settings
 from codebase_gardener.utils.error_handling import (
     CodebaseGardenerError,
     StorageError,
     retry_with_backoff,
 )
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 logger = structlog.get_logger(__name__)
 

@@ -17,7 +17,6 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pandas as pd
 import pytest
-
 from codebase_gardener.data.preprocessor import ChunkType, CodeChunk
 from codebase_gardener.data.vector_store import (
     CodeChunkSchema,

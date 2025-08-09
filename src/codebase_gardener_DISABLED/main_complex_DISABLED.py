@@ -14,12 +14,11 @@ from pathlib import Path
 from typing import Any
 
 import click
+from codebase_gardener.config import settings
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-
-from codebase_gardener.config import settings
 
 console = Console()
 

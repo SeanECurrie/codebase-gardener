@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from codebase_gardener.utils.directory_setup import (
     DirectoryManager,
     DirectorySetupError,

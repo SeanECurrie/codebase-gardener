@@ -12,8 +12,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
-
 from codebase_gardener.core.project_registry import (
     ProjectMetadata,
     ProjectRegistry,
@@ -23,6 +21,7 @@ from codebase_gardener.core.project_registry import (
     get_project_registry,
 )
 from codebase_gardener.utils.error_handling import StorageError
+from pydantic import ValidationError
 
 
 class TestProjectMetadata:

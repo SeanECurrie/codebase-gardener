@@ -15,7 +15,6 @@ from typing import Any
 
 import lancedb
 import numpy as np
-
 from codebase_gardener.config.settings import get_settings
 from codebase_gardener.core.project_registry import (
     get_project_registry,

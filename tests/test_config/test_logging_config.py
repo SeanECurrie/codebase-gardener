@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import structlog
-
 from codebase_gardener.config.logging_config import (
     LoggerMixin,
     bind_context,

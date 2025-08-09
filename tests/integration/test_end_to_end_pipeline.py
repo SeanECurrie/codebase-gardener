@@ -10,7 +10,6 @@ from pathlib import Path
 
 import psutil
 import pytest
-
 from codebase_gardener.config.settings import Settings
 from codebase_gardener.data.parser import TreeSitterParser
 from codebase_gardener.data.preprocessor import CodePreprocessor

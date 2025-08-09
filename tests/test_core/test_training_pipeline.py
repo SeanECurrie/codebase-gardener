@@ -11,7 +11,6 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
-
 from codebase_gardener.core.project_registry import ProjectMetadata, TrainingStatus
 from codebase_gardener.core.training_pipeline import (
     TrainingConfig,

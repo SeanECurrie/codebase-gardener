@@ -11,9 +11,8 @@ from pathlib import Path
 from typing import Any, Optional
 
 import structlog
-from tree_sitter import Language, Node, Parser, Tree
-
 from codebase_gardener.utils.error_handling import ParsingError, retry_with_backoff
+from tree_sitter import Language, Node, Parser, Tree
 
 logger = structlog.get_logger(__name__)
 

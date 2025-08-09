@@ -14,7 +14,6 @@ from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-
 from codebase_gardener.config.settings import Settings
 from codebase_gardener.data.preprocessor import ChunkType, CodeChunk
 from codebase_gardener.models.nomic_embedder import EmbeddingCache, NomicEmbedder

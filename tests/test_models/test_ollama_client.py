@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import ollama
 import pytest
-
 from codebase_gardener.config.settings import Settings
 from codebase_gardener.models.ollama_client import (
     OllamaClient,

@@ -15,13 +15,12 @@ from typing import Any
 
 import lancedb
 import numpy as np
-from lancedb.pydantic import LanceModel, Vector
-
 from codebase_gardener.data.preprocessor import CodeChunk
 from codebase_gardener.utils.error_handling import (
     VectorStoreError,
     retry_with_exponential_backoff,
 )
+from lancedb.pydantic import LanceModel, Vector
 
 logger = logging.getLogger(__name__)
 

@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-
 from codebase_gardener.config import settings
 from codebase_gardener.core.project_registry import ProjectRegistry, TrainingStatus
 from codebase_gardener.data.preprocessor import CodeChunk, CodePreprocessor

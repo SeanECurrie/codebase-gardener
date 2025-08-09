@@ -9,12 +9,11 @@ import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
-
 from codebase_gardener.config.settings import Settings
 
 # Import only the working components we identified in the audit
 from codebase_gardener.utils.file_utils import FileUtilities
+from rich.console import Console
 
 console = Console()
 

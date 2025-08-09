@@ -9,7 +9,6 @@ from pathlib import Path
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
-
 from codebase_gardener.data.parser import (
     CodeElement,
     CodeStructure,

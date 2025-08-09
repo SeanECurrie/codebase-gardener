@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-
 from codebase_gardener.data.parser import (
     CodeElement,
     ParseResult,
