@@ -11,40 +11,40 @@
 - Git alignment and branching strategy established (mvp/focus-cli branch)
 - Pre-commit hooks configured and working
 
-## What's Broken / Gaps
+## Recent Completions ✅
 
-❌ **Legacy Test Infrastructure**
-- `tests/test_project_structure.py` fails 4/4 tests (ModuleNotFoundError: codebase_gardener)
-- Tests reference disabled `src/codebase_gardener/` system components
-- CI/CD pipeline affected by failing tests
+✅ **Test Infrastructure Fixed** (commit 0fd4fd6)
+- `tests/test_project_structure.py` replaced with MVP-focused tests
+- All MVP tests now pass: pytest -q confirms 4/4 success
 
-❌ **Single Point of Failure**
-- Ollama connection has no retry logic or graceful degradation
-- Generic error messages when AI service unavailable
+✅ **Ollama Retry Logic Added** (commit 1e2b184)
+- Exponential backoff retry in codebase_auditor.py
+- Friendly error messages with host/model info after retries
+- Graceful degradation when AI service unavailable
 
-❌ **Documentation Confusion**
-- CLAUDE.md references disabled "Full Gardener System" components
-- Mixed messaging about what's actually available in MVP
+✅ **Documentation Aligned** (commits 9e6d74f, 6b6a022)
+- CLAUDE.md focuses on MVP scope with retry behavior noted
+- CAPABILITY_REPORT.md created with current status
 
-## 🚀 Immediate Next Actions (ranked 1–3)
+## 🚀 Next 3 Actions (≤45 min each)
 
-### 1. Fix Test Infrastructure
-**Problem**: 4/4 project structure tests failing due to disabled module imports
-**Solution**: Replace tests/test_project_structure.py with MVP-focused tests for codebase_auditor and simple_file_utils modules
+### 1. Create HOW_TO_RUN.md Guide
+**Gap**: Users need quickstart guide with concrete examples
+**Output**: User-facing guide with install→smoke→CLI→troubleshooting flow
 ```bash
-python -m pytest tests/test_project_structure.py -v  # should pass after fix
+# Result: Clear onboarding path for new users
 ```
 
-### 2. Add Ollama Retry Logic
-**Problem**: Single-attempt connection to Ollama causes poor UX when service starting
-**Solution**: Add exponential backoff retry in codebase_auditor.py analyze_codebase() method, lines ~250-280
+### 2. Verify All Test Coverage
+**Task**: Run full test suite and smoke test to confirm stability
+**Commands**: `pytest -q` + `PYTHONPATH=. python scripts/smoke_cli.py`
 ```bash
-# Test with: python codebase_auditor.py (when Ollama not running)
+# Ensure CI pipeline stays green
 ```
 
-### 3. Clean Up Documentation
-**Problem**: CLAUDE.md references disabled "Full Gardener System" confusing users/tests
-**Solution**: Update CLAUDE.md to focus only on working MVP components (codebase_auditor.py, simple_file_utils.py)
+### 3. Add Performance Benchmarks to Capability Report
+**Enhancement**: Document scale limits (4k+ files behavior) and timing
+**Research**: Test with large repo, document memory/time characteristics
 
 ## 🎯 Success Criteria (next 1–2 days)
 
