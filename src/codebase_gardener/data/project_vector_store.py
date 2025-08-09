@@ -6,26 +6,22 @@ It extends the existing LanceDB vector store implementation to support multiple 
 with data isolation, efficient project switching, and health monitoring.
 """
 
-import json
 import logging
 import threading
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import lancedb
 import numpy as np
 
 from codebase_gardener.config.settings import get_settings
 from codebase_gardener.core.project_registry import (
-    ProjectMetadata,
     get_project_registry,
 )
 from codebase_gardener.data.preprocessor import CodeChunk
 from codebase_gardener.data.vector_store import (
-    CodeChunkSchema,
     SearchResult,
     VectorStore,
 )
@@ -47,7 +43,7 @@ class ProjectVectorStoreInfo:
     chunk_count: int
     health_status: str = "healthy"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
             "project_id": self.project_id,
@@ -85,8 +81,8 @@ class ProjectVectorStoreManager:
         self._lock = threading.RLock()
 
         # Current active project
-        self._active_project_id: Optional[str] = None
-        self._active_vector_store: Optional[VectorStore] = None
+        self._active_project_id: str | None = None
+        self._active_vector_store: VectorStore | None = None
 
         # Database connection
         self.db_path = self.settings.data_dir / "vector_stores"
@@ -208,11 +204,11 @@ class ProjectVectorStoreManager:
                 logger.error(f"Failed to switch to project {project_id}: {e}")
                 return False
 
-    def get_active_vector_store(self) -> Optional[VectorStore]:
+    def get_active_vector_store(self) -> VectorStore | None:
         """Get the currently active vector store."""
         return self._active_vector_store
 
-    def get_active_project_id(self) -> Optional[str]:
+    def get_active_project_id(self) -> str | None:
         """Get the currently active project ID."""
         return self._active_project_id
 
@@ -221,8 +217,8 @@ class ProjectVectorStoreManager:
         project_id: str,
         query_embedding: np.ndarray,
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None
-    ) -> List[SearchResult]:
+        filters: dict[str, Any] | None = None
+    ) -> list[SearchResult]:
         """
         Search for similar chunks within a specific project.
 
@@ -245,8 +241,8 @@ class ProjectVectorStoreManager:
     def add_chunks_to_project(
         self,
         project_id: str,
-        chunks: List[CodeChunk],
-        embeddings: List[np.ndarray]
+        chunks: list[CodeChunk],
+        embeddings: list[np.ndarray]
     ) -> bool:
         """
         Add code chunks to a specific project's vector store.
@@ -311,7 +307,7 @@ class ProjectVectorStoreManager:
                 logger.error(f"Failed to remove vector store for project {project_id}: {e}")
                 return False
 
-    def health_check(self, project_id: Optional[str] = None) -> Dict[str, Any]:
+    def health_check(self, project_id: str | None = None) -> dict[str, Any]:
         """
         Perform health check on vector stores.
 
@@ -373,7 +369,7 @@ class ProjectVectorStoreManager:
 
         return health_results
 
-    def get_project_stats(self, project_id: str) -> Dict[str, Any]:
+    def get_project_stats(self, project_id: str) -> dict[str, Any]:
         """
         Get statistics for a specific project's vector store.
 
@@ -402,7 +398,7 @@ class ProjectVectorStoreManager:
             logger.error(f"Failed to get stats for project {project_id}: {e}")
             return {"error": str(e)}
 
-    def list_project_vector_stores(self) -> List[Dict[str, Any]]:
+    def list_project_vector_stores(self) -> list[dict[str, Any]]:
         """
         List all project vector stores.
 
@@ -498,7 +494,7 @@ class ProjectVectorStoreManager:
 
 
 # Global instance management
-_project_vector_store_manager: Optional[ProjectVectorStoreManager] = None
+_project_vector_store_manager: ProjectVectorStoreManager | None = None
 _manager_lock = threading.Lock()
 
 

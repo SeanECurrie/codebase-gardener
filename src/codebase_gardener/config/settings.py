@@ -5,9 +5,7 @@ This module provides centralized configuration for the Codebase Gardener applica
 with automatic environment variable support and type validation.
 """
 
-import os
 from pathlib import Path
-from typing import List, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 from pydantic_settings import BaseSettings
@@ -32,11 +30,11 @@ class Settings(BaseSettings):
         default_factory=lambda: Path.home() / ".codebase-gardener",
         description="Base directory for application data"
     )
-    projects_dir: Optional[Path] = Field(
+    projects_dir: Path | None = Field(
         default=None,
         description="Directory containing project-specific data"
     )
-    base_models_dir: Optional[Path] = Field(
+    base_models_dir: Path | None = Field(
         default=None,
         description="Directory for base AI models"
     )
@@ -70,7 +68,7 @@ class Settings(BaseSettings):
     )
 
     # Vector database settings
-    vector_db_path: Optional[Path] = Field(
+    vector_db_path: Path | None = Field(
         default=None,
         description="Path to vector database storage"
     )
@@ -168,7 +166,7 @@ class Settings(BaseSettings):
         default=True,
         description="Cache embeddings to disk for reuse"
     )
-    
+
     # Code preprocessing settings
     preserve_comments: bool = Field(
         default=True,

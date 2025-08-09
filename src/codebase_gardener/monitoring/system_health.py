@@ -11,8 +11,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import psutil
 import structlog
@@ -35,9 +34,9 @@ class ComponentHealth:
     status: HealthStatus
     initialized: bool
     last_check: datetime
-    response_time: Optional[float] = None
-    error_message: Optional[str] = None
-    metrics: Optional[Dict[str, Any]] = None
+    response_time: float | None = None
+    error_message: str | None = None
+    metrics: dict[str, Any] | None = None
 
 
 @dataclass
@@ -58,7 +57,7 @@ class SystemHealthMonitor:
         """Initialize system health monitor."""
         self.app_context = app_context
         self.start_time = datetime.now()
-        self.health_history: List[Dict[str, Any]] = []
+        self.health_history: list[dict[str, Any]] = []
         self.max_history_size = 100
         self._lock = threading.RLock()
 
@@ -209,7 +208,7 @@ class SystemHealthMonitor:
                 error_message=f"Health check failed: {str(e)}"
             )
 
-    def check_integration_health(self) -> Dict[str, Any]:
+    def check_integration_health(self) -> dict[str, Any]:
         """Check integration health between components."""
         integration_tests = []
 
@@ -331,7 +330,7 @@ class SystemHealthMonitor:
             "message": f"Integration health: {score:.0f}% ({passed_tests}/{total_tests})"
         }
 
-    def comprehensive_health_check(self) -> Dict[str, Any]:
+    def comprehensive_health_check(self) -> dict[str, Any]:
         """Perform comprehensive system health check."""
         with self._lock:
             check_time = datetime.now()
@@ -423,8 +422,8 @@ class SystemHealthMonitor:
 
     def _generate_recommendations(self, overall_status: HealthStatus,
                                 system_metrics: SystemMetrics,
-                                components: Dict[str, Any],
-                                integration_health: Dict[str, Any]) -> List[str]:
+                                components: dict[str, Any],
+                                integration_health: dict[str, Any]) -> list[str]:
         """Generate actionable recommendations based on health status."""
         recommendations = []
 
@@ -486,7 +485,7 @@ class SystemHealthMonitor:
 
         return recommendations
 
-    def get_health_history(self, hours: int = 24) -> List[Dict[str, Any]]:
+    def get_health_history(self, hours: int = 24) -> list[dict[str, Any]]:
         """Get health check history for the specified number of hours."""
         cutoff_time = datetime.now() - timedelta(hours=hours)
 
@@ -495,7 +494,7 @@ class SystemHealthMonitor:
             if datetime.fromisoformat(report["timestamp"]) > cutoff_time
         ]
 
-    def get_health_trends(self) -> Dict[str, Any]:
+    def get_health_trends(self) -> dict[str, Any]:
         """Analyze health trends over time."""
         if len(self.health_history) < 2:
             return {"message": "Insufficient data for trend analysis"}

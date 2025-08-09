@@ -13,10 +13,11 @@ import json
 import threading
 import time
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -37,9 +38,9 @@ class ConversationMessage:
     role: str  # 'user' or 'assistant'
     content: str
     timestamp: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert message to dictionary for JSON serialization."""
         return {
             'role': self.role,
@@ -49,7 +50,7 @@ class ConversationMessage:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ConversationMessage':
+    def from_dict(cls, data: dict[str, Any]) -> 'ConversationMessage':
         """Create message from dictionary."""
         return cls(
             role=data['role'],
@@ -80,12 +81,12 @@ class ConversationMessage:
 class ProjectContext:
     """Represents the conversation context for a specific project."""
     project_id: str
-    conversation_history: List[ConversationMessage] = field(default_factory=list)
-    analysis_cache: Dict[str, Any] = field(default_factory=dict)
+    conversation_history: list[ConversationMessage] = field(default_factory=list)
+    analysis_cache: dict[str, Any] = field(default_factory=dict)
     last_accessed: datetime = field(default_factory=datetime.now)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None) -> None:
+    def add_message(self, role: str, content: str, metadata: dict[str, Any] = None) -> None:
         """Add a new message to the conversation history."""
         message = ConversationMessage(
             role=role,
@@ -134,13 +135,13 @@ class ProjectContext:
             pruned_count=len(self.conversation_history)
         )
 
-    def get_recent_messages(self, limit: Optional[int] = None) -> List[ConversationMessage]:
+    def get_recent_messages(self, limit: int | None = None) -> list[ConversationMessage]:
         """Get recent messages, optionally limited."""
         if limit is None:
             return self.conversation_history.copy()
         return self.conversation_history[-limit:] if self.conversation_history else []
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert context to dictionary for JSON serialization."""
         return {
             'project_id': self.project_id,
@@ -151,7 +152,7 @@ class ProjectContext:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ProjectContext':
+    def from_dict(cls, data: dict[str, Any]) -> 'ProjectContext':
         """Create context from dictionary."""
         return cls(
             project_id=data['project_id'],
@@ -174,7 +175,7 @@ class ProjectContextManager:
         self._contexts_dir.mkdir(parents=True, exist_ok=True)
 
         # Active context and cache
-        self._active_context: Optional[ProjectContext] = None
+        self._active_context: ProjectContext | None = None
         self._context_cache: OrderedDict[str, ProjectContext] = OrderedDict()
         self._max_cache_size = 3
 
@@ -182,7 +183,7 @@ class ProjectContextManager:
         self._lock = threading.RLock()
 
         # Project switch observers
-        self._switch_observers: List[Callable[[str], None]] = []
+        self._switch_observers: list[Callable[[str], None]] = []
 
         # Auto-save timer
         self._last_save_time = time.time()
@@ -348,12 +349,12 @@ class ProjectContextManager:
                 )
                 raise ContextManagerError(f"Failed to switch to project {project_id}: {e}")
 
-    def get_current_context(self) -> Optional[ProjectContext]:
+    def get_current_context(self) -> ProjectContext | None:
         """Get the currently active project context."""
         with self._lock:
             return self._active_context
 
-    def get_current_project_id(self) -> Optional[str]:
+    def get_current_project_id(self) -> str | None:
         """Get the ID of the currently active project."""
         with self._lock:
             return self._active_context.project_id if self._active_context else None
@@ -367,17 +368,17 @@ class ProjectContextManager:
                 self._context_cache[project_id] = context  # Move to end (LRU)
                 context.last_accessed = datetime.now()
                 return context
-            
+
             # Load from disk or create new
             context = self._load_context(project_id)
-            
+
             # Add to cache and manage size
             self._context_cache[project_id] = context
             self._manage_cache()
-            
+
             return context
 
-    def add_message(self, role: str, content: str, metadata: Dict[str, Any] = None) -> None:
+    def add_message(self, role: str, content: str, metadata: dict[str, Any] = None) -> None:
         """Add a message to the current project's conversation."""
         with self._lock:
             if not self._active_context:
@@ -402,7 +403,7 @@ class ProjectContextManager:
                 content_length=len(content)
             )
 
-    def get_conversation_history(self, limit: Optional[int] = None) -> List[ConversationMessage]:
+    def get_conversation_history(self, limit: int | None = None) -> list[ConversationMessage]:
         """Get conversation history for the current project."""
         with self._lock:
             if not self._active_context:
@@ -438,7 +439,7 @@ class ProjectContextManager:
                 )
                 return False
 
-    def get_context_stats(self) -> Dict[str, Any]:
+    def get_context_stats(self) -> dict[str, Any]:
         """Get statistics about the context manager."""
         with self._lock:
             stats = {
@@ -523,7 +524,7 @@ class ProjectContextManager:
 
 
 # Global context manager instance
-_context_manager: Optional[ProjectContextManager] = None
+_context_manager: ProjectContextManager | None = None
 _context_manager_lock = threading.Lock()
 
 

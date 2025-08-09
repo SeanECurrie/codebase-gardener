@@ -8,7 +8,7 @@ directory structure with proper permissions and error handling.
 import json
 import stat
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -221,7 +221,7 @@ class DirectoryManager:
 
         logger.debug("Directory structure validation passed")
 
-    def _get_directory_list(self) -> List[str]:
+    def _get_directory_list(self) -> list[str]:
         """Get a list of created directories for logging."""
         directories = [
             self.data_dir,
@@ -317,7 +317,7 @@ class DirectoryManager:
 
         return sanitized
 
-    def get_active_project_state(self) -> Dict[str, Any]:
+    def get_active_project_state(self) -> dict[str, Any]:
         """
         Get the current active project state.
 
@@ -338,7 +338,7 @@ class DirectoryManager:
             )
             raise DirectorySetupError(f"Cannot read active project state: {e}") from e
 
-    def update_active_project_state(self, state: Dict[str, Any]) -> None:
+    def update_active_project_state(self, state: dict[str, Any]) -> None:
         """
         Update the active project state.
 
@@ -426,12 +426,12 @@ def create_project_directory(project_name: str) -> Path:
     return directory_manager.create_project_directory(project_name)
 
 
-def get_active_project_state() -> Dict[str, Any]:
+def get_active_project_state() -> dict[str, Any]:
     """Get the current active project state."""
     return directory_manager.get_active_project_state()
 
 
-def update_active_project_state(state: Dict[str, Any]) -> None:
+def update_active_project_state(state: dict[str, Any]) -> None:
     """Update the active project state."""
     directory_manager.update_active_project_state(state)
 

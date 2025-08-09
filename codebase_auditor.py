@@ -15,9 +15,9 @@ Usage:
 
 import os
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Tuple
+from pathlib import Path
+from typing import Any
 
 # Add the src directory to Python path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -41,7 +41,7 @@ class CodebaseAuditor:
     
     Provides comprehensive analysis, chat functionality, and markdown export.
     """
-    
+
     def __init__(self, ollama_host: str = None, model_name: str = None):
         """Initialize the auditor with Ollama client and file utilities.
 
@@ -54,13 +54,13 @@ class CodebaseAuditor:
 
         self.client = ollama.Client(ollama_host)
         self.file_utils = SimpleFileUtilities()
-        self.analysis_results: Optional[Dict[str, Any]] = None
+        self.analysis_results: dict[str, Any] | None = None
 
         # Simple, hardcoded caps to avoid huge prompts (pragmatic POC)
         self.max_files: int = 250
         self.max_file_bytes: int = 100 * 1024  # 100 KB per file
         self.max_total_bytes: int = 2 * 1024 * 1024  # 2 MB total
-        
+
         # Chat prompt for follow-up questions
         self.chat_prompt = """Based on your previous analysis of this codebase:
 
@@ -69,10 +69,10 @@ class CodebaseAuditor:
 User question: {user_question}
 
 Provide a helpful, specific answer based on your analysis. Reference specific files, functions, or code patterns when relevant."""
-        
+
     def _generate_analysis_prompt(self, file_count: int, total_bytes: int) -> str:
         """Generate context-appropriate analysis prompt based on codebase size."""
-        
+
         # Determine analysis depth based on codebase size
         if file_count <= 5:
             depth = "minimal"
@@ -82,27 +82,27 @@ Provide a helpful, specific answer based on your analysis. Reference specific fi
             depth = "comprehensive"
         else:
             depth = "high-level"
-            
+
         base_prompt = """You are an expert code auditor analyzing a codebase for an AI agent that will work on it later.
 
 Codebase context: {file_count} files, {size_desc}
 
 """
-        
+
         if depth == "minimal":
             specific_prompt = """This appears to be a small project or test codebase. Provide a brief analysis focusing on:
 - What the code does (main purpose/functionality)
 - Basic structure and organization
 - Any obvious issues or improvements needed
 Keep the analysis concise and proportional to the codebase size."""
-            
+
         elif depth == "focused":
             specific_prompt = """This is a focused project. Analyze the main aspects:
 - **Primary Purpose**: What this codebase accomplishes
 - **Architecture**: Key components and their relationships  
 - **Code Quality**: Notable patterns, issues, or strengths
 - **Recommendations**: 2-3 most important improvements"""
-            
+
         elif depth == "comprehensive":
             specific_prompt = """This is a substantial codebase requiring detailed analysis:
 
@@ -122,7 +122,7 @@ Keep the analysis concise and proportional to the codebase size."""
 - Prioritized list of critical issues to address
 - Specific improvements for AI agent work
 - Technical debt concerns"""
-            
+
         else:  # high-level
             specific_prompt = """This is a large codebase. Provide a high-level strategic analysis:
 - **System Overview**: Primary purpose and major subsystems
@@ -149,25 +149,25 @@ Focus on the big picture rather than detailed code issues."""
         """
         try:
             dir_path = Path(directory_path).resolve()
-            
+
             if not dir_path.exists() or not dir_path.is_dir():
                 return f"Error: Directory '{directory_path}' does not exist or is not accessible."
-            
+
             if progress_callback:
                 progress_callback("Starting codebase analysis...")
-            
+
             # Find source files using existing FileUtilities
             print("🔍 Discovering source files...")
             source_files = self.file_utils.find_source_files(
-                dir_path, 
+                dir_path,
                 progress_callback=progress_callback
             )
-            
+
             if not source_files:
                 return f"No source files found in '{directory_path}'"
-            
+
             print(f"📁 Found {len(source_files)} source files")
-            
+
             # Optional preflight: verify model is available with a tiny check
             if progress_callback:
                 progress_callback(f"Verifying model '{self.model_name}' is available...")
@@ -188,26 +188,26 @@ Focus on the big picture rather than detailed code issues."""
             file_contents, stats = self._read_and_combine_files_with_caps(
                 source_files, progress_callback, base_dir=dir_path
             )
-            
+
             if not file_contents.strip():
                 return "Error: No readable content found in source files"
-            
+
             # Send to model for analysis
             print(f"🤖 Analyzing codebase with {self.model_name}...")
             if progress_callback:
                 progress_callback(f"Sending codebase to {self.model_name} for analysis...")
-            
+
             # Generate context-appropriate prompt
             analysis_prompt = self._generate_analysis_prompt(len(source_files), stats['bytes_included'])
             full_prompt = analysis_prompt.format(file_contents=file_contents)
-            
+
             response = self.client.generate(
                 model=self.model_name,
                 prompt=full_prompt
             )
-            
+
             analysis_text = response['response']
-            
+
             # Store results
             self.analysis_results = {
                 'full_analysis': analysis_text,
@@ -217,28 +217,28 @@ Focus on the big picture rather than detailed code issues."""
                 'file_count': len(source_files),
                 'caps': stats
             }
-            
+
             print("✅ Analysis complete!")
             if progress_callback:
                 progress_callback("Analysis complete! You can now ask questions or export the report.")
-            
+
             return f"Analysis complete! Analyzed {len(source_files)} files. Ask me questions or export markdown report."
-            
+
         except Exception as e:
             error_msg = f"Analysis failed: {str(e)}"
             print(f"❌ {error_msg}")
             if progress_callback:
                 progress_callback(f"❌ {error_msg}")
             return error_msg
-    
+
     def _read_and_combine_files_with_caps(
         self,
-        source_files: List[Path],
+        source_files: list[Path],
         progress_callback=None,
-        base_dir: Optional[Path] = None
-    ) -> Tuple[str, Dict[str, Any]]:
+        base_dir: Path | None = None
+    ) -> tuple[str, dict[str, Any]]:
         """Read and combine files with simple caps to avoid huge prompts."""
-        combined_content: List[str] = []
+        combined_content: list[str] = []
         files_read = 0
         total_bytes = 0
         truncated_files = 0
@@ -253,7 +253,7 @@ Focus on the big picture rather than detailed code issues."""
                         f"Reading files... {idx}/{len(limited_files)} (total ~{total_bytes//1024} KB)"
                     )
 
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(file_path, encoding='utf-8', errors='ignore') as f:
                     content = f.read()
 
                 # Enforce per-file cap
@@ -309,7 +309,7 @@ Focus on the big picture rather than detailed code issues."""
             return bool(resp and isinstance(resp, dict) and resp.get('response'))
         except Exception:
             return False
-    
+
     def chat(self, question: str) -> str:
         """
         Ask questions about the analyzed codebase.
@@ -322,23 +322,23 @@ Focus on the big picture rather than detailed code issues."""
         """
         if not self.analysis_results:
             return "Error: No codebase analysis available. Please run analyze_codebase() first."
-        
+
         try:
             full_prompt = self.chat_prompt.format(
                 previous_analysis=self.analysis_results['full_analysis'],
                 user_question=question
             )
-            
+
             response = self.client.generate(
                 model=self.model_name,
                 prompt=full_prompt
             )
-            
+
             return response['response']
-            
+
         except Exception as e:
             return f"Chat failed: {str(e)}"
-    
+
     def export_markdown(self) -> str:
         """
         Export analysis results as formatted markdown.
@@ -348,9 +348,9 @@ Focus on the big picture rather than detailed code issues."""
         """
         if not self.analysis_results:
             return "Error: No analysis results to export. Please run analyze_codebase() first."
-        
+
         timestamp = datetime.fromisoformat(self.analysis_results['timestamp']).strftime("%Y-%m-%d %H:%M:%S")
-        
+
         markdown_report = f"""# Codebase Analysis Report
 
 **Generated:** {timestamp}  
@@ -368,18 +368,18 @@ Focus on the big picture rather than detailed code issues."""
 The following {self.analysis_results['file_count']} source files were included in this analysis:
 
 """
-        
+
         # Add file list
         for file_path in sorted(self.analysis_results['file_list']):
             relative_path = Path(file_path).relative_to(self.analysis_results['directory_path'])
             markdown_report += f"- `{relative_path}`\n"
-        
-        markdown_report += f"""
+
+        markdown_report += """
 ---
 
 *Report generated by Codebase Intelligence Auditor using gpt-oss-20b*
 """
-        
+
         return markdown_report
 
 
@@ -413,16 +413,16 @@ def format_analysis_summary(analysis_results):
     """Format a brief summary of analysis results."""
     if not analysis_results:
         return "No analysis completed yet."
-    
+
     caps = analysis_results.get('caps', {})
     files_included = caps.get('files_included', 0)
     files_skipped = caps.get('files_skipped', 0)
     bytes_included = caps.get('bytes_included', 0)
     files_truncated = caps.get('files_truncated', 0)
-    
+
     total_files = files_included + files_skipped
     truncated_note = f" ({files_truncated} truncated)" if files_truncated > 0 else ""
-    
+
     return f"📊 Analysis Summary: {files_included}/{total_files} files{truncated_note}, {bytes_included:,} bytes processed"
 
 
@@ -430,27 +430,27 @@ def main():
     """Enhanced CLI interface for the codebase auditor."""
     print_welcome()
     print_help()
-    
+
     auditor = CodebaseAuditor()
-    
+
     while True:
         try:
             # Show current status
             if auditor.analysis_results:
                 print(f"\n{format_analysis_summary(auditor.analysis_results)}")
-            
+
             command = input("\n🔍 > ").strip()
-            
+
             if not command:
                 continue
-                
+
             if command.lower() in ['quit', 'exit', 'q']:
                 print("👋 Goodbye!")
                 break
-                
+
             elif command.lower() == 'help':
                 print_help()
-                
+
             elif command.lower() == 'status':
                 if auditor.analysis_results:
                     print(f"\n✅ {format_analysis_summary(auditor.analysis_results)}")
@@ -466,53 +466,53 @@ def main():
                             print(f"   ... and {len(files_list) - 5} more files")
                 else:
                     print("❌ No analysis completed yet. Use 'analyze <directory>' to start.")
-                    
+
             elif command.startswith('analyze '):
                 directory = command[8:].strip()
                 if not directory:
                     print("❌ Please specify a directory to analyze")
                     print("   Example: analyze ./my-project")
                     continue
-                    
+
                 if not os.path.exists(directory):
                     print(f"❌ Directory not found: {directory}")
                     continue
-                    
+
                 print(f"\n🔄 Starting analysis of: {directory}")
                 print("   This may take a moment...")
-                
+
                 def progress_callback(msg):
                     if "Preflight" in msg and "failed" in msg:
-                        print(f"⚠️  Model check warning (continuing anyway)")
+                        print("⚠️  Model check warning (continuing anyway)")
                     elif msg.startswith("⚠️"):
                         print(f"⚠️  {msg}")
                     else:
                         print(f"📝 {msg}")
-                
+
                 result = auditor.analyze_codebase(directory, progress_callback=progress_callback)
-                print(f"\n✅ Analysis complete!")
+                print("\n✅ Analysis complete!")
                 print(f"{format_analysis_summary(auditor.analysis_results)}")
-                
+
             elif command.startswith('chat '):
                 question = command[5:].strip()
                 if not question:
                     print("❌ Please ask a question")
                     print("   Example: chat What are the main issues in this codebase?")
                     continue
-                    
+
                 if not auditor.analysis_results:
                     print("❌ No analysis available. Run 'analyze <directory>' first.")
                     continue
-                    
+
                 print(f"\n🤖 Thinking about: {question}")
                 response = auditor.chat(question)
                 print(f"\n💭 Response:\n{response}")
-                
+
             elif command.startswith('export'):
                 if not auditor.analysis_results:
                     print("❌ No analysis available. Run 'analyze <directory>' first.")
                     continue
-                    
+
                 # Parse optional filename
                 parts = command.split(' ', 1)
                 if len(parts) > 1 and parts[1].strip():
@@ -521,17 +521,17 @@ def main():
                         filename += '.md'
                 else:
                     filename = f"codebase_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-                
+
                 report = auditor.export_markdown()
                 with open(filename, 'w', encoding='utf-8') as f:
                     f.write(report)
                 print(f"📄 Report exported to: {filename}")
                 print(f"   Size: {len(report):,} characters")
-                
+
             else:
                 print(f"❌ Unknown command: {command}")
                 print("   Type 'help' for available commands")
-                
+
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
             break

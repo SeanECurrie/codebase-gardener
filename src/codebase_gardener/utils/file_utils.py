@@ -9,18 +9,13 @@ directory traversal, cross-platform path handling, and file monitoring capabilit
 import hashlib
 import mimetypes
 import os
-import re
-import signal
 import stat
-import tempfile
-import time
+import time as _time
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Set, Tuple, Union
-import time as _time
 
 import structlog
 
@@ -55,10 +50,10 @@ class FileInfo:
     size: int
     modified_time: datetime
     file_type: FileType
-    encoding: Optional[str] = None
-    line_count: Optional[int] = None
+    encoding: str | None = None
+    line_count: int | None = None
     is_hidden: bool = False
-    permissions: Optional[str] = None
+    permissions: str | None = None
 
 
 @dataclass
@@ -67,8 +62,8 @@ class FileChange:
     path: Path
     change_type: str  # 'created', 'modified', 'deleted'
     timestamp: datetime
-    old_size: Optional[int] = None
-    new_size: Optional[int] = None
+    old_size: int | None = None
+    new_size: int | None = None
 
 
 @dataclass
@@ -76,7 +71,7 @@ class FileSnapshot:
     """Snapshot of directory state at a point in time."""
     directory: Path
     timestamp: datetime
-    files: Dict[Path, FileInfo]
+    files: dict[Path, FileInfo]
     total_size: int
     file_count: int
 
@@ -181,7 +176,7 @@ class FileUtilities:
         """Check if a file is a source code file."""
         return self.detect_file_type(file_path) == FileType.SOURCE_CODE
 
-    def get_language_from_file(self, file_path: Path) -> Optional[str]:
+    def get_language_from_file(self, file_path: Path) -> str | None:
         """
         Get programming language from file extension.
 
@@ -305,7 +300,7 @@ class FileUtilities:
 
         return total_size
 
-    def get_file_encoding(self, file_path: Path) -> Optional[str]:
+    def get_file_encoding(self, file_path: Path) -> str | None:
         """
         Detect file encoding.
 
@@ -332,7 +327,7 @@ class FileUtilities:
         except (OSError, PermissionError):
             return None
 
-    def _count_lines(self, file_path: Path, encoding: str) -> Optional[int]:
+    def _count_lines(self, file_path: Path, encoding: str) -> int | None:
         """Count lines in a text file."""
         try:
             with file_path.open('r', encoding=encoding) as f:
@@ -363,9 +358,9 @@ class FileUtilities:
 
     # Directory Traversal Methods
 
-    def scan_directory(self, dir_path: Path, patterns: Optional[List[str]] = None,
+    def scan_directory(self, dir_path: Path, patterns: list[str] | None = None,
                       recursive: bool = True, include_hidden: bool = False,
-                      exclude_patterns: Optional[List[str]] = None) -> Iterator[Path]:
+                      exclude_patterns: list[str] | None = None) -> Iterator[Path]:
         """
         Scan directory for files matching patterns, excluding specified directories.
 
@@ -409,8 +404,8 @@ class FileUtilities:
         except (OSError, PermissionError) as e:
             logger.error(f"Error scanning directory: {e}", dir_path=str(dir_path))
 
-    def _recursive_scan_with_exclusions(self, dir_path: Path, patterns: List[str], 
-                                       include_hidden: bool, exclude_patterns: List[str]) -> Iterator[Path]:
+    def _recursive_scan_with_exclusions(self, dir_path: Path, patterns: list[str],
+                                       include_hidden: bool, exclude_patterns: list[str]) -> Iterator[Path]:
         """Recursively scan directory while excluding specified patterns."""
         try:
             # Check if current directory should be excluded
@@ -437,36 +432,36 @@ class FileUtilities:
             # Skip directories we can't access
             pass
 
-    def _should_exclude_directory(self, dir_path: Path, exclude_patterns: List[str]) -> bool:
+    def _should_exclude_directory(self, dir_path: Path, exclude_patterns: list[str]) -> bool:
         """Check if a directory should be excluded from scanning."""
         dir_name = dir_path.name
-        
+
         for pattern in exclude_patterns:
             # Skip file patterns (those with extensions or wildcards for files)
             if '.' in pattern and not pattern.startswith('.'):
                 continue
-                
+
             # Direct name match
             if pattern == dir_name:
                 return True
-                
+
             # Pattern match for directories
             if pattern.startswith('.') and dir_name.startswith('.'):
                 if pattern == dir_name or (len(pattern) == 1 and pattern == '.'):
                     return True
-                    
+
             # Common directory exclusions
-            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env', 
+            if pattern in ['node_modules', '__pycache__', '.git', '.svn', 'venv', 'env',
                           'vendor', 'target', 'build', 'dist', '.tox', '.pytest_cache',
                           '.vscode', '.idea', '.cache']:
                 if dir_name == pattern:
                     return True
-        
+
         return False
 
-    def find_source_files(self, dir_path: Path, languages: Optional[List[str]] = None,
-                         exclude_patterns: Optional[List[str]] = None,
-                         progress_callback=None, timeout: Optional[int] = None) -> List[Path]:
+    def find_source_files(self, dir_path: Path, languages: list[str] | None = None,
+                         exclude_patterns: list[str] | None = None,
+                         progress_callback=None, timeout: int | None = None) -> list[Path]:
         """
         Find source code files in a directory with progress feedback.
 
@@ -485,12 +480,12 @@ class FileUtilities:
         """
         if not dir_path.exists() or not dir_path.is_dir():
             raise FileUtilityError(f"Directory does not exist or is not accessible: {dir_path}")
-        
+
         logger.info(f"Starting file discovery in {dir_path}")
-        
+
         if progress_callback:
             progress_callback(f"Scanning directory: {dir_path}")
-        
+
         source_files = []
         exclusion_patterns = self.DEFAULT_EXCLUSION_PATTERNS.copy()
         files_processed = 0
@@ -511,11 +506,11 @@ class FileUtilities:
                     )
 
                 files_processed += 1
-                
+
                 # Provide progress feedback every 50 files for more responsive feedback
                 if progress_callback and files_processed % 50 == 0:
                     progress_callback(f"Processed {files_processed} files, found {len(source_files)} source files")
-                
+
                 # Check if it's a source code file
                 if not self.is_source_code_file(file_path):
                     continue
@@ -534,20 +529,20 @@ class FileUtilities:
 
             if progress_callback:
                 progress_callback(f"✅ Completed: found {len(source_files)} source files in {files_processed} total files")
-            
+
             logger.info(f"File discovery completed: found {len(source_files)} source files")
             return source_files
-            
+
         except Exception as e:
             logger.error(f"File discovery failed: {e}", dir_path=str(dir_path))
             if progress_callback:
                 progress_callback(f"❌ File discovery failed: {e}")
             raise FileUtilityError(f"Could not discover files in {dir_path}: {e}") from e
-    
+
 # Remove the internal implementation method - it's now in the main method
 
-    def apply_exclusion_patterns(self, files: List[Path],
-                                patterns: List[str]) -> List[Path]:
+    def apply_exclusion_patterns(self, files: list[Path],
+                                patterns: list[str]) -> list[Path]:
         """
         Filter files by exclusion patterns.
 
@@ -560,11 +555,11 @@ class FileUtilities:
         """
         return [f for f in files if not self._matches_exclusion_patterns(f, patterns)]
 
-    def _matches_exclusion_patterns(self, file_path: Path, patterns: List[str]) -> bool:
+    def _matches_exclusion_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if a file matches any exclusion pattern (legacy method)."""
         return self._matches_file_exclusion_patterns(file_path, patterns)
 
-    def _matches_file_exclusion_patterns(self, file_path: Path, patterns: List[str]) -> bool:
+    def _matches_file_exclusion_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if a file matches any file-specific exclusion pattern."""
         file_str = str(file_path)
         file_name = file_path.name
@@ -662,7 +657,7 @@ class FileUtilities:
 
                 logger.debug(f"Atomically wrote file: {file_path}")
 
-            except Exception as e:
+            except Exception:
                 # Cleanup temporary file
                 if temp_path.exists():
                     temp_path.unlink()
@@ -708,7 +703,7 @@ class FileUtilities:
 
     # File Monitoring Methods
 
-    def get_file_changes(self, dir_path: Path, since: datetime) -> List[FileChange]:
+    def get_file_changes(self, dir_path: Path, since: datetime) -> list[FileChange]:
         """
         Get file changes since a specific time.
 
@@ -777,7 +772,7 @@ class FileUtilities:
             file_count=file_count
         )
 
-    def compare_snapshots(self, old: FileSnapshot, new: FileSnapshot) -> List[FileChange]:
+    def compare_snapshots(self, old: FileSnapshot, new: FileSnapshot) -> list[FileChange]:
         """
         Compare two file snapshots to find changes.
 
@@ -824,7 +819,7 @@ class FileUtilities:
 
     # Cross-platform Utilities
 
-    def normalize_path(self, path: Union[str, Path]) -> Path:
+    def normalize_path(self, path: str | Path) -> Path:
         """
         Normalize path for cross-platform compatibility.
 
@@ -869,7 +864,7 @@ class FileUtilities:
 
         return False
 
-    def check_file_permissions(self, file_path: Path) -> Dict[str, bool]:
+    def check_file_permissions(self, file_path: Path) -> dict[str, bool]:
         """
         Check file permissions cross-platform.
 
@@ -942,8 +937,8 @@ def get_file_info(file_path: Path) -> FileInfo:
     return file_utilities.get_file_info(file_path)
 
 
-def find_source_files(dir_path: Path, languages: Optional[List[str]] = None, 
-                     progress_callback=None) -> List[Path]:
+def find_source_files(dir_path: Path, languages: list[str] | None = None,
+                     progress_callback=None) -> list[Path]:
     """Find source code files in directory with progress feedback."""
     return file_utilities.find_source_files(dir_path, languages, progress_callback=progress_callback)
 
@@ -958,6 +953,6 @@ def atomic_write_file(file_path: Path, content: str, encoding: str = 'utf-8') ->
     file_utilities.atomic_write_file(file_path, content, encoding)
 
 
-def normalize_path(path: Union[str, Path]) -> Path:
+def normalize_path(path: str | Path) -> Path:
     """Normalize path for cross-platform compatibility."""
     return file_utilities.normalize_path(path)

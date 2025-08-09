@@ -7,21 +7,17 @@ for embedding generation and LoRA training.
 """
 
 import hashlib
-import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any
 
 import structlog
-from tree_sitter import Node, Tree
 
 from codebase_gardener.data.parser import (
     CodeElement,
-    CodeStructure,
     ParseResult,
-    SupportedLanguage,
     TreeSitterParser,
 )
 from codebase_gardener.utils.error_handling import (
@@ -60,13 +56,13 @@ class CodeChunk:
     content: str
     language: str
     chunk_type: ChunkType
-    file_path: Optional[Path]
+    file_path: Path | None
     start_line: int
     end_line: int
     start_byte: int
     end_byte: int
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
     complexity_score: float = 0.0
 
     def __post_init__(self):
@@ -119,7 +115,7 @@ class CodePreprocessor:
     with rich metadata for embedding generation and LoRA training.
     """
 
-    def __init__(self, config: Optional[PreprocessingConfig] = None):
+    def __init__(self, config: PreprocessingConfig | None = None):
         """
         Initialize the preprocessor with configuration.
 
@@ -136,7 +132,7 @@ class CodePreprocessor:
         )
 
     @retry_with_backoff(max_attempts=2)
-    def preprocess_file(self, file_path: Path, code: str) -> List[CodeChunk]:
+    def preprocess_file(self, file_path: Path, code: str) -> list[CodeChunk]:
         """
         Preprocess a code file into semantic chunks.
 
@@ -189,7 +185,7 @@ class CodePreprocessor:
                 details={"file_path": str(file_path), "error": str(e)}
             )
 
-    def preprocess_code(self, code: str, language: str, file_path: Optional[Path] = None) -> List[CodeChunk]:
+    def preprocess_code(self, code: str, language: str, file_path: Path | None = None) -> list[CodeChunk]:
         """
         Preprocess code string into semantic chunks.
 
@@ -236,7 +232,7 @@ class CodePreprocessor:
                 details={"language": language, "error": str(e)}
             )
 
-    def _generate_chunks(self, parse_result: ParseResult, code: str, file_path: Optional[Path]) -> List[CodeChunk]:
+    def _generate_chunks(self, parse_result: ParseResult, code: str, file_path: Path | None) -> list[CodeChunk]:
         """Generate chunks from parsed code structure."""
         chunks = []
 
@@ -259,7 +255,7 @@ class CodePreprocessor:
 
         return chunks
 
-    def _extract_module_info(self, parse_result: ParseResult, code: str) -> Dict[str, Any]:
+    def _extract_module_info(self, parse_result: ParseResult, code: str) -> dict[str, Any]:
         """Extract module-level information for context."""
         info = {
             "imports": [],
@@ -304,9 +300,9 @@ class CodePreprocessor:
         self,
         element: CodeElement,
         code: str,
-        file_path: Optional[Path],
-        module_info: Dict[str, Any]
-    ) -> Optional[CodeChunk]:
+        file_path: Path | None,
+        module_info: dict[str, Any]
+    ) -> CodeChunk | None:
         """Create a code chunk from a parsed code element."""
         try:
             # Determine chunk type
@@ -388,13 +384,13 @@ class CodePreprocessor:
 
         return content
 
-    def _generate_chunk_id(self, content: str, start_line: int, file_path: Optional[Path]) -> str:
+    def _generate_chunk_id(self, content: str, start_line: int, file_path: Path | None) -> str:
         """Generate a unique ID for a code chunk."""
         # Create a hash based on content, location, and file path
         hash_input = f"{content}{start_line}{file_path or ''}"
         return hashlib.md5(hash_input.encode('utf-8'), usedforsecurity=False).hexdigest()[:12]
 
-    def _extract_dependencies(self, element: CodeElement, module_info: Dict[str, Any]) -> List[str]:
+    def _extract_dependencies(self, element: CodeElement, module_info: dict[str, Any]) -> list[str]:
         """Extract dependencies for a code element."""
         dependencies = []
 
@@ -464,9 +460,9 @@ class CodePreprocessor:
     def _build_chunk_metadata(
         self,
         element: CodeElement,
-        module_info: Dict[str, Any],
+        module_info: dict[str, Any],
         complexity: float
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Build comprehensive metadata for a code chunk."""
         metadata = {
             "element_type": element.element_type,
@@ -538,9 +534,9 @@ class CodePreprocessor:
         self,
         parse_result: ParseResult,
         code: str,
-        file_path: Optional[Path],
-        module_info: Dict[str, Any]
-    ) -> Optional[CodeChunk]:
+        file_path: Path | None,
+        module_info: dict[str, Any]
+    ) -> CodeChunk | None:
         """Create a chunk representing module-level content."""
         # Extract module-level content (imports, docstring, module variables)
         module_content_parts = []
@@ -625,7 +621,7 @@ class CodePreprocessor:
 
         return True
 
-    def _split_oversized_chunks(self, chunks: List[CodeChunk], code: str) -> List[CodeChunk]:
+    def _split_oversized_chunks(self, chunks: list[CodeChunk], code: str) -> list[CodeChunk]:
         """Split chunks that exceed maximum size."""
         result = []
 
@@ -639,7 +635,7 @@ class CodePreprocessor:
 
         return result
 
-    def _split_chunk(self, chunk: CodeChunk, code: str) -> List[CodeChunk]:
+    def _split_chunk(self, chunk: CodeChunk, code: str) -> list[CodeChunk]:
         """Split a large chunk into smaller semantic pieces."""
         # For now, implement simple line-based splitting
         # TODO: Implement more sophisticated AST-based splitting
@@ -705,7 +701,7 @@ class CodePreprocessor:
 
         return chunks
 
-    def _post_process_chunks(self, chunks: List[CodeChunk]) -> List[CodeChunk]:
+    def _post_process_chunks(self, chunks: list[CodeChunk]) -> list[CodeChunk]:
         """Post-process chunks for quality and consistency."""
         # Sort chunks by line number
         chunks.sort(key=lambda c: c.start_line)
@@ -719,7 +715,7 @@ class CodePreprocessor:
 
         return chunks
 
-    def _remove_duplicate_chunks(self, chunks: List[CodeChunk]) -> List[CodeChunk]:
+    def _remove_duplicate_chunks(self, chunks: list[CodeChunk]) -> list[CodeChunk]:
         """Remove duplicate chunks based on content similarity."""
         seen_hashes = set()
         unique_chunks = []
@@ -735,7 +731,7 @@ class CodePreprocessor:
 
         return unique_chunks
 
-    def _add_chunk_overlap(self, chunks: List[CodeChunk]) -> List[CodeChunk]:
+    def _add_chunk_overlap(self, chunks: list[CodeChunk]) -> list[CodeChunk]:
         """Add overlap between adjacent chunks."""
         if len(chunks) <= 1:
             return chunks
@@ -782,7 +778,7 @@ class CodePreprocessor:
         return overlapped_chunks
 
 
-def preprocess_file(file_path: Path, config: Optional[PreprocessingConfig] = None) -> List[CodeChunk]:
+def preprocess_file(file_path: Path, config: PreprocessingConfig | None = None) -> list[CodeChunk]:
     """
     Convenience function to preprocess a single file.
 
@@ -795,7 +791,7 @@ def preprocess_file(file_path: Path, config: Optional[PreprocessingConfig] = Non
     """
     preprocessor = CodePreprocessor(config)
 
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         code = f.read()
 
     return preprocessor.preprocess_file(file_path, code)
@@ -804,8 +800,8 @@ def preprocess_file(file_path: Path, config: Optional[PreprocessingConfig] = Non
 def preprocess_code_string(
     code: str,
     language: str,
-    config: Optional[PreprocessingConfig] = None
-) -> List[CodeChunk]:
+    config: PreprocessingConfig | None = None
+) -> list[CodeChunk]:
     """
     Convenience function to preprocess a code string.
 

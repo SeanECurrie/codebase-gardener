@@ -6,7 +6,6 @@ including status displays, progress indicators, and specialized input/output com
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 import structlog
@@ -87,7 +86,7 @@ class ChatInterface:
         )
 
     @staticmethod
-    def create_chat_controls() -> Tuple[gr.Button, gr.Button]:
+    def create_chat_controls() -> tuple[gr.Button, gr.Button]:
         """Create chat control buttons."""
         send_btn = gr.Button(
             "Send",
@@ -128,7 +127,7 @@ class CodeAnalysisInterface:
         )
 
     @staticmethod
-    def create_analysis_controls() -> Tuple[gr.Button, gr.Dropdown]:
+    def create_analysis_controls() -> tuple[gr.Button, gr.Dropdown]:
         """Create analysis control components."""
         analyze_btn = gr.Button(
             "🔍 Analyze Code",
@@ -175,7 +174,7 @@ class ProjectManagement:
     """Project management interface components."""
 
     @staticmethod
-    def create_project_actions() -> Tuple[gr.Button, gr.Button, gr.Button]:
+    def create_project_actions() -> tuple[gr.Button, gr.Button, gr.Button]:
         """Create project action buttons."""
         add_btn = gr.Button(
             "➕ Add Project",
@@ -198,7 +197,7 @@ class ProjectManagement:
         return add_btn, train_btn, remove_btn
 
     @staticmethod
-    def create_project_form() -> Dict[str, gr.Component]:
+    def create_project_form() -> dict[str, gr.Component]:
         """Create project creation form components."""
         return {
             "name": gr.Textbox(
@@ -462,20 +461,20 @@ class CustomCSS:
         """
 
 # Convenience functions for creating common component combinations
-def create_status_section() -> Tuple[gr.Markdown, gr.Markdown]:
+def create_status_section() -> tuple[gr.Markdown, gr.Markdown]:
     """Create a complete status section."""
     project_status = StatusDisplay.create_project_status_card()
     system_health = StatusDisplay.create_system_health_card()
     return project_status, system_health
 
-def create_chat_section() -> Tuple[gr.Chatbot, gr.Textbox, gr.Button, gr.Button]:
+def create_chat_section() -> tuple[gr.Chatbot, gr.Textbox, gr.Button, gr.Button]:
     """Create a complete chat section."""
     chatbot = ChatInterface.create_chatbot()
     chat_input = ChatInterface.create_chat_input()
     send_btn, clear_btn = ChatInterface.create_chat_controls()
     return chatbot, chat_input, send_btn, clear_btn
 
-def create_analysis_section() -> Tuple[gr.Code, gr.Markdown, gr.Button, gr.Dropdown]:
+def create_analysis_section() -> tuple[gr.Code, gr.Markdown, gr.Button, gr.Dropdown]:
     """Create a complete code analysis section."""
     code_input = CodeAnalysisInterface.create_code_input()
     analysis_output = CodeAnalysisInterface.create_analysis_output()

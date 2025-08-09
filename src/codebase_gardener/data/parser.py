@@ -5,11 +5,10 @@ This module provides Layer 1 (Structural Analysis) of the multi-modal understand
 offering AST parsing, code structure extraction, and error recovery for multiple programming languages.
 """
 
-import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Optional
 
 import structlog
 from tree_sitter import Language, Node, Parser, Tree
@@ -40,7 +39,7 @@ class CodeElement:
     end_byte: int
     content: str
     language: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """Validate code element data."""
@@ -61,18 +60,18 @@ class ParseError:
     column: int
     byte_offset: int
     error_type: str = "syntax_error"
-    context: Optional[str] = None
+    context: str | None = None
 
 
 @dataclass
 class CodeStructure:
     """Represents the extracted structure of a code file."""
 
-    functions: List[CodeElement] = field(default_factory=list)
-    classes: List[CodeElement] = field(default_factory=list)
-    imports: List[CodeElement] = field(default_factory=list)
-    variables: List[CodeElement] = field(default_factory=list)
-    comments: List[CodeElement] = field(default_factory=list)
+    functions: list[CodeElement] = field(default_factory=list)
+    classes: list[CodeElement] = field(default_factory=list)
+    imports: list[CodeElement] = field(default_factory=list)
+    variables: list[CodeElement] = field(default_factory=list)
+    comments: list[CodeElement] = field(default_factory=list)
 
     def add_element(self, element: CodeElement) -> None:
         """Add a code element to the appropriate category."""
@@ -87,7 +86,7 @@ class CodeStructure:
         elif element.element_type == "comment":
             self.comments.append(element)
 
-    def get_all_elements(self) -> List[CodeElement]:
+    def get_all_elements(self) -> list[CodeElement]:
         """Get all code elements as a flat list."""
         return (
             self.functions +
@@ -97,7 +96,7 @@ class CodeStructure:
             self.comments
         )
 
-    def get_element_count(self) -> Dict[str, int]:
+    def get_element_count(self) -> dict[str, int]:
         """Get count of each element type."""
         return {
             "functions": len(self.functions),
@@ -113,11 +112,11 @@ class CodeStructure:
 class ParseResult:
     """Result of parsing a code file."""
 
-    tree: Optional[Tree]
+    tree: Tree | None
     structure: CodeStructure
-    errors: List[ParseError] = field(default_factory=list)
-    language: Optional[str] = None
-    file_path: Optional[Path] = None
+    errors: list[ParseError] = field(default_factory=list)
+    language: str | None = None
+    file_path: Path | None = None
 
     @property
     def has_errors(self) -> bool:
@@ -177,7 +176,7 @@ class TreeSitterParser:
         },
     }
 
-    def __init__(self, language: Union[str, SupportedLanguage]):
+    def __init__(self, language: str | SupportedLanguage):
         """
         Initialize parser for a specific language.
 
@@ -236,7 +235,7 @@ class TreeSitterParser:
             )
 
     @classmethod
-    def detect_language(cls, file_path: Union[str, Path]) -> Optional[SupportedLanguage]:
+    def detect_language(cls, file_path: str | Path) -> SupportedLanguage | None:
         """
         Detect programming language from file extension.
 
@@ -260,7 +259,7 @@ class TreeSitterParser:
         return None
 
     @classmethod
-    def create_for_file(cls, file_path: Union[str, Path]) -> Optional['TreeSitterParser']:
+    def create_for_file(cls, file_path: str | Path) -> Optional['TreeSitterParser']:
         """
         Create a parser instance for a specific file based on its extension.
 
@@ -277,7 +276,7 @@ class TreeSitterParser:
         return cls(language)
 
     @retry_with_backoff(max_attempts=2)
-    def parse(self, code: str, file_path: Optional[Path] = None, old_tree: Optional[Tree] = None) -> ParseResult:
+    def parse(self, code: str, file_path: Path | None = None, old_tree: Tree | None = None) -> ParseResult:
         """
         Parse source code and extract structure.
 
@@ -351,7 +350,7 @@ class TreeSitterParser:
                 }
             )
 
-    def _extract_errors(self, tree: Tree, code: str) -> List[ParseError]:
+    def _extract_errors(self, tree: Tree, code: str) -> list[ParseError]:
         """Extract parsing errors from the AST."""
         errors = []
         code_lines = code.split('\n')
@@ -404,7 +403,7 @@ class TreeSitterParser:
         traverse_node(tree.root_node)
         return structure
 
-    def _create_code_element(self, node: Node, code: str, element_type: str) -> Optional[CodeElement]:
+    def _create_code_element(self, node: Node, code: str, element_type: str) -> CodeElement | None:
         """Create a CodeElement from an AST node."""
         try:
             # Extract basic information
@@ -443,7 +442,7 @@ class TreeSitterParser:
             )
             return None
 
-    def _extract_element_name(self, node: Node, code: str) -> Optional[str]:
+    def _extract_element_name(self, node: Node, code: str) -> str | None:
         """Extract the name of a code element from its AST node."""
         try:
             if self.language == SupportedLanguage.PYTHON:
@@ -455,7 +454,7 @@ class TreeSitterParser:
         except Exception:
             return None
 
-    def _extract_python_name(self, node: Node, code: str) -> Optional[str]:
+    def _extract_python_name(self, node: Node, code: str) -> str | None:
         """Extract name from Python AST node."""
         if node.type in ["function_definition", "class_definition"]:
             # Look for identifier child
@@ -477,7 +476,7 @@ class TreeSitterParser:
 
         return None
 
-    def _extract_js_ts_name(self, node: Node, code: str) -> Optional[str]:
+    def _extract_js_ts_name(self, node: Node, code: str) -> str | None:
         """Extract name from JavaScript/TypeScript AST node."""
         if node.type in ["function_declaration", "class_declaration"]:
             # Look for identifier child
@@ -513,7 +512,7 @@ class TreeSitterParser:
 
         return None
 
-    def _extract_element_metadata(self, node: Node, code: str) -> Dict[str, Any]:
+    def _extract_element_metadata(self, node: Node, code: str) -> dict[str, Any]:
         """Extract additional metadata for a code element."""
         metadata = {
             "node_type": node.type,
@@ -529,7 +528,7 @@ class TreeSitterParser:
 
         return metadata
 
-    def _extract_python_metadata(self, node: Node, code: str) -> Dict[str, Any]:
+    def _extract_python_metadata(self, node: Node, code: str) -> dict[str, Any]:
         """Extract Python-specific metadata."""
         metadata = {}
 
@@ -555,7 +554,7 @@ class TreeSitterParser:
 
         return metadata
 
-    def _extract_js_ts_metadata(self, node: Node, code: str) -> Dict[str, Any]:
+    def _extract_js_ts_metadata(self, node: Node, code: str) -> dict[str, Any]:
         """Extract JavaScript/TypeScript-specific metadata."""
         metadata = {}
 
@@ -570,7 +569,7 @@ class TreeSitterParser:
         return metadata
 
 
-def create_parser_for_file(file_path: Union[str, Path]) -> Optional[TreeSitterParser]:
+def create_parser_for_file(file_path: str | Path) -> TreeSitterParser | None:
     """
     Convenience function to create a parser for a specific file.
 
@@ -583,7 +582,7 @@ def create_parser_for_file(file_path: Union[str, Path]) -> Optional[TreeSitterPa
     return TreeSitterParser.create_for_file(file_path)
 
 
-def get_supported_extensions() -> Set[str]:
+def get_supported_extensions() -> set[str]:
     """
     Get all supported file extensions.
 
@@ -596,7 +595,7 @@ def get_supported_extensions() -> Set[str]:
     return extensions
 
 
-def is_supported_file(file_path: Union[str, Path]) -> bool:
+def is_supported_file(file_path: str | Path) -> bool:
     """
     Check if a file is supported for parsing.
 

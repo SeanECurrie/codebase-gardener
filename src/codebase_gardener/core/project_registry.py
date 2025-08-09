@@ -15,7 +15,6 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, List, Optional
 
 import structlog
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -53,9 +52,9 @@ class ProjectMetadata(BaseModel):
     training_status: TrainingStatus = Field(default=TrainingStatus.NOT_STARTED, description="Current training status")
     language: str = Field(default="python", description="Primary programming language")
     file_count: int = Field(default=0, description="Number of files processed")
-    lora_adapter_path: Optional[Path] = Field(None, description="Path to the trained LoRA adapter")
-    vector_store_path: Optional[Path] = Field(None, description="Path to the project's vector store")
-    context_path: Optional[Path] = Field(None, description="Path to conversation context file")
+    lora_adapter_path: Path | None = Field(None, description="Path to the trained LoRA adapter")
+    vector_store_path: Path | None = Field(None, description="Path to the project's vector store")
+    context_path: Path | None = Field(None, description="Path to conversation context file")
 
     @field_validator('source_path', 'lora_adapter_path', 'vector_store_path', 'context_path', mode='before')
     @classmethod
@@ -97,8 +96,8 @@ class RegistryData(BaseModel):
     This includes versioning information and the projects dictionary.
     """
     version: str = Field(default="1.0", description="Registry format version")
-    projects: Dict[str, ProjectMetadata] = Field(default_factory=dict, description="Map of project_id to metadata")
-    active_project: Optional[str] = Field(None, description="Currently active project ID")
+    projects: dict[str, ProjectMetadata] = Field(default_factory=dict, description="Map of project_id to metadata")
+    active_project: str | None = Field(None, description="Currently active project ID")
 
     model_config = ConfigDict(
         json_encoders = {
@@ -124,7 +123,7 @@ class ProjectRegistry:
     fast lookup operations.
     """
 
-    def __init__(self, registry_path: Optional[Path] = None):
+    def __init__(self, registry_path: Path | None = None):
         """
         Initialize the project registry.
 
@@ -292,7 +291,7 @@ class ProjectRegistry:
 
             return project_id
 
-    def get_project(self, project_id: str) -> Optional[ProjectMetadata]:
+    def get_project(self, project_id: str) -> ProjectMetadata | None:
         """
         Get project metadata by ID.
 
@@ -304,7 +303,7 @@ class ProjectRegistry:
         """
         return self._data.projects.get(project_id)
 
-    def list_projects(self) -> List[ProjectMetadata]:
+    def list_projects(self) -> list[ProjectMetadata]:
         """
         Get a list of all registered projects.
 
@@ -420,7 +419,7 @@ class ProjectRegistry:
                 name=project_name
             )
 
-    def get_active_project(self) -> Optional[str]:
+    def get_active_project(self) -> str | None:
         """
         Get the currently active project ID.
 
@@ -455,7 +454,7 @@ class ProjectRegistry:
                 project_name=self._data.projects[project_id].name
             )
 
-    def get_projects_by_status(self, status: TrainingStatus) -> List[ProjectMetadata]:
+    def get_projects_by_status(self, status: TrainingStatus) -> list[ProjectMetadata]:
         """
         Get all projects with a specific training status.
 
@@ -474,7 +473,7 @@ class ProjectRegistry:
         """Get the total number of registered projects."""
         return len(self._data.projects)
 
-    def validate_registry(self) -> List[str]:
+    def validate_registry(self) -> list[str]:
         """
         Validate the registry and return any issues found.
 
@@ -501,7 +500,7 @@ class ProjectRegistry:
 
 
 # Global registry instance
-_registry_instance: Optional[ProjectRegistry] = None
+_registry_instance: ProjectRegistry | None = None
 _registry_lock = Lock()
 
 

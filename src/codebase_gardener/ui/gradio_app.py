@@ -5,10 +5,6 @@ This module provides the main web interface for the Codebase Gardener system,
 enabling project-specific code analysis through specialized LoRA adapters.
 """
 
-import asyncio
-import traceback
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 import structlog
@@ -16,9 +12,8 @@ import structlog
 from ..config.settings import get_settings
 from ..core.dynamic_model_loader import get_dynamic_model_loader
 from ..core.project_context_manager import get_project_context_manager
-from ..core.project_registry import ProjectMetadata, get_project_registry
+from ..core.project_registry import get_project_registry
 from ..data.project_vector_store import get_project_vector_store_manager
-from ..utils.error_handling import CodebaseGardenerError
 
 logger = structlog.get_logger(__name__)
 
@@ -46,7 +41,7 @@ def initialize_components():
         logger.error(f"Failed to initialize components: {e}")
         return False
 
-def get_project_options() -> List[Tuple[str, str]]:
+def get_project_options() -> list[tuple[str, str]]:
     """Get available projects for dropdown."""
     try:
         if not app_state["project_registry"]:
@@ -103,15 +98,15 @@ def get_project_status(project_id: str) -> str:
                 health_status = app_state["vector_store_manager"].health_check(project_id)
                 vector_status = "🟢 Healthy" if health_status.get("overall_status") == "healthy" else "⚠️ Issues"
                 status_parts.append(f"**Vector Store:** {vector_status}")
-            except Exception as e:
-                status_parts.append(f"**Vector Store:** ❌ Error")
+            except Exception:
+                status_parts.append("**Vector Store:** ❌ Error")
 
         return "\n".join(status_parts)
     except Exception as e:
         logger.error(f"Error getting project status: {e}")
         return f"Error: {str(e)}"
 
-def switch_project(project_id: str, progress=gr.Progress()) -> Tuple[str, str, str]:
+def switch_project(project_id: str, progress=gr.Progress()) -> tuple[str, str, str]:
     """Handle project switching across all components."""
     if not project_id:
         return "No project selected", "", "Please select a project"
@@ -149,7 +144,7 @@ def switch_project(project_id: str, progress=gr.Progress()) -> Tuple[str, str, s
         status = get_project_status(project_id)
         success_msg = f"✅ Successfully switched to project: {project_id}"
 
-        logger.info(f"Project switch completed", project_id=project_id)
+        logger.info("Project switch completed", project_id=project_id)
         return status, success_msg, ""
 
     except Exception as e:
@@ -157,7 +152,7 @@ def switch_project(project_id: str, progress=gr.Progress()) -> Tuple[str, str, s
         logger.error(f"Project switch failed: {e}", project_id=project_id)
         return get_project_status(project_id), error_msg, ""
 
-def handle_chat(message: str, history: List[Dict[str, str]], project_id: str) -> Tuple[List[Dict[str, str]], str]:
+def handle_chat(message: str, history: list[dict[str, str]], project_id: str) -> tuple[list[dict[str, str]], str]:
     """Handle chat messages with project-specific context using real AI integration."""
     if not message.strip():
         return history, ""

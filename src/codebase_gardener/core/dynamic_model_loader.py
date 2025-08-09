@@ -5,7 +5,6 @@ This module provides dynamic loading and unloading of LoRA adapters for efficien
 project switching with memory management optimized for Mac Mini M4 constraints.
 """
 
-import asyncio
 import threading
 import time
 from collections import OrderedDict
@@ -14,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import structlog
 import torch
@@ -23,13 +22,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from ..config.settings import Settings
 from ..core.project_registry import ProjectRegistry, get_project_registry
+
 # DISABLED: Complex components not needed for simple auditor
 # from ..models.ollama_client import OllamaClient
 # from ..models.peft_manager import PeftManager
 from ..utils.error_handling import (
-    CodebaseGardenerError,
     ModelError,
-    ModelLoadingError,
     retry_with_backoff,
 )
 
@@ -49,7 +47,7 @@ class AdapterInfo:
     """Information about a loaded adapter."""
     project_id: str
     adapter_name: str
-    model: Optional[PeftModel]
+    model: PeftModel | None
     loaded_at: datetime
     last_accessed: datetime
     memory_usage_mb: float
@@ -88,9 +86,9 @@ class DynamicModelLoader:
     def __init__(
         self,
         settings: Settings,
-        ollama_client: Optional[Any] = None,  # DISABLED: Complex component
-        peft_manager: Optional[Any] = None,  # DISABLED: Complex component
-        project_registry: Optional[ProjectRegistry] = None
+        ollama_client: Any | None = None,  # DISABLED: Complex component
+        peft_manager: Any | None = None,  # DISABLED: Complex component
+        project_registry: ProjectRegistry | None = None
     ):
         """
         Initialize the dynamic model loader.
@@ -113,10 +111,10 @@ class DynamicModelLoader:
         self._memory_limit_mb = 4096  # 4GB memory limit for Mac Mini M4
 
         # Current state
-        self._current_adapter: Optional[str] = None
-        self._base_model: Optional[AutoModelForCausalLM] = None
-        self._base_tokenizer: Optional[AutoTokenizer] = None
-        self._current_base_model_name: Optional[str] = None
+        self._current_adapter: str | None = None
+        self._base_model: AutoModelForCausalLM | None = None
+        self._base_tokenizer: AutoTokenizer | None = None
+        self._current_base_model_name: str | None = None
 
         # Thread safety
         self._lock = threading.RLock()
@@ -132,8 +130,8 @@ class DynamicModelLoader:
             load_time_avg_seconds=0.0,
             unload_time_avg_seconds=0.0
         )
-        self._load_times: List[float] = []
-        self._unload_times: List[float] = []
+        self._load_times: list[float] = []
+        self._unload_times: list[float] = []
 
         logger.info(
             "Dynamic model loader initialized",
@@ -145,7 +143,7 @@ class DynamicModelLoader:
         """Get current loader status."""
         return self._status
 
-    def get_current_adapter(self) -> Optional[str]:
+    def get_current_adapter(self) -> str | None:
         """Get currently active adapter ID."""
         return self._current_adapter
 
@@ -511,7 +509,7 @@ class DynamicModelLoader:
             logger.error("Project switch error", project_id=project_id, error=str(e))
             return False
 
-    def get_loaded_adapters(self) -> List[Dict[str, Any]]:
+    def get_loaded_adapters(self) -> list[dict[str, Any]]:
         """
         Get information about currently loaded adapters.
 
@@ -578,7 +576,7 @@ class DynamicModelLoader:
             if not was_loaded:
                 self.unload_adapter(project_id, adapter_name)
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """
         Perform health check on the dynamic model loader.
 
@@ -643,12 +641,12 @@ class DynamicModelLoader:
 
 
 # Global instance management
-_loader_instance: Optional[DynamicModelLoader] = None
+_loader_instance: DynamicModelLoader | None = None
 _loader_lock = threading.Lock()
 
 
 def get_dynamic_model_loader(
-    settings: Optional[Settings] = None,
+    settings: Settings | None = None,
     **kwargs
 ) -> DynamicModelLoader:
     """

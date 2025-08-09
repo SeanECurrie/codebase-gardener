@@ -11,14 +11,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import lancedb
 import numpy as np
-import pyarrow as pa
 from lancedb.pydantic import LanceModel, Vector
 
-from codebase_gardener.config.settings import Settings
 from codebase_gardener.data.preprocessor import CodeChunk
 from codebase_gardener.utils.error_handling import (
     VectorStoreError,
@@ -34,7 +32,7 @@ class SearchResult:
     chunk_id: str
     chunk: CodeChunk
     similarity_score: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class CodeChunkSchema(LanceModel):
@@ -128,7 +126,7 @@ class VectorStore:
         if not self._connected or self.db is None:
             self.connect()
 
-    def _chunk_to_schema(self, chunk: CodeChunk, embedding: np.ndarray) -> Dict[str, Any]:
+    def _chunk_to_schema(self, chunk: CodeChunk, embedding: np.ndarray) -> dict[str, Any]:
         """Convert CodeChunk to schema-compatible dictionary."""
         now = datetime.now().isoformat()
 
@@ -150,7 +148,7 @@ class VectorStore:
             "updated_at": now
         }
 
-    def _schema_to_chunk(self, row: Dict[str, Any]) -> CodeChunk:
+    def _schema_to_chunk(self, row: dict[str, Any]) -> CodeChunk:
         """Convert schema row back to CodeChunk object."""
         from codebase_gardener.data.preprocessor import ChunkType
 
@@ -178,7 +176,7 @@ class VectorStore:
         )
 
     @retry_with_exponential_backoff(max_retries=3)
-    def add_chunks(self, chunks: List[CodeChunk], embeddings: List[np.ndarray]) -> None:
+    def add_chunks(self, chunks: list[CodeChunk], embeddings: list[np.ndarray]) -> None:
         """
         Add code chunks with their embeddings to the vector store.
 
@@ -199,7 +197,7 @@ class VectorStore:
         try:
             # Convert chunks to schema format
             data = []
-            for chunk, embedding in zip(chunks, embeddings):
+            for chunk, embedding in zip(chunks, embeddings, strict=False):
                 data.append(self._chunk_to_schema(chunk, embedding))
 
             # Add to table
@@ -215,8 +213,8 @@ class VectorStore:
         self,
         query_embedding: np.ndarray,
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None
-    ) -> List[SearchResult]:
+        filters: dict[str, Any] | None = None
+    ) -> list[SearchResult]:
         """
         Search for similar code chunks using vector similarity.
 
@@ -273,7 +271,7 @@ class VectorStore:
             raise VectorStoreError(f"Failed to search similar chunks: {e}") from e
 
     @retry_with_exponential_backoff(max_retries=3)
-    def get_by_id(self, chunk_id: str) -> Optional[CodeChunk]:
+    def get_by_id(self, chunk_id: str) -> CodeChunk | None:
         """
         Retrieve a specific chunk by its ID.
 
@@ -330,7 +328,7 @@ class VectorStore:
             raise VectorStoreError(f"Failed to update chunk {chunk.id}: {e}") from e
 
     @retry_with_exponential_backoff(max_retries=3)
-    def delete_chunks(self, chunk_ids: List[str]) -> None:
+    def delete_chunks(self, chunk_ids: list[str]) -> None:
         """
         Delete chunks by their IDs.
 
@@ -383,7 +381,7 @@ class VectorStore:
             # Index creation might fail if already exists, log but don't raise
             logger.warning(f"Index optimization failed (may already exist): {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get statistics about the vector store.
 

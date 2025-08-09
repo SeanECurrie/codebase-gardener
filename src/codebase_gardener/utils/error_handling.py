@@ -10,8 +10,9 @@ This module provides a comprehensive error handling system with:
 
 import functools
 import time
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, TypeVar
 
 import structlog
 from tenacity import (
@@ -37,9 +38,9 @@ class CodebaseGardenerError(Exception):
     def __init__(
         self,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
-        user_message: Optional[str] = None,
-        suggestions: Optional[List[str]] = None
+        details: dict[str, Any] | None = None,
+        user_message: str | None = None,
+        suggestions: list[str] | None = None
     ):
         super().__init__(message)
         self.message = message
@@ -59,7 +60,7 @@ class CodebaseGardenerError(Exception):
             timestamp=self.timestamp.isoformat()
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert error to dictionary for serialization."""
         return {
             "error_type": self.__class__.__name__,
@@ -334,7 +335,7 @@ def retry_with_backoff(
     min_wait: float = 1.0,
     max_wait: float = 10.0,
     multiplier: float = 2.0,
-    retry_exceptions: Optional[tuple] = None
+    retry_exceptions: tuple | None = None
 ) -> Callable[[F], F]:
     """
     Decorator for retrying functions with exponential backoff.
@@ -433,9 +434,9 @@ def retry_with_exponential_backoff(max_retries: int = 3) -> Callable[[F], F]:
 
 
 def handle_errors(
-    error_type: Type[CodebaseGardenerError] = CodebaseGardenerError,
-    user_message: Optional[str] = None,
-    suggestions: Optional[List[str]] = None,
+    error_type: type[CodebaseGardenerError] = CodebaseGardenerError,
+    user_message: str | None = None,
+    suggestions: list[str] | None = None,
     reraise: bool = True
 ) -> Callable[[F], F]:
     """
@@ -566,7 +567,7 @@ def is_retryable_error(error: Exception) -> bool:
     return isinstance(error, retryable_types)
 
 
-def get_error_context(error: Exception) -> Dict[str, Any]:
+def get_error_context(error: Exception) -> dict[str, Any]:
     """Extract context information from an error."""
     context = {
         "error_type": type(error).__name__,

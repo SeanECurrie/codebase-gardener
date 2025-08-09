@@ -13,12 +13,11 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-import psutil
 import structlog
 
-from .system_health import SystemHealthMonitor, HealthStatus
+from .system_health import HealthStatus, SystemHealthMonitor
 
 logger = structlog.get_logger(__name__)
 
@@ -40,7 +39,7 @@ class Alert:
     message: str
     acknowledged: bool = False
     resolved: bool = False
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -50,7 +49,7 @@ class MetricPoint:
     metric_name: str
     value: float
     component: str
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 class OperationalMonitor:
@@ -60,19 +59,19 @@ class OperationalMonitor:
         """Initialize operational monitor."""
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        
+
         self.app_context = app_context
         self.health_monitor = SystemHealthMonitor(app_context)
-        
+
         # Database for metrics and alerts
         self.db_path = self.data_dir / "operational_metrics.db"
         self._init_database()
-        
+
         # Monitoring configuration
         self.monitoring_interval = 30  # seconds
         self.metric_retention_days = 30
         self.alert_retention_days = 90
-        
+
         # Alerting thresholds (enhanced from SystemHealthMonitor)
         self.alert_thresholds = {
             'cpu_percent_warning': 75.0,
@@ -86,13 +85,13 @@ class OperationalMonitor:
             'integration_score_warning': 80.0,
             'integration_score_critical': 60.0
         }
-        
+
         # Monitoring state
         self._monitoring_active = False
         self._monitoring_thread = None
         self._lock = threading.RLock()
-        
-        logger.info("Operational monitor initialized", 
+
+        logger.info("Operational monitor initialized",
                    data_dir=str(self.data_dir),
                    db_path=str(self.db_path))
 
@@ -111,7 +110,7 @@ class OperationalMonitor:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
+
             # Alerts table
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS alerts (
@@ -126,13 +125,13 @@ class OperationalMonitor:
                     created_at TEXT DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            
+
             # Create indexes for performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_metrics_component ON metrics(component)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_timestamp ON alerts(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_alerts_level ON alerts(level)")
-            
+
             conn.commit()
 
     def store_metric(self, metric: MetricPoint):
@@ -172,39 +171,39 @@ class OperationalMonitor:
                     json.dumps(alert.metadata) if alert.metadata else None
                 ))
                 conn.commit()
-                
-            logger.info("Alert stored", 
+
+            logger.info("Alert stored",
                        alert_id=alert.id,
                        level=alert.level.value,
                        component=alert.component)
-                       
+
         except Exception as e:
             logger.error(f"Failed to store alert: {e}", alert_id=alert.id)
 
-    def get_metrics(self, 
-                   component: Optional[str] = None,
-                   metric_name: Optional[str] = None,
-                   hours: int = 24) -> List[MetricPoint]:
+    def get_metrics(self,
+                   component: str | None = None,
+                   metric_name: str | None = None,
+                   hours: int = 24) -> list[MetricPoint]:
         """Retrieve metrics from the database."""
         try:
             cutoff_time = datetime.now() - timedelta(hours=hours)
-            
+
             query = "SELECT timestamp, metric_name, value, component, metadata FROM metrics WHERE timestamp >= ?"
             params = [cutoff_time.isoformat()]
-            
+
             if component:
                 query += " AND component = ?"
                 params.append(component)
-                
+
             if metric_name:
                 query += " AND metric_name = ?"
                 params.append(metric_name)
-                
+
             query += " ORDER BY timestamp DESC"
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute(query, params)
-                
+
                 metrics = []
                 for row in cursor.fetchall():
                     timestamp, name, value, comp, metadata = row
@@ -215,41 +214,41 @@ class OperationalMonitor:
                         component=comp,
                         metadata=json.loads(metadata) if metadata else None
                     ))
-                
+
                 return metrics
-                
+
         except Exception as e:
             logger.error(f"Failed to retrieve metrics: {e}")
             return []
 
-    def get_alerts(self, 
-                  level: Optional[AlertLevel] = None,
-                  component: Optional[str] = None,
+    def get_alerts(self,
+                  level: AlertLevel | None = None,
+                  component: str | None = None,
                   unresolved_only: bool = False,
-                  hours: int = 24) -> List[Alert]:
+                  hours: int = 24) -> list[Alert]:
         """Retrieve alerts from the database."""
         try:
             cutoff_time = datetime.now() - timedelta(hours=hours)
-            
+
             query = "SELECT id, timestamp, level, component, message, acknowledged, resolved, metadata FROM alerts WHERE timestamp >= ?"
             params = [cutoff_time.isoformat()]
-            
+
             if level:
                 query += " AND level = ?"
                 params.append(level.value)
-                
+
             if component:
                 query += " AND component = ?"
                 params.append(component)
-                
+
             if unresolved_only:
                 query += " AND resolved = 0"
-                
+
             query += " ORDER BY timestamp DESC"
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.execute(query, params)
-                
+
                 alerts = []
                 for row in cursor.fetchall():
                     alert_id, timestamp, level_str, comp, message, ack, resolved, metadata = row
@@ -263,9 +262,9 @@ class OperationalMonitor:
                         resolved=bool(resolved),
                         metadata=json.loads(metadata) if metadata else None
                     ))
-                
+
                 return alerts
-                
+
         except Exception as e:
             logger.error(f"Failed to retrieve alerts: {e}")
             return []
@@ -279,14 +278,14 @@ class OperationalMonitor:
                     (alert_id,)
                 )
                 conn.commit()
-                
+
                 if cursor.rowcount > 0:
                     logger.info("Alert acknowledged", alert_id=alert_id)
                     return True
                 else:
                     logger.warning("Alert not found for acknowledgment", alert_id=alert_id)
                     return False
-                    
+
         except Exception as e:
             logger.error(f"Failed to acknowledge alert: {e}", alert_id=alert_id)
             return False
@@ -300,14 +299,14 @@ class OperationalMonitor:
                     (alert_id,)
                 )
                 conn.commit()
-                
+
                 if cursor.rowcount > 0:
                     logger.info("Alert resolved", alert_id=alert_id)
                     return True
                 else:
                     logger.warning("Alert not found for resolution", alert_id=alert_id)
                     return False
-                    
+
         except Exception as e:
             logger.error(f"Failed to resolve alert: {e}", alert_id=alert_id)
             return False
@@ -317,13 +316,13 @@ class OperationalMonitor:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         return f"{component}_{metric}_{level.value}_{timestamp}"
 
-    def _check_thresholds_and_alert(self, health_report: Dict[str, Any]):
+    def _check_thresholds_and_alert(self, health_report: dict[str, Any]):
         """Check thresholds and generate alerts based on health report."""
         current_time = datetime.now()
-        
+
         # Check system resource thresholds
         metrics = health_report["system_metrics"]
-        
+
         # CPU alerts
         cpu_percent = metrics["cpu_percent"]
         if cpu_percent >= self.alert_thresholds["cpu_percent_critical"]:
@@ -445,10 +444,10 @@ class OperationalMonitor:
             # Get comprehensive health report
             health_report = self.health_monitor.comprehensive_health_check()
             current_time = datetime.now()
-            
+
             # Store system metrics
             metrics = health_report["system_metrics"]
-            
+
             system_metrics_to_store = [
                 ("cpu_percent", metrics["cpu_percent"]),
                 ("memory_mb", metrics["memory_mb"]),
@@ -457,7 +456,7 @@ class OperationalMonitor:
                 ("process_count", metrics["process_count"]),
                 ("uptime_seconds", metrics["uptime_seconds"])
             ]
-            
+
             for metric_name, value in system_metrics_to_store:
                 metric = MetricPoint(
                     timestamp=current_time,
@@ -466,13 +465,13 @@ class OperationalMonitor:
                     component="system"
                 )
                 self.store_metric(metric)
-            
+
             # Store integration health score
             integration_health = health_report["integration_health"].copy()
             # Convert HealthStatus enum to string for JSON serialization
             if "status" in integration_health:
                 integration_health["status"] = str(integration_health["status"])
-            
+
             integration_metric = MetricPoint(
                 timestamp=current_time,
                 metric_name="integration_score",
@@ -481,7 +480,7 @@ class OperationalMonitor:
                 metadata=integration_health
             )
             self.store_metric(integration_metric)
-            
+
             # Store component response times
             for comp_name, comp_data in health_report["components"].items():
                 if comp_data.get("response_time"):
@@ -493,14 +492,14 @@ class OperationalMonitor:
                         metadata={"status": str(comp_data["status"])}  # Convert to string for JSON serialization
                     )
                     self.store_metric(response_time_metric)
-            
+
             # Check thresholds and generate alerts
             self._check_thresholds_and_alert(health_report)
-            
-            logger.debug("Metrics collected and stored", 
+
+            logger.debug("Metrics collected and stored",
                         timestamp=current_time.isoformat(),
                         system_metrics_count=len(system_metrics_to_store))
-            
+
         except Exception as e:
             logger.error(f"Failed to collect and store metrics: {e}")
 
@@ -509,11 +508,11 @@ class OperationalMonitor:
         if self._monitoring_active:
             logger.warning("Monitoring already active")
             return
-            
+
         self._monitoring_active = True
         self._monitoring_thread = threading.Thread(target=self._monitoring_loop, daemon=True)
         self._monitoring_thread.start()
-        
+
         logger.info("Operational monitoring started", interval=self.monitoring_interval)
 
     def stop_monitoring(self):
@@ -521,7 +520,7 @@ class OperationalMonitor:
         self._monitoring_active = False
         if self._monitoring_thread:
             self._monitoring_thread.join(timeout=5)
-            
+
         logger.info("Operational monitoring stopped")
 
     def _monitoring_loop(self):
@@ -539,7 +538,7 @@ class OperationalMonitor:
         try:
             metric_cutoff = datetime.now() - timedelta(days=self.metric_retention_days)
             alert_cutoff = datetime.now() - timedelta(days=self.alert_retention_days)
-            
+
             with sqlite3.connect(self.db_path) as conn:
                 # Clean up old metrics
                 cursor = conn.execute(
@@ -547,46 +546,46 @@ class OperationalMonitor:
                     (metric_cutoff.isoformat(),)
                 )
                 metrics_deleted = cursor.rowcount
-                
+
                 # Clean up old resolved alerts
                 cursor = conn.execute(
                     "DELETE FROM alerts WHERE timestamp < ? AND resolved = 1",
                     (alert_cutoff.isoformat(),)
                 )
                 alerts_deleted = cursor.rowcount
-                
+
                 conn.commit()
-                
-            logger.info("Old data cleaned up", 
+
+            logger.info("Old data cleaned up",
                        metrics_deleted=metrics_deleted,
                        alerts_deleted=alerts_deleted)
-                       
+
         except Exception as e:
             logger.error(f"Failed to cleanup old data: {e}")
 
-    def get_operational_summary(self) -> Dict[str, Any]:
+    def get_operational_summary(self) -> dict[str, Any]:
         """Get operational monitoring summary."""
         try:
             current_time = datetime.now()
-            
+
             # Get recent alerts
             recent_alerts = self.get_alerts(hours=24)
             unresolved_alerts = [a for a in recent_alerts if not a.resolved]
             critical_alerts = [a for a in recent_alerts if a.level == AlertLevel.CRITICAL]
-            
+
             # Get latest health report
             health_report = self.health_monitor.comprehensive_health_check()
-            
+
             # Get metric counts
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("SELECT COUNT(*) FROM metrics WHERE timestamp >= ?", 
+                cursor = conn.execute("SELECT COUNT(*) FROM metrics WHERE timestamp >= ?",
                                     ((current_time - timedelta(hours=24)).isoformat(),))
                 metrics_24h = cursor.fetchone()[0]
-                
-                cursor = conn.execute("SELECT COUNT(*) FROM alerts WHERE timestamp >= ?", 
+
+                cursor = conn.execute("SELECT COUNT(*) FROM alerts WHERE timestamp >= ?",
                                     ((current_time - timedelta(hours=24)).isoformat(),))
                 alerts_24h = cursor.fetchone()[0]
-            
+
             return {
                 "timestamp": current_time.isoformat(),
                 "monitoring_active": self._monitoring_active,
@@ -601,7 +600,7 @@ class OperationalMonitor:
                 "recent_alerts": [asdict(alert) for alert in recent_alerts[:5]],  # Last 5 alerts
                 "uptime_hours": health_report["uptime_seconds"] / 3600
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to get operational summary: {e}")
             return {

@@ -5,7 +5,7 @@ This module provides a reusable project selector component with status indicator
 and real-time updates for the Codebase Gardener web interface.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import gradio as gr
 import structlog
@@ -15,7 +15,6 @@ from ..core.project_registry import (
     TrainingStatus,
     get_project_registry,
 )
-from ..utils.error_handling import CodebaseGardenerError
 
 logger = structlog.get_logger(__name__)
 
@@ -34,7 +33,7 @@ class ProjectSelector:
         except Exception as e:
             logger.error(f"Failed to initialize ProjectSelector: {e}")
 
-    def get_project_choices(self) -> List[Tuple[str, str]]:
+    def get_project_choices(self) -> list[tuple[str, str]]:
         """Get formatted project choices for dropdown."""
         try:
             if not self.project_registry:
@@ -72,7 +71,7 @@ class ProjectSelector:
         }
         return status_icons.get(status, "❓")
 
-    def get_project_info(self, project_id: str) -> Dict[str, Any]:
+    def get_project_info(self, project_id: str) -> dict[str, Any]:
         """Get detailed project information."""
         if not project_id or not self.project_registry:
             return {
@@ -188,11 +187,11 @@ def get_project_selector() -> ProjectSelector:
     return _project_selector_instance
 
 # Convenience functions for direct use in Gradio interfaces
-def get_project_choices() -> List[Tuple[str, str]]:
+def get_project_choices() -> list[tuple[str, str]]:
     """Get project choices for dropdown."""
     return get_project_selector().get_project_choices()
 
-def get_project_info(project_id: str) -> Dict[str, Any]:
+def get_project_info(project_id: str) -> dict[str, Any]:
     """Get project information."""
     return get_project_selector().get_project_info(project_id)
 

@@ -9,7 +9,7 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import structlog
 from structlog.types import Processor
@@ -18,9 +18,9 @@ from .settings import settings
 
 
 def configure_logging(
-    log_level: Optional[str] = None,
-    debug: Optional[bool] = None,
-    log_file: Optional[Path] = None
+    log_level: str | None = None,
+    debug: bool | None = None,
+    log_file: Path | None = None
 ) -> None:
     """
     Configure structured logging for the application.

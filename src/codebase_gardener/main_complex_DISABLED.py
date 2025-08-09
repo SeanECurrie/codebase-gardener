@@ -11,7 +11,7 @@ import sys
 import threading
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import click
 from rich.console import Console
@@ -111,7 +111,7 @@ class ApplicationContext:
             # Close vector store connections
             pass
 
-    def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> dict[str, Any]:
         """Comprehensive health check of all components."""
         health_report = {
             "timestamp": datetime.now().isoformat(),
@@ -364,7 +364,7 @@ def serve(ctx: click.Context, host: str, port: int) -> None:
     help="Automatically start LoRA training after adding project",
 )
 @click.pass_context
-def add(ctx: click.Context, project_path: Path, name: Optional[str], auto_train: bool) -> None:
+def add(ctx: click.Context, project_path: Path, name: str | None, auto_train: bool) -> None:
     """Add a new codebase project for analysis."""
     app_context = get_or_create_app_context(ctx)
     project_name = name or project_path.name
@@ -382,9 +382,9 @@ def add(ctx: click.Context, project_path: Path, name: Optional[str], auto_train:
         if app_context.file_utilities:
             def progress_callback(message):
                 console.print(f"[dim]{message}[/dim]")
-            
+
             try:
-                console.print(f"[blue]Analyzing project structure...[/blue]")
+                console.print("[blue]Analyzing project structure...[/blue]")
                 source_files = app_context.file_utilities.find_source_files(
                     project_path, progress_callback=progress_callback
                 )
@@ -502,10 +502,10 @@ def remove(ctx: click.Context, project_name: str, force: bool) -> None:
 
         if not force:
             console.print(f"[dim]Project path: {project.source_path}[/dim]")
-            console.print(f"[dim]This will delete:[/dim]")
-            console.print(f"[dim]  • LoRA adapter files[/dim]")
-            console.print(f"[dim]  • Vector store data[/dim]")
-            console.print(f"[dim]  • Conversation context[/dim]")
+            console.print("[dim]This will delete:[/dim]")
+            console.print("[dim]  • LoRA adapter files[/dim]")
+            console.print("[dim]  • Vector store data[/dim]")
+            console.print("[dim]  • Conversation context[/dim]")
 
             if not click.confirm("Continue with removal?"):
                 console.print("[dim]Operation cancelled.[/dim]")
@@ -551,7 +551,7 @@ def remove(ctx: click.Context, project_name: str, force: bool) -> None:
     help="Show training progress",
 )
 @click.pass_context
-def train(ctx: click.Context, project_name: Optional[str], force: bool, progress: bool) -> None:
+def train(ctx: click.Context, project_name: str | None, force: bool, progress: bool) -> None:
     """Manually trigger LoRA training for a specific project."""
     app_context = get_or_create_app_context(ctx)
 
@@ -639,7 +639,7 @@ def switch(ctx: click.Context, project_name: str) -> None:
     help="Show status for specific project",
 )
 @click.pass_context
-def status(ctx: click.Context, detailed: bool, project: Optional[str]) -> None:
+def status(ctx: click.Context, detailed: bool, project: str | None) -> None:
     """Show system health and component status."""
     app_context = get_or_create_app_context(ctx)
 
@@ -685,7 +685,7 @@ def status(ctx: click.Context, detailed: bool, project: Optional[str]) -> None:
             console.print(table)
 
             # System information
-            console.print(f"\n[bold]System Information:[/bold]")
+            console.print("\n[bold]System Information:[/bold]")
             console.print(f"Data Directory: {health_report['system']['data_dir']}")
             console.print(f"Debug Mode: {health_report['system']['debug_mode']}")
 
@@ -697,7 +697,7 @@ def status(ctx: click.Context, detailed: bool, project: Optional[str]) -> None:
                     try:
                         def progress_callback(message):
                             console.print(f"[dim]{message}[/dim]")
-                        
+
                         source_files = list(app_context.file_utilities.find_source_files(
                             project_obj.source_path, progress_callback=progress_callback
                         ))
@@ -744,7 +744,7 @@ def status(ctx: click.Context, detailed: bool, project: Optional[str]) -> None:
     help="Output format",
 )
 @click.pass_context
-def analyze(ctx: click.Context, code_input: Optional[str], file: Optional[Path], project: Optional[str], output: str) -> None:
+def analyze(ctx: click.Context, code_input: str | None, file: Path | None, project: str | None, output: str) -> None:
     """Perform code analysis using project-specific models."""
     app_context = get_or_create_app_context(ctx)
 
@@ -888,7 +888,7 @@ Please provide:
 
             # Display AI analysis if available
             if analysis_result.get("ai_response"):
-                console.print(f"\n[bold]AI Analysis:[/bold]")
+                console.print("\n[bold]AI Analysis:[/bold]")
                 console.print(analysis_result["ai_response"])
 
             if analysis_result["suggestions"]:

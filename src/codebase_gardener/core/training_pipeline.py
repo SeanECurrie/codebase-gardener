@@ -6,15 +6,15 @@ of project-specific LoRA adapters. It coordinates between existing components to
 provide a seamless training experience with progress tracking and error handling.
 """
 
-import asyncio
 import threading
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import structlog
 
@@ -25,7 +25,6 @@ from codebase_gardener.data.vector_store import VectorStore
 from codebase_gardener.models.peft_manager import PeftManager
 from codebase_gardener.utils.error_handling import (
     TrainingError,
-    handle_errors,
     retry_with_exponential_backoff,
 )
 
@@ -49,8 +48,8 @@ class TrainingProgress:
     phase: TrainingPhase
     progress_percent: float
     message: str
-    details: Optional[Dict[str, Any]] = None
-    timestamp: Optional[datetime] = None
+    details: dict[str, Any] | None = None
+    timestamp: datetime | None = None
 
     def __post_init__(self):
         if self.timestamp is None:
@@ -87,7 +86,7 @@ class TrainingDataPreparator:
         self.config = config
         self.logger = structlog.get_logger(__name__).bind(component="training_data_preparator")
 
-    def prepare_training_data(self, project_name: str) -> List[Dict[str, Any]]:
+    def prepare_training_data(self, project_name: str) -> list[dict[str, Any]]:
         """
         Prepare training data from project code chunks.
 
@@ -158,7 +157,7 @@ class TrainingDataPreparator:
                 raise
             raise TrainingError(f"Failed to prepare training data: {e}") from e
 
-    def _load_code_chunks(self, project_name: str) -> List[CodeChunk]:
+    def _load_code_chunks(self, project_name: str) -> list[CodeChunk]:
         """Load code chunks for the project."""
         try:
             # Try to load from vector store first
@@ -196,7 +195,7 @@ class TrainingDataPreparator:
         except Exception as e:
             raise TrainingError(f"Failed to load code chunks: {e}") from e
 
-    def _filter_quality_chunks(self, chunks: List[CodeChunk]) -> List[CodeChunk]:
+    def _filter_quality_chunks(self, chunks: list[CodeChunk]) -> list[CodeChunk]:
         """Filter chunks based on quality criteria."""
         quality_chunks = []
 
@@ -243,13 +242,13 @@ class TrainingDataPreparator:
 
         return has_function or has_class
 
-    def _select_best_chunks(self, chunks: List[CodeChunk]) -> List[CodeChunk]:
+    def _select_best_chunks(self, chunks: list[CodeChunk]) -> list[CodeChunk]:
         """Select the best chunks when we have too many."""
         # Sort by complexity score (descending) and take the top chunks
         sorted_chunks = sorted(chunks, key=lambda c: c.complexity_score, reverse=True)
         return sorted_chunks[:self.config.max_training_chunks]
 
-    def _convert_to_training_format(self, chunks: List[CodeChunk]) -> List[Dict[str, Any]]:
+    def _convert_to_training_format(self, chunks: list[CodeChunk]) -> list[dict[str, Any]]:
         """Convert code chunks to HuggingFace training format."""
         training_data = []
 
@@ -260,7 +259,7 @@ class TrainingDataPreparator:
 
         return training_data
 
-    def _create_training_examples(self, chunk: CodeChunk) -> List[Dict[str, Any]]:
+    def _create_training_examples(self, chunk: CodeChunk) -> list[dict[str, Any]]:
         """Create training examples from a code chunk."""
         examples = []
 
@@ -316,7 +315,7 @@ class TrainingProgressTracker:
             progress_percent=0.0,
             message="Initializing training pipeline"
         )
-        self._callbacks: List[Callable[[TrainingProgress], None]] = []
+        self._callbacks: list[Callable[[TrainingProgress], None]] = []
         self._lock = threading.Lock()
 
     def add_progress_callback(self, callback: Callable[[TrainingProgress], None]):
@@ -329,7 +328,7 @@ class TrainingProgressTracker:
         phase: TrainingPhase,
         progress_percent: float,
         message: str,
-        details: Optional[Dict[str, Any]] = None
+        details: dict[str, Any] | None = None
     ):
         """Update training progress."""
         with self._lock:
@@ -386,22 +385,22 @@ class TrainingPipeline:
     to provide a seamless training experience with progress tracking.
     """
 
-    def __init__(self, config: Optional[TrainingConfig] = None):
+    def __init__(self, config: TrainingConfig | None = None):
         self.config = config or TrainingConfig.from_settings()
         self.registry = ProjectRegistry()
         self.peft_manager = PeftManager(settings)
         self.data_preparator = TrainingDataPreparator(self.config)
         self.logger = structlog.get_logger(__name__).bind(component="training_pipeline")
 
-        self._active_trainings: Dict[str, TrainingProgressTracker] = {}
-        self._training_threads: Dict[str, threading.Thread] = {}
+        self._active_trainings: dict[str, TrainingProgressTracker] = {}
+        self._training_threads: dict[str, threading.Thread] = {}
         self._lock = threading.Lock()
 
     @retry_with_exponential_backoff(max_retries=2)
     def start_training(
         self,
         project_name: str,
-        progress_callback: Optional[Callable[[TrainingProgress], None]] = None
+        progress_callback: Callable[[TrainingProgress], None] | None = None
     ) -> str:
         """
         Start training a LoRA adapter for the specified project.
@@ -463,7 +462,7 @@ class TrainingPipeline:
 
         return training_id
 
-    def get_training_progress(self, project_name: str) -> Optional[TrainingProgress]:
+    def get_training_progress(self, project_name: str) -> TrainingProgress | None:
         """Get current training progress for a project."""
         with self._lock:
             tracker = self._active_trainings.get(project_name)
@@ -678,7 +677,7 @@ class TrainingPipeline:
         finally:
             self.logger.info("Exiting training context", project_name=project_name)
 
-    def get_active_trainings(self) -> Dict[str, TrainingProgress]:
+    def get_active_trainings(self) -> dict[str, TrainingProgress]:
         """Get all currently active trainings."""
         with self._lock:
             return {
@@ -689,7 +688,7 @@ class TrainingPipeline:
     def wait_for_training_completion(
         self,
         project_name: str,
-        timeout_seconds: Optional[float] = None
+        timeout_seconds: float | None = None
     ) -> TrainingProgress:
         """
         Wait for training to complete.
@@ -725,7 +724,7 @@ class TrainingPipeline:
 
 
 # Global training pipeline instance
-_training_pipeline: Optional[TrainingPipeline] = None
+_training_pipeline: TrainingPipeline | None = None
 
 
 def get_training_pipeline() -> TrainingPipeline:
@@ -740,14 +739,14 @@ def get_training_pipeline() -> TrainingPipeline:
 
 def start_project_training(
     project_name: str,
-    progress_callback: Optional[Callable[[TrainingProgress], None]] = None
+    progress_callback: Callable[[TrainingProgress], None] | None = None
 ) -> str:
     """Start training for a project."""
     pipeline = get_training_pipeline()
     return pipeline.start_training(project_name, progress_callback)
 
 
-def get_project_training_progress(project_name: str) -> Optional[TrainingProgress]:
+def get_project_training_progress(project_name: str) -> TrainingProgress | None:
     """Get training progress for a project."""
     pipeline = get_training_pipeline()
     return pipeline.get_training_progress(project_name)
