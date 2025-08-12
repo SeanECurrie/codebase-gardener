@@ -1,5 +1,14 @@
 # CLAUDE.md
 
+## READ FIRST (Auto-Run)
+- Always read (in order) the directives and spec before any action:
+  `.kiro/specs/enhanced-codebase-auditor/claude-directives.md`
+  `.kiro/specs/enhanced-codebase-auditor/requirements.md`
+  `.kiro/specs/enhanced-codebase-auditor/design.md`
+  `.kiro/specs/enhanced-codebase-auditor/tasks.md`
+  `.kiro/steering/task-execution-framework.md`
+- Non-interactive mode: never ask to proceed; use safe defaults.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## MVP Scope
