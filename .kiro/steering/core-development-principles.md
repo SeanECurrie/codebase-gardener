@@ -87,6 +87,13 @@ This means:
 4. **Verify the fix works** - can the basic workflow complete?
 5. **Then and only then** - consider optimizations or enhancements
 
+### After Completing Any Work:
+1. **Update tasks.md FIRST** - mark task completed with checkmarks and findings in `.kiro/specs/enhanced-codebase-auditor/tasks.md`
+2. **Create memory file** - comprehensive handoff documentation
+3. **Update completion log** - document what was proven to work
+4. **Commit and push** - proper git workflow with conventional commits
+5. **Verify all completion criteria met** - don't skip validation steps
+
 ### Red Flags That I'm Going Wrong:
 - Building complex solutions for simple problems
 - Adding timeouts/retries when basic functionality is broken

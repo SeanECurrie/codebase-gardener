@@ -24,6 +24,7 @@ Sequential Thinking → Context7 → Bright Data → Basic Memory. If unavailabl
 
 ## Memory & Trace
 - Write memory artifacts under `.kiro/memory/` per task (naming: `<task_slug>.md`)
+- **CRITICAL**: Update `.kiro/specs/enhanced-codebase-auditor/tasks.md` FIRST - mark task completed with checkmarks and findings
 - Update `.kiro/docs/task_completion_test_log.md` with completion status
 - Memory files are authoritative handoff documents between tasks
 

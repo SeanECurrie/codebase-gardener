@@ -9,6 +9,13 @@
   `.kiro/steering/task-execution-framework.md`
 - Non-interactive mode: never ask to proceed; use safe defaults.
 
+## CRITICAL TASK COMPLETION REQUIREMENT
+**ALWAYS UPDATE TASKS.MD FIRST** when completing any task:
+- Change `- [ ] N. Task Name` to `- [x] N. Task Name **COMPLETED YYYY-MM-DD**`
+- Add completion checkmarks to all Pre-Task, Implementation, Post-Task phases
+- Document key findings and gaps directly in the task
+- This is completion criteria #11 - the task is NOT complete without this update
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## MVP Scope
