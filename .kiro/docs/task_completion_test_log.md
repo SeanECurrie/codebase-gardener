@@ -759,6 +759,43 @@ The Codebase Gardener MVP now provides:
 - Performance baseline established for comparison
 - Integration challenges identified and documented
 
+## Task 2: Component Reactivation Infrastructure - 2025-01-20
+**Date**: 2025-01-20
+**Status**: ✅ COMPLETED
+**Duration**: ~45 minutes
+
+### Key Capabilities Added:
+- Component registry system with dynamic loading and graceful fallbacks
+- PEFT Manager with LoRA capabilities and graceful fallback mode
+- Complete directory structure for enhanced codebase gardener (`src/codebase_gardener/`)
+- Configuration system integration with settings and logging
+- Utility framework with error handling and file operations
+
+### Integration Test Results:
+- ✅ Smoke test: `PYTHONPATH=. python scripts/smoke_cli.py` → `SMOKE_OK` (MVP preserved)
+- ✅ Focused tests: `PYTHONPATH=. pytest -q tests/test_project_structure.py tests/test_single_file_auditor.py` → 8/8 pass
+- ✅ Component registry: 6 components registered, dynamic loading tested
+- ✅ PEFT Manager: LoRA available, graceful fallback implemented
+- ✅ Configuration: Settings import successful, logging configured
+
+### Gaps Identified for Next Task:
+1. **Core Component Moves**: Need to move project_registry, dynamic_model_loader from disabled
+2. **CLI Integration**: Need to integrate component registry with CLI for `--advanced` flag
+3. **Resource Monitoring**: Need resource constraint checking for Mac Mini M4
+4. **Integration Hooks**: Need to integrate with existing `CodebaseAuditor` class
+
+### Critical Findings:
+- **Infrastructure Status**: Component reactivation foundation successfully established
+- **Architecture**: Layer 2 Enhancement Controller implemented per design document
+- **Backwards Compatibility**: MVP CLI functionality 100% preserved throughout reactivation
+- **Graceful Fallbacks**: All components handle missing dependencies gracefully
+
+### Next Task Prerequisites Met:
+- Component registry ready for complex component loading
+- Dynamic loading system handles dependencies and fallbacks
+- Configuration and utility frameworks integrated
+- MVP CLI validation confirms no regressions introduced
+
 ---
 
 ## Task 4 Production-Readiness: Performance Optimization - CORRECTIVE ACTION - 2025-01-08
