@@ -46,6 +46,15 @@ $ python codebase_auditor.py
 > analyze ./my-project
 📊 Analysis Summary: 28/28 files, 156,789 bytes processed
 
+> analyze --advanced ./my-project
+🚀 Starting advanced analysis of: ./my-project
+⚠️  Advanced features requested but not available - falling back to standard analysis
+
+> features
+🔧 Advanced Features Status:
+⚠️  Advanced features are not currently available
+   Available features: 0/6
+
 > chat What are the main architectural patterns?
 💭 This React application follows component-based architecture...
 
@@ -53,7 +62,7 @@ $ python codebase_auditor.py
 📄 Report exported to: project-analysis.md
 
 > help
-Available commands: analyze, chat, export, status, help, quit
+Available commands: analyze, analyze --advanced, chat, export, status, features, help, quit
 ```
 
 **Key Features:**
@@ -62,6 +71,8 @@ Available commands: analyze, chat, export, status, help, quit
 - 💬 Interactive chat with your codebase
 - 📄 Markdown report export
 - ⚡ Local-first (works offline with Ollama)
+- 🚀 Advanced mode support (with graceful fallback during MVP)
+- 📊 Feature status reporting and mode detection
 
 ## Troubleshooting
 
