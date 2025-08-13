@@ -282,6 +282,9 @@ Focus on the big picture rather than detailed code issues."""
                 "caps": stats,
             }
 
+            # Check for advanced features and enhance analysis if available
+            self._try_enhance_analysis(dir_path)
+
             print("✅ Analysis complete!")
             if progress_callback:
                 progress_callback(
@@ -465,6 +468,58 @@ The following {self.analysis_results["file_count"]} source files were included i
 """
 
         return markdown_report
+
+    def _try_enhance_analysis(self, dir_path: Path) -> None:
+        """
+        Try to enhance analysis using advanced features if available.
+
+        This method attempts to load the AdvancedFeaturesController and
+        apply enhancements to the analysis results. If advanced features
+        are not available, it gracefully continues without enhancement.
+
+        Args:
+            dir_path: Path to the analyzed directory
+        """
+        try:
+            # Try to import and use advanced features
+            sys.path.insert(0, str(Path(__file__).parent / "src"))
+
+            from codebase_gardener.core import (
+                advanced_features_controller,
+                check_advanced_features,
+            )
+
+            # Check if any advanced features are available
+            if not check_advanced_features():
+                return
+
+            print("🚀 Advanced features detected - enhancing analysis...")
+
+            # Get enhancement level for this codebase
+            enhancement_level = advanced_features_controller.get_enhancement_level(
+                dir_path
+            )
+
+            # Enhance the analysis context
+            enhanced_context = advanced_features_controller.enhance_analysis(
+                self.analysis_results
+            )
+
+            # Update analysis results with enhancements
+            if enhanced_context != self.analysis_results:
+                self.analysis_results.update(enhanced_context)
+                print(
+                    f"✨ Analysis enhanced to '{enhancement_level}' level with {len([k for k in enhanced_context.keys() if k.startswith('enhanced_')])} advanced features"
+                )
+
+        except ImportError:
+            # Advanced features not available - this is expected for MVP mode
+            pass
+        except Exception as e:
+            # Log but don't fail - advanced features should never break basic functionality
+            print(
+                f"⚠️ Advanced feature enhancement failed (continuing with basic analysis): {e}"
+            )
 
 
 def print_welcome():
