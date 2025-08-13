@@ -82,6 +82,14 @@ python codebase_auditor.py
 export OLLAMA_HOST=http://localhost:11434
 export OLLAMA_MODEL=llama3.2:3b
 python codebase_auditor.py
+
+# CLI commands available:
+# analyze <directory>              - Basic codebase analysis
+# analyze --advanced <directory>   - Enhanced analysis with advanced features (if available)
+# features                         - Show advanced feature status
+# chat <question>                  - Ask questions about analysis
+# export [filename]                - Export markdown report
+# status                           - Show current analysis status
 ```
 
 #### Full System (Development/Advanced)

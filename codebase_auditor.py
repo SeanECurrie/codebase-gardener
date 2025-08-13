@@ -80,6 +80,7 @@ class CodebaseAuditor:
         self.client = ollama.Client(ollama_host)
         self.file_utils = SimpleFileUtilities()
         self.analysis_results: dict[str, Any] | None = None
+        self._advanced_mode_requested: bool = False
 
         # Simple, hardcoded caps to avoid huge prompts (pragmatic POC)
         self.max_files: int = 250
@@ -298,7 +299,7 @@ Focus on the big picture rather than detailed code issues."""
             error_msg = (
                 "Ollama connection failed after retries. "
                 f"Ensure Ollama is running and model is pulled. "
-                f"Host={self.host}, Model={self.model_name}, Error={e}"
+                f"Host={self.client._client.base_url}, Model={self.model_name}, Error={e}"
             )
             print(f"❌ {error_msg}")
             if progress_callback:
@@ -489,11 +490,24 @@ The following {self.analysis_results["file_count"]} source files were included i
                 check_advanced_features,
             )
 
+            # Check if user requested advanced mode specifically
+            advanced_mode_requested = getattr(self, "_advanced_mode_requested", False)
+
             # Check if any advanced features are available
-            if not check_advanced_features():
+            features_available = check_advanced_features()
+
+            if not features_available:
+                if advanced_mode_requested:
+                    print(
+                        "⚠️  Advanced mode requested but features not available - using standard analysis"
+                    )
                 return
 
-            print("🚀 Advanced features detected - enhancing analysis...")
+            # Enhanced feedback when features are available
+            if advanced_mode_requested:
+                print("🚀 Advanced features detected - applying enhanced analysis...")
+            else:
+                print("🚀 Advanced features detected - enhancing analysis...")
 
             # Get enhancement level for this codebase
             enhancement_level = advanced_features_controller.get_enhancement_level(
@@ -508,13 +522,34 @@ The following {self.analysis_results["file_count"]} source files were included i
             # Update analysis results with enhancements
             if enhanced_context != self.analysis_results:
                 self.analysis_results.update(enhanced_context)
-                print(
-                    f"✨ Analysis enhanced to '{enhancement_level}' level with {len([k for k in enhanced_context.keys() if k.startswith('enhanced_')])} advanced features"
+                enhancement_count = len(
+                    [k for k in enhanced_context.keys() if k.startswith("enhanced_")]
                 )
+
+                if advanced_mode_requested:
+                    print(
+                        f"✨ Advanced analysis complete! Enhancement level: '{enhancement_level}' with {enhancement_count} features applied"
+                    )
+                else:
+                    print(
+                        f"✨ Analysis enhanced to '{enhancement_level}' level with {enhancement_count} advanced features"
+                    )
+
+                # Show what enhancements were applied
+                if enhancement_count > 0:
+                    applied_features = [
+                        k.replace("enhanced_", "")
+                        for k in enhanced_context.keys()
+                        if k.startswith("enhanced_")
+                    ]
+                    print(f"🎯 Applied enhancements: {', '.join(applied_features)}")
 
         except ImportError:
             # Advanced features not available - this is expected for MVP mode
-            pass
+            if getattr(self, "_advanced_mode_requested", False):
+                print(
+                    "⚠️  Advanced features not available - continuing with standard analysis"
+                )
         except Exception as e:
             # Log but don't fail - advanced features should never break basic functionality
             print(
@@ -536,16 +571,22 @@ def print_help():
     """Print available commands and usage examples."""
     print("\n📋 Available Commands:")
     print("  analyze <directory>     - Analyze a codebase directory")
+    print(
+        "  analyze --advanced <directory> - Analyze with advanced features (if available)"
+    )
     print("  chat <question>         - Ask questions about the analysis")
     print("  export [filename]       - Export markdown report")
     print("  status                  - Show current analysis status")
+    print("  features                - Show available advanced features")
     print("  help                    - Show this help message")
     print("  quit/exit/q             - Exit the auditor")
     print("\n💡 Examples:")
     print("  > analyze ./my-project")
+    print("  > analyze --advanced ./my-project")
     print("  > chat What are the main architecture patterns?")
     print("  > export my-analysis.md")
     print("  > status")
+    print("  > features")
 
 
 def format_analysis_summary(analysis_results):
@@ -609,10 +650,25 @@ def main():
                     )
 
             elif command.startswith("analyze "):
-                directory = command[8:].strip()
+                # Parse analyze command with optional --advanced flag
+                command_parts = command[8:].strip().split()
+
+                # Check for --advanced flag
+                advanced_mode = False
+                directory = None
+
+                if command_parts and command_parts[0] == "--advanced":
+                    advanced_mode = True
+                    directory = (
+                        " ".join(command_parts[1:]) if len(command_parts) > 1 else ""
+                    )
+                else:
+                    directory = " ".join(command_parts)
+
                 if not directory:
                     print("❌ Please specify a directory to analyze")
                     print("   Example: analyze ./my-project")
+                    print("   Example: analyze --advanced ./my-project")
                     continue
 
                 # Input validation for directory argument
@@ -629,7 +685,36 @@ def main():
                     print("❌ Directory not found")
                     continue
 
-                print(f"\n🔄 Starting analysis of: {directory}")
+                # Check for advanced features and provide user feedback
+                if advanced_mode:
+                    print(f"\n🚀 Starting advanced analysis of: {directory}")
+                    try:
+                        # Try to import advanced features for availability check
+                        sys.path.insert(0, str(Path(__file__).parent / "src"))
+                        from codebase_gardener.core import (
+                            check_advanced_features,
+                            get_enhancement_level,
+                        )
+
+                        if check_advanced_features():
+                            enhancement_level = get_enhancement_level(Path(directory))
+                            print(
+                                f"✨ Advanced features available - enhancement level: {enhancement_level}"
+                            )
+                        else:
+                            print(
+                                "⚠️  Advanced features requested but not available - falling back to standard analysis"
+                            )
+                            print(
+                                "   (This is expected behavior - advanced features are not yet fully implemented)"
+                            )
+                    except ImportError:
+                        print(
+                            "⚠️  Advanced features not available - using standard analysis"
+                        )
+                else:
+                    print(f"\n🔄 Starting analysis of: {directory}")
+
                 print("   This may take a moment...")
 
                 def progress_callback(msg):
@@ -640,9 +725,15 @@ def main():
                     else:
                         print(f"📝 {msg}")
 
+                # Store the advanced mode preference for potential enhancement logic
+                auditor._advanced_mode_requested = advanced_mode
+
                 auditor.analyze_codebase(directory, progress_callback=progress_callback)
                 print("\n✅ Analysis complete!")
                 print(f"{format_analysis_summary(auditor.analysis_results)}")
+
+                # Reset the mode preference
+                auditor._advanced_mode_requested = False
 
             elif command.startswith("chat "):
                 question = command[5:].strip()
@@ -686,6 +777,70 @@ def main():
                     print(f"   Size: {len(report):,} characters")
                 except OSError:
                     print("❌ Failed to write report file")
+
+            elif command.lower() == "features":
+                print("\n🔧 Advanced Features Status:")
+                try:
+                    # Try to import and check advanced features
+                    sys.path.insert(0, str(Path(__file__).parent / "src"))
+                    from codebase_gardener.core import (
+                        advanced_features_controller,
+                        check_advanced_features,
+                    )
+
+                    if check_advanced_features():
+                        print("✨ Advanced features are available!")
+                        available_features = (
+                            advanced_features_controller.get_available_features()
+                        )
+                        for feature in available_features:
+                            print(f"   ✅ {feature}")
+
+                        # Show resource status
+                        resource_status = (
+                            advanced_features_controller.get_resource_status()
+                        )
+                        if resource_status and "memory_used_gb" in resource_status:
+                            print("\n💾 Resource Status:")
+                            print(
+                                f"   Memory: {resource_status['memory_used_gb']:.1f}GB used, {resource_status['memory_available_gb']:.1f}GB available"
+                            )
+                            print(
+                                f"   Disk: {resource_status['disk_free_gb']:.1f}GB free"
+                            )
+                            constraint_status = (
+                                "✅ Within constraints"
+                                if resource_status.get("within_constraints")
+                                else "⚠️ Near limits"
+                            )
+                            print(f"   Status: {constraint_status}")
+
+                    else:
+                        print("⚠️  Advanced features are not currently available")
+                        print("   Available features: 0/6")
+                        print("\n📋 Feature Requirements:")
+                        print(
+                            "   🔄 rag_retrieval: Requires vector_store, project_vector_store_manager"
+                        )
+                        print("   🔍 semantic_search: Requires vector_store")
+                        print(
+                            "   🧠 training_pipeline: Requires peft_manager, training_pipeline, dynamic_model_loader"
+                        )
+                        print(
+                            "   📂 project_management: Requires project_registry, project_context_manager"
+                        )
+                        print("   💾 vector_storage: Requires vector_store")
+                        print(
+                            "   🎯 embedding_generation: Requires vector_store, dynamic_model_loader"
+                        )
+                        print(
+                            "\n💡 Note: This is expected behavior during MVP development"
+                        )
+
+                except ImportError:
+                    print("⚠️  Advanced features system not available")
+                    print("   Running in basic MVP mode")
+                    print("   All core functionality is available")
 
             else:
                 print(f"❌ Unknown command: {command}")
