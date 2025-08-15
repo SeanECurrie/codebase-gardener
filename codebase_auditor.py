@@ -81,6 +81,8 @@ class CodebaseAuditor:
         self.file_utils = SimpleFileUtilities()
         self.analysis_results: dict[str, Any] | None = None
         self._advanced_mode_requested: bool = False
+        self._current_project_id: str | None = None
+        self._project_manager = None
 
         # Simple, hardcoded caps to avoid huge prompts (pragmatic POC)
         self.max_files: int = 250
@@ -283,6 +285,9 @@ Focus on the big picture rather than detailed code issues."""
                 "caps": stats,
             }
 
+            # Integrate with project management
+            self._integrate_with_project_management(dir_path)
+
             # Check for advanced features and enhance analysis if available
             self._try_enhance_analysis(dir_path)
 
@@ -395,29 +400,120 @@ Focus on the big picture rather than detailed code issues."""
 
     def chat(self, question: str) -> str:
         """
-        Ask questions about the analyzed codebase.
+        Ask questions about the analyzed codebase with project context.
 
         Args:
             question: User's question about the codebase
 
         Returns:
-            AI response based on the analysis
+            AI response based on the analysis and project context
         """
         if not self.analysis_results:
             return "Error: No codebase analysis available. Please run analyze_codebase() first."
 
         try:
-            full_prompt = self.chat_prompt.format(
-                previous_analysis=self.analysis_results["full_analysis"],
-                user_question=question,
+            # Integrate with project context
+            context_info = self._get_project_context_for_chat()
+
+            # Enhanced prompt with project context
+            enhanced_prompt = self._build_enhanced_chat_prompt(question, context_info)
+
+            response = self.client.generate(
+                model=self.model_name, prompt=enhanced_prompt
             )
+            answer = response["response"]
 
-            response = self.client.generate(model=self.model_name, prompt=full_prompt)
+            # Store chat in project context
+            self._store_chat_in_project_context(question, answer)
 
-            return response["response"]
+            return answer
 
         except Exception as e:
             return f"Chat failed: {str(e)}"
+
+    def _get_project_context_for_chat(self) -> str:
+        """Get project context information for enhanced chat."""
+        pm = self._get_project_manager()
+        if not pm or not self._current_project_id:
+            return ""
+
+        try:
+            context = pm["context_manager"].get_context(self._current_project_id)
+            if not context or not context.conversation_history:
+                return ""
+
+            # Get recent conversation history (last 5 messages)
+            recent_messages = context.conversation_history[-5:]
+            context_lines = []
+
+            for msg in recent_messages:
+                if msg.role in ["user", "assistant"]:
+                    role_label = "User" if msg.role == "user" else "Assistant"
+                    context_lines.append(f"{role_label}: {msg.content[:200]}...")
+
+            if context_lines:
+                return (
+                    "\nRecent conversation context:\n" + "\n".join(context_lines) + "\n"
+                )
+
+        except Exception:
+            pass  # Context not available, continue without it
+
+        return ""
+
+    def _build_enhanced_chat_prompt(self, question: str, context_info: str) -> str:
+        """Build enhanced chat prompt with project context."""
+        base_prompt = self.chat_prompt.format(
+            previous_analysis=self.analysis_results["full_analysis"],
+            user_question=question,
+        )
+
+        if context_info:
+            return f"{base_prompt}\n{context_info}\nContinue the conversation naturally, building on previous context where relevant."
+        else:
+            return base_prompt
+
+    def _store_chat_in_project_context(self, question: str, answer: str) -> None:
+        """Store chat interaction in project context."""
+        pm = self._get_project_manager()
+        if not pm or not self._current_project_id:
+            return
+
+        try:
+            from codebase_gardener.core.project_context_manager import (
+                ConversationMessage,
+            )
+
+            # Store user question
+            user_message = ConversationMessage(
+                role="user",
+                content=question,
+                timestamp=datetime.now(),
+                metadata={"type": "chat_question"},
+            )
+            pm["context_manager"].add_message(
+                self._current_project_id,
+                user_message.role,
+                user_message.content,
+                user_message.metadata,
+            )
+
+            # Store assistant response
+            assistant_message = ConversationMessage(
+                role="assistant",
+                content=answer,
+                timestamp=datetime.now(),
+                metadata={"type": "chat_response"},
+            )
+            pm["context_manager"].add_message(
+                self._current_project_id,
+                assistant_message.role,
+                assistant_message.content,
+                assistant_message.metadata,
+            )
+
+        except Exception:
+            pass  # Don't fail chat if context storage fails
 
     def export_markdown(self) -> str:
         """
@@ -469,6 +565,344 @@ The following {self.analysis_results["file_count"]} source files were included i
 """
 
         return markdown_report
+
+    def _get_project_manager(self):
+        """Get or create project manager instance."""
+        if self._project_manager is None:
+            try:
+                # Try to import project management components
+                sys.path.insert(0, str(Path(__file__).parent / "src"))
+                from codebase_gardener.core.project_context_manager import (
+                    ProjectContextManager,
+                )
+                from codebase_gardener.core.project_registry import ProjectRegistry
+
+                registry = ProjectRegistry()
+                context_manager = ProjectContextManager()
+
+                self._project_manager = {
+                    "registry": registry,
+                    "context_manager": context_manager,
+                    # Helper methods for compatibility
+                    "get_project_by_path": self._get_project_by_path,
+                    "update_analysis_date": self._update_analysis_date,
+                }
+            except ImportError as e:
+                print(f"⚠️  Project management not available: {e}")
+                return None
+        return self._project_manager
+
+    def _get_project_by_path(self, source_path: str):
+        """Helper method to find project by source path."""
+        pm = self._get_project_manager()
+        if not pm:
+            return None
+
+        for project in pm["registry"].list_projects():
+            if str(project.source_path) == source_path:
+                return project
+        return None
+
+    def _update_analysis_date(self, project_id: str, analysis_date):
+        """Helper method to update project's last_updated timestamp."""
+        pm = self._get_project_manager()
+        if not pm:
+            return
+
+        # Get the project and update its last_updated field
+        project = pm["registry"].get_project(project_id)
+        if project:
+            project.last_updated = analysis_date
+            # Save the registry to persist the change
+            pm["registry"]._save_registry()
+
+    def _handle_projects_command(self):
+        """Handle the 'projects' command to list all registered projects."""
+        pm = self._get_project_manager()
+        if not pm:
+            print("❌ Project management not available")
+            return
+
+        try:
+            projects = pm["registry"].list_projects()
+            if not projects:
+                print("📂 No projects registered yet")
+                print(
+                    "   Use 'project create <directory>' to create your first project"
+                )
+                return
+
+            print(f"\n📂 Registered Projects ({len(projects)}):")
+            print("=" * 60)
+
+            for project in projects:
+                status_icon = (
+                    "✅"
+                    if project.training_status.value == "completed"
+                    else "🔄"
+                    if project.training_status.value == "training"
+                    else "📝"
+                )
+                current_indicator = (
+                    " ← CURRENT"
+                    if project.project_id == self._current_project_id
+                    else ""
+                )
+
+                print(f"{status_icon} {project.name}")
+                print(f"   ID: {project.project_id}{current_indicator}")
+                print(f"   Path: {project.source_path}")
+                print(f"   Created: {project.created_at.strftime('%Y-%m-%d %H:%M')}")
+                print(f"   Status: {project.training_status.value}")
+
+                if project.last_updated:
+                    print(
+                        f"   Last Updated: {project.last_updated.strftime('%Y-%m-%d %H:%M')}"
+                    )
+                print()
+
+        except Exception as e:
+            print(f"❌ Failed to list projects: {e}")
+
+    def _handle_project_command(self, subcommand: str, args: list[str]):
+        """Handle project subcommands."""
+        pm = self._get_project_manager()
+        if not pm:
+            print("❌ Project management not available")
+            return
+
+        try:
+            if subcommand == "create":
+                self._project_create(pm, args)
+            elif subcommand == "info":
+                self._project_info(pm, args)
+            elif subcommand == "switch":
+                self._project_switch(pm, args)
+            elif subcommand == "cleanup":
+                self._project_cleanup(pm, args)
+            elif subcommand == "health":
+                self._project_health(pm, args)
+            else:
+                print(f"❌ Unknown project subcommand: {subcommand}")
+                print("   Available: create, info, switch, cleanup, health")
+
+        except Exception as e:
+            print(f"❌ Project command failed: {e}")
+
+    def _project_create(self, pm, args: list[str]):
+        """Create a new project."""
+        if not args:
+            print("❌ Please specify a directory path")
+            print("   Example: project create ./my-project")
+            return
+
+        directory = " ".join(args)
+        dir_path = Path(directory).resolve()
+
+        if not dir_path.exists() or not dir_path.is_dir():
+            print(f"❌ Directory not found: {directory}")
+            return
+
+        # Check if project already exists
+        existing_project = self._get_project_by_path(str(dir_path))
+        if existing_project:
+            print(f"📂 Project already exists: {existing_project.name}")
+            print(f"   ID: {existing_project.project_id}")
+            self._current_project_id = existing_project.project_id
+            print("✅ Switched to existing project")
+            return
+
+        # Create new project
+        project_name = dir_path.name
+        project_id = pm["registry"].register_project(project_name, dir_path)
+        project = pm["registry"].get_project(project_id)
+
+        self._current_project_id = project_id
+        print(f"✅ Created new project: {project.name}")
+        print(f"   ID: {project.project_id}")
+        print(f"   Path: {project.source_path}")
+        print("🔄 Project is now active for analysis")
+
+    def _project_info(self, pm, args: list[str]):
+        """Show project information."""
+        if args:
+            project_id = args[0]
+            project = pm["registry"].get_project(project_id)
+        elif self._current_project_id:
+            project = pm["registry"].get_project(self._current_project_id)
+        else:
+            print("❌ No project ID specified and no current project")
+            print("   Example: project info abc123")
+            return
+
+        if not project:
+            print(
+                f"❌ Project not found: {args[0] if args else self._current_project_id}"
+            )
+            return
+
+        print("\n📂 Project Information")
+        print("=" * 40)
+        print(f"Name: {project.name}")
+        print(f"ID: {project.project_id}")
+        print(f"Path: {project.source_path}")
+        print(f"Created: {project.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"Training Status: {project.training_status.value}")
+
+        if project.last_updated:
+            print(f"Last Updated: {project.last_updated.strftime('%Y-%m-%d %H:%M:%S')}")
+        if project.lora_adapter_path:
+            print(f"LoRA Adapter: {project.lora_adapter_path}")
+        if project.vector_store_path:
+            print(f"Vector Store: {project.vector_store_path}")
+
+        # Show context information
+        try:
+            context = pm["context_manager"].get_context(project.project_id)
+            if context and context.conversation_history:
+                print(
+                    f"Conversation History: {len(context.conversation_history)} messages"
+                )
+        except Exception:
+            pass  # Context manager might not be available
+
+    def _project_switch(self, pm, args: list[str]):
+        """Switch to a different project."""
+        if not args:
+            print("❌ Please specify a project ID")
+            print("   Example: project switch abc123")
+            print("   Use 'projects' to see available project IDs")
+            return
+
+        project_id = args[0]
+        project = pm["registry"].get_project(project_id)
+
+        if not project:
+            print(f"❌ Project not found: {project_id}")
+            print("   Use 'projects' to see available projects")
+            return
+
+        self._current_project_id = project_id
+        print(f"✅ Switched to project: {project.name}")
+        print(f"   ID: {project.project_id}")
+        print(f"   Path: {project.source_path}")
+
+    def _project_cleanup(self, pm, args: list[str]):
+        """Clean up old project data."""
+        # For now, just show what would be cleaned up
+        print("🧹 Project Cleanup Analysis:")
+
+        projects = pm["registry"].list_projects()
+        old_projects = []
+
+        for project in projects:
+            if project.last_updated:
+                days_old = (datetime.now() - project.last_updated).days
+                if days_old > 30:  # Consider projects older than 30 days
+                    old_projects.append((project, days_old))
+
+        if not old_projects:
+            print("✅ No cleanup needed - all projects are recent")
+            return
+
+        print(f"📋 Found {len(old_projects)} projects that haven't been used recently:")
+        for project, days_old in old_projects:
+            print(
+                f"   • {project.name} (ID: {project.project_id[:8]}...) - {days_old} days old"
+            )
+
+        print("\n💡 Manual cleanup required:")
+        print("   - Use project management commands to remove unused projects")
+        print("   - Check vector store and LoRA adapter files manually")
+
+    def _project_health(self, pm, args: list[str]):
+        """Check project health status."""
+        print("🔍 Project Health Check:")
+        print("=" * 40)
+
+        # Check registry health
+        try:
+            projects = pm["registry"].list_projects()
+            print(f"✅ Project Registry: {len(projects)} projects registered")
+        except Exception as e:
+            print(f"❌ Project Registry: Error - {e}")
+
+        # Check context manager health
+        try:
+            # Test context manager by creating a temporary context
+            pm["context_manager"].get_context("health-check")
+            print("✅ Context Manager: Available")
+        except Exception as e:
+            print(f"❌ Context Manager: Error - {e}")
+
+        # Check current project
+        if self._current_project_id:
+            try:
+                current_project = pm["registry"].get_project(self._current_project_id)
+                if current_project:
+                    print(f"✅ Current Project: {current_project.name}")
+
+                    # Check if project path still exists
+                    if Path(current_project.source_path).exists():
+                        print("✅ Project Path: Accessible")
+                    else:
+                        print("⚠️  Project Path: Directory no longer exists")
+                else:
+                    print("⚠️  Current Project: Invalid project ID")
+            except Exception as e:
+                print(f"❌ Current Project: Error - {e}")
+        else:
+            print("ℹ️  Current Project: None selected")
+
+    def _integrate_with_project_management(self, dir_path: Path) -> None:
+        """Integrate analysis with project management system."""
+        pm = self._get_project_manager()
+        if not pm:
+            return  # Project management not available
+
+        try:
+            # Check if project already exists for this path
+            existing_project = self._get_project_by_path(str(dir_path))
+
+            if not existing_project:
+                # Auto-create project if it doesn't exist
+                project_name = dir_path.name
+                project_id = pm["registry"].register_project(project_name, dir_path)
+                project = pm["registry"].get_project(project_id)
+                self._current_project_id = project_id
+                print(
+                    f"📂 Auto-created project: {project.name} (ID: {project.project_id[:8]}...)"
+                )
+            else:
+                # Use existing project
+                self._current_project_id = existing_project.project_id
+                print(
+                    f"📂 Using existing project: {existing_project.name} (ID: {existing_project.project_id[:8]}...)"
+                )
+
+            # Update project with analysis results
+            if self._current_project_id:
+                self._update_analysis_date(self._current_project_id, datetime.now())
+
+                # Store analysis in project context
+                if self.analysis_results:
+                    # Add analysis as a system message
+                    pm["context_manager"].add_message(
+                        self._current_project_id,
+                        "system",
+                        f"Analysis completed: {self.analysis_results['file_count']} files processed",
+                        {
+                            "type": "analysis_completion",
+                            "file_count": self.analysis_results["file_count"],
+                            "bytes_processed": self.analysis_results["caps"].get(
+                                "bytes_included", 0
+                            ),
+                        },
+                    )
+
+        except Exception as e:
+            print(f"⚠️  Project integration failed: {e}")
+            # Don't fail the analysis, just continue without project management
 
     def _try_enhance_analysis(self, dir_path: Path) -> None:
         """
@@ -578,11 +1012,21 @@ def print_help():
     print("  export [filename]       - Export markdown report")
     print("  status                  - Show current analysis status")
     print("  features                - Show available advanced features")
+    print("\n📂 Project Management:")
+    print("  projects                - List all registered projects")
+    print("  project create <dir>    - Create/register a new project")
+    print("  project info [id]       - Show project information")
+    print("  project switch <id>     - Switch to a different project context")
+    print("  project cleanup         - Clean up old project data")
+    print("  project health          - Check project health status")
+    print("\n🔧 System:")
     print("  help                    - Show this help message")
     print("  quit/exit/q             - Exit the auditor")
     print("\n💡 Examples:")
     print("  > analyze ./my-project")
     print("  > analyze --advanced ./my-project")
+    print("  > project create ./my-project")
+    print("  > project switch abc123")
     print("  > chat What are the main architecture patterns?")
     print("  > export my-analysis.md")
     print("  > status")
@@ -632,6 +1076,7 @@ def main():
                 print_help()
 
             elif command.lower() == "status":
+                # Show analysis status
                 if auditor.analysis_results:
                     print(f"\n✅ {format_analysis_summary(auditor.analysis_results)}")
                     files_list = auditor.analysis_results.get("file_list", [])
@@ -648,6 +1093,50 @@ def main():
                     print(
                         "❌ No analysis completed yet. Use 'analyze <directory>' to start."
                     )
+
+                # Show project status
+                pm = auditor._get_project_manager()
+                if pm and auditor._current_project_id:
+                    try:
+                        project = pm["registry"].get_project(
+                            auditor._current_project_id
+                        )
+                        if project:
+                            print(f"\n📂 Current Project: {project.name}")
+                            print(f"   ID: {project.project_id}")
+                            print(f"   Path: {project.source_path}")
+                            print(f"   Status: {project.training_status.value}")
+
+                            # Show conversation context
+                            context = pm["context_manager"].get_context(
+                                auditor._current_project_id
+                            )
+                            if context and context.conversation_history:
+                                chat_messages = [
+                                    msg
+                                    for msg in context.conversation_history
+                                    if msg.role in ["user", "assistant"]
+                                ]
+                                if chat_messages:
+                                    print(
+                                        f"   Chat History: {len(chat_messages)} messages"
+                                    )
+                    except Exception:
+                        pass
+                elif pm:
+                    print("\n📂 Project Management: Available (no current project)")
+                    try:
+                        projects = pm["registry"].list_projects()
+                        if projects:
+                            print(f"   Registered Projects: {len(projects)}")
+                        else:
+                            print(
+                                "   Use 'project create <dir>' to create your first project"
+                            )
+                    except Exception:
+                        pass
+                else:
+                    print("\n📂 Project Management: Not available")
 
             elif command.startswith("analyze "):
                 # Parse analyze command with optional --advanced flag
@@ -841,6 +1330,21 @@ def main():
                     print("⚠️  Advanced features system not available")
                     print("   Running in basic MVP mode")
                     print("   All core functionality is available")
+
+            elif command.lower() == "projects":
+                auditor._handle_projects_command()
+
+            elif command.startswith("project "):
+                parts = command[8:].strip().split()
+                if not parts:
+                    print("❌ Please specify a project subcommand")
+                    print("   Available: create, info, switch, cleanup, health")
+                    print("   Example: project create ./my-project")
+                    continue
+
+                subcommand = parts[0].lower()
+                args = parts[1:] if len(parts) > 1 else []
+                auditor._handle_project_command(subcommand, args)
 
             else:
                 print(f"❌ Unknown command: {command}")
