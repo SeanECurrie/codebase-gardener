@@ -230,6 +230,6 @@ backup/
 backups/
 
 # Temporary and cache files specific to this project
-.kiro/
+.kiro/.DS_Store
 *.tmp
 *.cache

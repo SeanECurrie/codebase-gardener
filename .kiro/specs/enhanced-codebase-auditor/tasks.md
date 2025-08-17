@@ -256,6 +256,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement backup and recovery mechanisms for vector data
   - _Requirements: 3.1, 3.2, 3.6, 7.1, 8.4_
 
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/vector-store-task9 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
+
 - [ ] 10. RAG Engine Implementation
 
   - Create context retrieval system using semantic similarity search
@@ -265,6 +284,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement context caching and optimization for repeated queries
   - _Requirements: 3.2, 3.3, 3.5, 3.6_
 
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/rag-engine-task10 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
+
 - [ ] 11. Enhanced Analysis Integration
   - Integrate RAG context retrieval with existing chat functionality
   - Implement enhanced analysis generation using retrieved context
@@ -272,6 +310,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Create performance monitoring for retrieval latency and accuracy
   - Implement A/B testing framework for enhanced vs simple responses
   - _Requirements: 3.2, 3.3, 1.1, 1.3_
+
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/enhanced-analysis-task11 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
 
 ### Phase 3: LoRA Training Pipeline
 
@@ -284,6 +341,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement training data versioning and management
   - _Requirements: 4.1, 4.4, 4.7_
 
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/training-data-task12 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
+
 - [ ] 13. PEFT Manager and LoRA Training Integration
 
   - Reactivate PEFT manager for LoRA adapter creation and management
@@ -293,6 +369,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement training resource monitoring and constraint management
   - _Requirements: 4.1, 4.2, 4.4, 4.7, 7.3_
 
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/peft-training-task13 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
+
 - [ ] 14. Background Training System
 
   - Implement asynchronous training with progress reporting
@@ -301,6 +396,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement training completion notification and model switching
   - Create training history and performance tracking
   - _Requirements: 4.2, 4.3, 7.3, 7.4_
+
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/background-training-task14 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
 
 - [ ] 15. Model Management and Dynamic Loading
 

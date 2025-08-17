@@ -4,7 +4,8 @@ from pathlib import Path
 
 # Add parent directory to path to find simple_file_utils
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from simple_file_utils import SimpleFileUtilities
+
+from simple_file_utils import SimpleFileUtilities  # noqa: E402
 
 
 def main():

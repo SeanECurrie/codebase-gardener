@@ -9,7 +9,7 @@ from pathlib import Path
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from codebase_gardener.utils.file_utils import FileUtilities
+from codebase_gardener.utils.file_utils import FileUtilities  # noqa: E402
 
 
 def test_basic_discovery():

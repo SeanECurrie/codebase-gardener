@@ -195,7 +195,7 @@ class TreeSitterParser:
         elif isinstance(language, str):
             try:
                 self.language = SupportedLanguage(language.lower())
-            except ValueError:
+            except ValueError as e:
                 raise ParsingError(
                     f"Unsupported language: {language}",
                     details={
@@ -203,7 +203,7 @@ class TreeSitterParser:
                             lang.value for lang in SupportedLanguage
                         ]
                     },
-                )
+                ) from e
             self._language_obj = None
             self._setup_language()
         else:
@@ -226,7 +226,7 @@ class TreeSitterParser:
         if isinstance(language, str):
             try:
                 self.language = SupportedLanguage(language.lower())
-            except ValueError:
+            except ValueError as e:
                 raise ParsingError(
                     f"Unsupported language: {language}",
                     details={
@@ -234,7 +234,7 @@ class TreeSitterParser:
                             lang.value for lang in SupportedLanguage
                         ]
                     },
-                )
+                ) from e
         else:
             self.language = language
 
@@ -271,12 +271,12 @@ class TreeSitterParser:
             raise ParsingError(
                 f"Failed to import Tree-sitter language module for {self.language.value}",
                 details={"import_error": str(e)},
-            )
+            ) from e
         except Exception as e:
             raise ParsingError(
                 f"Failed to setup Tree-sitter language: {self.language.value}",
                 details={"error": str(e)},
-            )
+            ) from e
 
     @classmethod
     def detect_language(cls, file_path: str | Path) -> SupportedLanguage | None:
@@ -403,7 +403,7 @@ class TreeSitterParser:
                     "error": str(e),
                     "file_path": str(file_path) if file_path else None,
                 },
-            )
+            ) from e
 
     def _extract_errors(self, tree: Tree, code: str) -> list[ParseError]:
         """Extract parsing errors from the AST."""
