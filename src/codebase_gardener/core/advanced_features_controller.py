@@ -100,6 +100,9 @@ class AdvancedFeaturesController:
             "project_management",
             "vector_storage",
             "embedding_generation",
+            "semantic_analysis",
+            "code_parsing",
+            "semantic_chunking",
         ]
 
         available = []
@@ -113,6 +116,10 @@ class AdvancedFeaturesController:
             available=len(available),
         )
         return available
+
+    def is_feature_available(self, feature_name: str) -> bool:
+        """Alias for check_feature_availability for convenience."""
+        return self.check_feature_availability(feature_name)
 
     def get_enhancement_level(self, directory_path: Path) -> str:
         """
@@ -256,6 +263,13 @@ class AdvancedFeaturesController:
             "project_management": ["project_registry", "project_context_manager"],
             "vector_storage": ["vector_store"],
             "embedding_generation": ["vector_store", "dynamic_model_loader"],
+            "semantic_analysis": [
+                "tree_sitter_parser",
+                "code_preprocessor",
+                "semantic_file_processor",
+            ],
+            "code_parsing": ["tree_sitter_parser"],
+            "semantic_chunking": ["code_preprocessor", "semantic_file_processor"],
         }
 
         required_components = feature_components.get(feature_name, [])
@@ -333,6 +347,90 @@ class AdvancedFeaturesController:
         except Exception as e:
             logger.warning("Semantic enhancement failed", error=str(e))
             return context
+
+    @graceful_fallback(fallback_value={})
+    def analyze_with_semantics(self, directory_path: str) -> dict[str, Any]:
+        """
+        Perform semantic analysis of a codebase using Tree-sitter parsing.
+
+        Args:
+            directory_path: Path to the codebase directory
+
+        Returns:
+            Comprehensive semantic analysis results
+        """
+        try:
+            if not self.is_feature_available("semantic_analysis"):
+                logger.info("Semantic analysis not available, using basic analysis")
+                return {"error": "semantic_analysis_unavailable"}
+
+            # Load semantic file processor
+            processor = self.registry.get_component("semantic_file_processor")
+
+            # Perform semantic analysis
+            analysis_result = processor.analyze_codebase(directory_path)
+
+            logger.info(
+                "Semantic analysis completed",
+                directory=directory_path,
+                files_analyzed=analysis_result.get("file_summary", {}).get(
+                    "analyzed_successfully", 0
+                ),
+                languages=list(analysis_result.get("language_distribution", {}).keys()),
+            )
+
+            return analysis_result
+
+        except Exception as e:
+            logger.error(
+                "Semantic analysis failed", error=str(e), directory=directory_path
+            )
+            return {"error": str(e)}
+
+    @graceful_fallback(fallback_value=[])
+    def get_file_semantic_chunks(self, file_path: str) -> list:
+        """
+        Get semantic chunks for a specific file.
+
+        Args:
+            file_path: Path to the file
+
+        Returns:
+            List of semantic code chunks
+        """
+        try:
+            if not self.is_feature_available("semantic_chunking"):
+                return []
+
+            from pathlib import Path
+
+            processor = self.registry.get_component("semantic_file_processor")
+            chunks = processor.get_file_chunks(Path(file_path))
+
+            # Convert chunks to serializable format
+            chunk_data = []
+            for chunk in chunks:
+                chunk_data.append(
+                    {
+                        "id": chunk.id,
+                        "type": chunk.chunk_type.value,
+                        "content": chunk.content,
+                        "language": chunk.language,
+                        "start_line": chunk.start_line,
+                        "end_line": chunk.end_line,
+                        "size": chunk.size,
+                        "complexity": chunk.complexity_score,
+                        "metadata": chunk.metadata,
+                    }
+                )
+
+            return chunk_data
+
+        except Exception as e:
+            logger.warning(
+                "Failed to get semantic chunks", file_path=file_path, error=str(e)
+            )
+            return []
 
     @graceful_fallback(fallback_value={})
     def _apply_project_enhancement(self, context: dict[str, Any]) -> dict[str, Any]:

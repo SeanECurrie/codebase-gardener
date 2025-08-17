@@ -90,6 +90,12 @@ python codebase_auditor.py
 # chat <question>                  - Ask questions about analysis
 # export [filename]                - Export markdown report
 # status                           - Show current analysis status
+# projects                         - List all registered projects
+# project create <dir>             - Create/register new project
+# project info [id]                - Show project information
+# project switch <id>              - Switch between project contexts
+# project cleanup                  - Analyze old project data
+# project health                   - Check project system health
 ```
 
 #### Full System (Development/Advanced)

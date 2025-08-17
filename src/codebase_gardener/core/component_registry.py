@@ -118,6 +118,28 @@ class ComponentRegistry:
             dependencies=["transformers", "peft", "vector_store"],
         )
 
+        # Semantic analysis components
+        self.register(
+            name="tree_sitter_parser",
+            module_path="codebase_gardener.data.parser",
+            class_name="TreeSitterParser",
+            dependencies=["tree_sitter"],
+        )
+
+        self.register(
+            name="code_preprocessor",
+            module_path="codebase_gardener.data.preprocessor",
+            class_name="CodePreprocessor",
+            dependencies=["tree_sitter"],
+        )
+
+        self.register(
+            name="semantic_file_processor",
+            module_path="codebase_gardener.data.semantic_file_processor",
+            class_name="SemanticFileProcessor",
+            dependencies=["tree_sitter"],
+        )
+
     def register(
         self,
         name: str,
