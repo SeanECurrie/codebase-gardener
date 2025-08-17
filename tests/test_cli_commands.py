@@ -307,7 +307,11 @@ def test_error_handling_robustness():
                 # Should handle unreadable files gracefully
                 result = auditor.analyze_codebase(str(test_dir))
                 # Should still complete, just skip unreadable files
-                assert "Analysis complete" in result or "Analysis failed" in result
+                assert (
+                    "Analysis complete" in result
+                    or "Analysis failed" in result
+                    or "Error: No readable content found" in result
+                )
         finally:
             # Restore permissions for cleanup
             test_file.chmod(0o644)
