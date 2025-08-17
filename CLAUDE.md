@@ -9,6 +9,13 @@
   `.kiro/steering/task-execution-framework.md`
 - Non-interactive mode: never ask to proceed; use safe defaults.
 
+## CRITICAL TASK COMPLETION REQUIREMENT
+**ALWAYS UPDATE TASKS.MD FIRST** when completing any task:
+- Change `- [ ] N. Task Name` to `- [x] N. Task Name **COMPLETED YYYY-MM-DD**`
+- Add completion checkmarks to all Pre-Task, Implementation, Post-Task phases
+- Document key findings and gaps directly in the task
+- This is completion criteria #11 - the task is NOT complete without this update
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## MVP Scope
@@ -75,6 +82,20 @@ python codebase_auditor.py
 export OLLAMA_HOST=http://localhost:11434
 export OLLAMA_MODEL=llama3.2:3b
 python codebase_auditor.py
+
+# CLI commands available:
+# analyze <directory>              - Basic codebase analysis
+# analyze --advanced <directory>   - Enhanced analysis with advanced features (if available)
+# features                         - Show advanced feature status
+# chat <question>                  - Ask questions about analysis
+# export [filename]                - Export markdown report
+# status                           - Show current analysis status
+# projects                         - List all registered projects
+# project create <dir>             - Create/register new project
+# project info [id]                - Show project information
+# project switch <id>              - Switch between project contexts
+# project cleanup                  - Analyze old project data
+# project health                   - Check project system health
 ```
 
 #### Full System (Development/Advanced)

@@ -267,6 +267,14 @@ git push origin feat/[component-name]-task[N]
 ```markdown
 ## Documentation Updates Required
 
+### CRITICAL: Tasks.md Update (ALWAYS FIRST)
+- [ ] **Mark task as completed in `.kiro/specs/enhanced-codebase-auditor/tasks.md`**:
+  - Change `- [ ] N. Task Name` to `- [x] N. Task Name **COMPLETED YYYY-MM-DD**`
+  - Add completion checkmarks to all Pre-Task, Implementation, Post-Task phases
+  - Document key findings and validation results directly in task
+  - List specific gaps and quick wins for next task
+  - Update requirement completion status
+
 ### Task Completion Log
 - [ ] Update `.kiro/docs/task_completion_test_log.md` with:
   - Task completion status
@@ -300,18 +308,19 @@ git push origin feat/[component-name]-task[N]
 
 ### Process Criteria
 6. **Previous Task Validated**: Previous task's outputs were verified and integrated
-7. **MCP Tools Used**: All four MCP tools used in correct order with documentation
+7. **MCP Tools Used**: All four MCP tools used in correct order with documentation (or documented why unavailable)
 8. **Gap Closure Applied**: Gap Validation and Gap Closure phases completed
 9. **Memory File Created**: Comprehensive memory file following template
 10. **Git Integration**: Changes committed and pushed with proper messages
-11. **Documentation Updated**: All required documentation updated
-12. **Next Task Prepared**: Clear handoff information for next task
+11. **Tasks.md Updated**: Task marked completed with checkmarks and findings in `.kiro/specs/enhanced-codebase-auditor/tasks.md`
+12. **Documentation Updated**: All required documentation updated
+13. **Next Task Prepared**: Clear handoff information for next task
 
 ### Quality Criteria
-13. **Integration Tested**: Component works with existing system
-14. **Error Handling**: Proper error handling and logging implemented
-15. **Performance Acceptable**: Meets performance requirements for use case
-16. **Code Quality**: Follows established patterns and conventions
+14. **Integration Tested**: Component works with existing system
+15. **Error Handling**: Proper error handling and logging implemented
+16. **Performance Acceptable**: Meets performance requirements for use case
+17. **Code Quality**: Follows established patterns and conventions
 
 ## Failure Recovery
 
