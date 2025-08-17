@@ -96,15 +96,60 @@ class CodeChunk:
 class PreprocessingConfig:
     """Configuration for code preprocessing and chunking."""
 
-    max_chunk_size: int = 2048  # Maximum characters per chunk
-    min_chunk_size: int = 50  # Minimum characters per chunk
-    overlap_size: int = 100  # Overlap between chunks in characters
+    max_chunk_size: int = 1536  # Maximum characters per chunk (optimal for embeddings)
+    min_chunk_size: int = 100  # Minimum characters per chunk
+    overlap_size: int = 150  # Overlap between chunks in characters
     preserve_comments: bool = True
     preserve_docstrings: bool = True
     normalize_whitespace: bool = True
     extract_imports: bool = True
     calculate_complexity: bool = True
     include_context: bool = True  # Include surrounding context in metadata
+
+    @classmethod
+    def for_embeddings(cls) -> "PreprocessingConfig":
+        """Create a configuration optimized for embedding generation."""
+        return cls(
+            max_chunk_size=1536,  # Optimal for most embedding models (384 tokens * 4 chars/token)
+            min_chunk_size=150,  # Ensure meaningful content
+            overlap_size=200,  # Rich context overlap
+            preserve_comments=True,
+            preserve_docstrings=True,
+            normalize_whitespace=True,
+            extract_imports=True,
+            calculate_complexity=True,
+            include_context=True,
+        )
+
+    @classmethod
+    def for_large_context(cls) -> "PreprocessingConfig":
+        """Create a configuration for large context models."""
+        return cls(
+            max_chunk_size=4096,  # For models with large context windows
+            min_chunk_size=200,
+            overlap_size=300,
+            preserve_comments=True,
+            preserve_docstrings=True,
+            normalize_whitespace=True,
+            extract_imports=True,
+            calculate_complexity=True,
+            include_context=True,
+        )
+
+    @classmethod
+    def for_fast_processing(cls) -> "PreprocessingConfig":
+        """Create a configuration for fast processing with smaller chunks."""
+        return cls(
+            max_chunk_size=1024,
+            min_chunk_size=50,
+            overlap_size=100,
+            preserve_comments=False,  # Skip comments for speed
+            preserve_docstrings=True,
+            normalize_whitespace=False,  # Skip normalization for speed
+            extract_imports=True,
+            calculate_complexity=False,  # Skip complexity calculation for speed
+            include_context=False,  # Skip context for speed
+        )
 
 
 class CodePreprocessor:
@@ -179,7 +224,7 @@ class CodePreprocessor:
             logger.error(error_msg, error=str(e), file_path=str(file_path))
             raise PreprocessingError(
                 error_msg, details={"file_path": str(file_path), "error": str(e)}
-            )
+            ) from e
 
     def preprocess_code(
         self, code: str, language: str, file_path: Path | None = None
@@ -223,7 +268,7 @@ class CodePreprocessor:
             logger.error(error_msg, error=str(e), language=language)
             raise PreprocessingError(
                 error_msg, details={"language": language, "error": str(e)}
-            )
+            ) from e
 
     def _generate_chunks(
         self, parse_result: ParseResult, code: str, file_path: Path | None
@@ -407,30 +452,35 @@ class CodePreprocessor:
         """Extract dependencies for a code element."""
         dependencies = []
 
-        # Add imports as dependencies
+        # Add imports as dependencies (module-level)
         for import_info in module_info.get("imports", []):
             dependencies.append(import_info["name"])
 
         # Extract function/method calls from content
         content = element.content
 
-        # Simple regex patterns for common dependency patterns
+        # Enhanced regex patterns for better dependency detection
         patterns = [
             r"(\w+)\(",  # Function calls
             r"from\s+(\w+(?:\.\w+)*)",  # From imports
             r"import\s+(\w+(?:\.\w+)*)",  # Import statements
-            r"(\w+)\.(\w+)",  # Method calls
+            r"(\w+)\.(\w+)",  # Method calls (captures both object and method)
+            r"@(\w+)",  # Decorators
+            r"class\s+\w+\((\w+)\)",  # Class inheritance
+            r"raise\s+(\w+)",  # Exception types
+            r"except\s+(\w+)",  # Exception handling
         ]
 
         for pattern in patterns:
             matches = re.findall(pattern, content)
             for match in matches:
                 if isinstance(match, tuple):
-                    dependencies.extend(match)
+                    # For method calls, include both object and method
+                    dependencies.extend([m for m in match if m])
                 else:
                     dependencies.append(match)
 
-        # Remove duplicates and filter out common keywords
+        # Remove duplicates and filter out common keywords and built-ins
         keywords = {
             "if",
             "else",
@@ -463,12 +513,35 @@ class CodePreprocessor:
             "pass",
             "break",
             "continue",
+            "print",
+            "super",
+            "type",
+            "dict",
+            "list",
+            "tuple",
+            "set",
+            "range",
+            "enumerate",
+            "zip",
+            "map",
+            "filter",
+            "any",
+            "all",
         }
+
+        # Enhanced filtering for better dependency quality
         dependencies = list(
-            set(dep for dep in dependencies if dep not in keywords and len(dep) > 1)
+            {
+                dep
+                for dep in dependencies
+                if dep not in keywords
+                and len(dep) > 1
+                and not dep.isdigit()  # Remove numeric literals
+                and not dep.startswith("_")  # Remove private/internal references
+            }
         )
 
-        return dependencies[:10]  # Limit to top 10 dependencies
+        return dependencies[:15]  # Increased limit for richer dependency information
 
     def _calculate_complexity(self, element: CodeElement, code: str) -> float:
         """Calculate complexity score for a code element."""
@@ -543,6 +616,9 @@ class CodePreprocessor:
             "is_well_formatted": self._is_well_formatted(element.content),
         }
 
+        # Add relationship analysis for better semantic understanding
+        metadata["relationships"] = self._analyze_relationships(element, module_info)
+
         return metadata
 
     def _has_docstring(self, content: str) -> bool:
@@ -581,6 +657,57 @@ class CodePreprocessor:
         reasonable_length = all(len(line) < 120 for line in lines)
 
         return consistent and reasonable_length
+
+    def _analyze_relationships(
+        self, element: CodeElement, module_info: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Analyze relationships between code elements for semantic understanding."""
+        relationships = {
+            "function_calls": [],
+            "class_usage": [],
+            "imported_modules": [],
+            "exception_handling": [],
+            "inheritance": [],
+            "decorators": [],
+        }
+
+        content = element.content
+
+        # Function calls analysis
+        function_calls = re.findall(r"(\w+)\(", content)
+        relationships["function_calls"] = list(set(function_calls))[:10]
+
+        # Class usage (instantiation and method calls)
+        class_usage = re.findall(r"(\w+)\.(\w+)", content)
+        relationships["class_usage"] = [
+            f"{obj}.{method}" for obj, method in class_usage[:10]
+        ]
+
+        # Imported modules being used
+        imported_modules = []
+        for import_info in module_info.get("imports", []):
+            if import_info["name"] in content:
+                imported_modules.append(import_info["name"])
+        relationships["imported_modules"] = imported_modules
+
+        # Exception handling patterns
+        exception_patterns = re.findall(r"except\s+(\w+)|raise\s+(\w+)", content)
+        exceptions = [exc for pattern in exception_patterns for exc in pattern if exc]
+        relationships["exception_handling"] = list(set(exceptions))
+
+        # Inheritance (for class elements)
+        if element.element_type == "class":
+            inheritance = re.findall(r"class\s+\w+\(([^)]+)\)", content)
+            if inheritance:
+                relationships["inheritance"] = [
+                    base.strip() for base in inheritance[0].split(",")
+                ]
+
+        # Decorators
+        decorators = re.findall(r"@(\w+)", content)
+        relationships["decorators"] = list(set(decorators))
+
+        return relationships
 
     def _create_module_chunk(
         self,
@@ -621,7 +748,7 @@ class CodePreprocessor:
 
         metadata = {
             "element_type": "module",
-            "element_name": file_path.stem if file_path else "module",
+            "element_name": Path(file_path).stem if file_path else "module",
             "line_count": len(content.split("\n")),
             "byte_size": len(content),
             "complexity": 1.0,
@@ -647,7 +774,7 @@ class CodePreprocessor:
         )
 
     def _is_valid_chunk(self, chunk: CodeChunk) -> bool:
-        """Check if a chunk meets quality criteria."""
+        """Check if a chunk meets quality criteria using advanced assessment."""
         # Content quality
         content = chunk.content.strip()
         if not content:
@@ -667,11 +794,111 @@ class CodePreprocessor:
         if chunk.chunk_type == ChunkType.COMMENT and not self.config.preserve_comments:
             return False
 
-        # Skip trivial chunks (e.g., single variable assignments without context)
-        if chunk.chunk_type == ChunkType.VARIABLE and len(content.split("\n")) == 1:
+        # Enhanced quality assessment
+        quality_score = self._calculate_chunk_quality_score(chunk)
+        if quality_score < 0.3:  # Minimum quality threshold
+            return False
+
+        # Skip trivial chunks with more sophisticated detection
+        if self._is_trivial_chunk(chunk):
             return False
 
         return True
+
+    def _calculate_chunk_quality_score(self, chunk: CodeChunk) -> float:
+        """Calculate a quality score for the chunk (0.0 to 1.0)."""
+        score = 0.0
+        content = chunk.content
+
+        # Base score by chunk type (some types are inherently more valuable)
+        type_scores = {
+            ChunkType.FUNCTION: 0.8,
+            ChunkType.CLASS: 0.9,
+            ChunkType.METHOD: 0.8,
+            ChunkType.MODULE: 0.7,
+            ChunkType.INTERFACE: 0.8,
+            ChunkType.TYPE: 0.6,
+            ChunkType.IMPORT: 0.3,
+            ChunkType.VARIABLE: 0.4,
+            ChunkType.COMMENT: 0.2,
+            ChunkType.BLOCK: 0.5,
+        }
+        score += type_scores.get(chunk.chunk_type, 0.5)
+
+        # Documentation quality (docstrings, comments)
+        quality_indicators = chunk.metadata.get("quality_indicators", {})
+        if quality_indicators.get("has_docstring", False):
+            score += 0.2
+        if quality_indicators.get("has_comments", False):
+            score += 0.1
+
+        # Complexity consideration (moderate complexity is good)
+        complexity = chunk.complexity_score
+        if (
+            2.0 <= complexity <= 10.0
+        ):  # Sweet spot for meaningful but not overly complex code
+            score += 0.1
+        elif complexity > 15.0:  # Very complex code is valuable despite complexity
+            score += 0.15
+
+        # Relationship richness
+        relationships = chunk.metadata.get("relationships", {})
+        if relationships:
+            # Award points for having various types of relationships
+            relationship_score = 0
+            for rel_list in relationships.values():
+                if rel_list:
+                    relationship_score += 0.02
+            score += min(relationship_score, 0.1)  # Cap at 0.1
+
+        # Content richness (length and structure)
+        lines = content.split("\n")
+        non_empty_lines = [line for line in lines if line.strip()]
+        if len(non_empty_lines) >= 3:  # At least some substantial content
+            score += 0.05
+
+        # Penalize very short or very long chunks
+        if chunk.size < 30:  # Too short
+            score -= 0.2
+        elif chunk.size > 5000:  # Too long for effective embedding
+            score -= 0.1
+
+        return min(score, 1.0)  # Cap at 1.0
+
+    def _is_trivial_chunk(self, chunk: CodeChunk) -> bool:
+        """Detect trivial chunks that add little value."""
+        content = chunk.content.strip()
+        lines = [line.strip() for line in content.split("\n") if line.strip()]
+
+        # Single-line trivial patterns
+        if len(lines) == 1:
+            line = lines[0]
+            trivial_patterns = [
+                r"^\w+\s*=\s*\w+$",  # Simple assignment: x = y
+                r"^import\s+\w+$",  # Simple import
+                r"^from\s+\w+\s+import\s+\w+$",  # Simple from import
+                r"^pass$",  # Just pass
+                r"^\s*#.*$",  # Just a comment
+                r"^return\s*$",  # Empty return
+            ]
+            if any(re.match(pattern, line) for pattern in trivial_patterns):
+                return True
+
+        # Multi-line but still trivial patterns
+        if len(lines) <= 3:
+            content_joined = " ".join(lines)
+            # Check for simple getter/setter patterns
+            if re.match(r".*return\s+self\.\w+.*", content_joined):
+                return True
+            # Check for simple property definitions
+            if "@property" in content and "return" in content and len(lines) <= 3:
+                return True
+
+        # Empty or whitespace-only content
+        if not content or content.isspace():
+            return True
+
+        return False
 
     def _split_oversized_chunks(
         self, chunks: list[CodeChunk], code: str
