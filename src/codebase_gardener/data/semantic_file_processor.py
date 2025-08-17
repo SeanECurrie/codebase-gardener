@@ -7,7 +7,7 @@ capabilities, providing semantic analysis integration for the CLI.
 
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 
@@ -27,7 +27,7 @@ class SemanticFileProcessor:
     """
 
     def __init__(
-        self, preprocessing_config: Optional[PreprocessingConfig] = None, settings=None
+        self, preprocessing_config: PreprocessingConfig | None = None, settings=None
     ):
         """
         Initialize the semantic file processor.
@@ -82,7 +82,7 @@ class SemanticFileProcessor:
             )
             return []
 
-    def analyze_file(self, file_path: Path) -> Optional[dict[str, Any]]:
+    def analyze_file(self, file_path: Path) -> dict[str, Any] | None:
         """
         Analyze a single file with semantic parsing.
 
@@ -353,7 +353,7 @@ class SemanticFileProcessor:
 
 
 def analyze_codebase_with_semantics(
-    directory_path: str, config: Optional[PreprocessingConfig] = None
+    directory_path: str, config: PreprocessingConfig | None = None
 ) -> dict[str, Any]:
     """
     Convenience function to analyze a codebase with semantic parsing.
@@ -370,7 +370,7 @@ def analyze_codebase_with_semantics(
 
 
 def get_file_semantic_chunks(
-    file_path: Path, config: Optional[PreprocessingConfig] = None
+    file_path: Path, config: PreprocessingConfig | None = None
 ) -> list[CodeChunk]:
     """
     Convenience function to get semantic chunks for a file.

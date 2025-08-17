@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, mvp/focus-cli]
+    branches: [main, development, mvp/focus-cli]
   pull_request:
-    branches: [main]
+    branches: [main, development]
 
 jobs:
   test:
@@ -27,3 +27,10 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+      - name: Check task execution blocks (warning only)
+        run: |
+          if find tasks/ -name "task-*.md" -exec grep -L "Execution Block" {} + 2>/dev/null | head -1; then
+            echo "::warning::Some task files missing Execution Block"
+          fi
+        continue-on-error: true

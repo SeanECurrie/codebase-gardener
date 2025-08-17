@@ -228,6 +228,25 @@ The plan reactivates existing disabled components rather than building from scra
   - Implement incremental embedding updates for code changes
   - _Requirements: 2.4, 3.4, 7.1, 7.4_
 
+  **Execution Block (Agent MUST follow)**
+  Read CLAUDE.md:
+  - Branching: Branching & PR Policy (Authoritative)
+  - Steps: Task Loop (Start → Finish)
+  - Edits: Edit Rules (Diff-Only, No Rewrites)
+
+  Start
+  - From development:
+  ```bash
+  git checkout development && git pull
+  git checkout -b feat/embedding-task8 development
+  ```
+  - Summarize context (branch, task #) before edits.
+
+  Finish
+  - Tests/docs updated.
+  - Open PR → base=development; merge after validation.
+  - Post a 5-bullet report per Reporting Format.
+
 - [ ] 9. Vector Store Setup and Management
 
   - Reactivate LanceDB vector store with project-specific isolation

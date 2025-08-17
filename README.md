@@ -11,6 +11,10 @@ ollama pull llama3.2:3b
 python codebase_auditor.py
 ```
 
+## Agent Workflow
+
+Agents must follow CLAUDE.md → Branching & PR Policy (Authoritative) and Task Loop (Start → Finish).
+
 ## Scripts
 
 ```bash
