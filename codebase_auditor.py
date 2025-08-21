@@ -208,8 +208,8 @@ Focus on the big picture rather than detailed code issues."""
                     or str_path.startswith("/private/etc")
                 ):
                     return "Error: Access to system directories is not allowed."
-            except Exception:
-                return "Error: Invalid directory path."
+            except (OSError, ValueError, TypeError) as e:
+                return f"Error: Invalid directory path: {e}"
 
             if not dir_path.exists() or not dir_path.is_dir():
                 return "Error: Directory does not exist or is not accessible."
@@ -361,7 +361,7 @@ Focus on the big picture rather than detailed code issues."""
                 )
                 try:
                     relative_path = file_path.relative_to(root)
-                except Exception:
+                except ValueError:
                     relative_path = file_path.name
                 combined_content.append(f"\n=== FILE: {relative_path} ===\n{content}\n")
 
@@ -395,7 +395,7 @@ Focus on the big picture rather than detailed code issues."""
             test_prompt = "You are alive? Answer 'yes'."
             resp = self.client.generate(model=self.model_name, prompt=test_prompt)
             return bool(resp and isinstance(resp, dict) and resp.get("response"))
-        except Exception:
+        except (ConnectionError, TimeoutError, OSError):
             return False
 
     def chat(self, question: str) -> str:
@@ -456,7 +456,7 @@ Focus on the big picture rather than detailed code issues."""
                     "\nRecent conversation context:\n" + "\n".join(context_lines) + "\n"
                 )
 
-        except Exception:
+        except (AttributeError, KeyError, TypeError):
             pass  # Context not available, continue without it
 
         return ""
@@ -512,7 +512,7 @@ Focus on the big picture rather than detailed code issues."""
                 assistant_message.metadata,
             )
 
-        except Exception:
+        except (AttributeError, KeyError, TypeError):
             pass  # Don't fail chat if context storage fails
 
     def export_markdown(self) -> str:
@@ -763,7 +763,7 @@ The following {self.analysis_results["file_count"]} source files were included i
                 print(
                     f"Conversation History: {len(context.conversation_history)} messages"
                 )
-        except Exception:
+        except (AttributeError, KeyError, TypeError):
             pass  # Context manager might not be available
 
     def _project_switch(self, pm, args: list[str]):
@@ -1121,7 +1121,7 @@ def main():
                                     print(
                                         f"   Chat History: {len(chat_messages)} messages"
                                     )
-                    except Exception:
+                    except (AttributeError, KeyError, TypeError):
                         pass
                 elif pm:
                     print("\n📂 Project Management: Available (no current project)")
@@ -1133,7 +1133,7 @@ def main():
                             print(
                                 "   Use 'project create <dir>' to create your first project"
                             )
-                    except Exception:
+                    except (AttributeError, KeyError, TypeError):
                         pass
                 else:
                     print("\n📂 Project Management: Not available")
@@ -1353,8 +1353,8 @@ def main():
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
             break
-        except Exception:
-            print("❌ An unexpected error occurred")
+        except Exception as e:
+            print(f"❌ An unexpected error occurred: {type(e).__name__}")
             print("   Type 'help' for available commands")
 
 

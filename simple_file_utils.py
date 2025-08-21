@@ -5,7 +5,7 @@ This is a standalone version that doesn't depend on structlog or other heavy dep
 Extracted from the working FileUtilities.find_source_files() method.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 
@@ -112,7 +112,7 @@ class SimpleFileUtilities:
         ".cache",
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize simple file utilities."""
         pass
 
@@ -171,7 +171,7 @@ class SimpleFileUtilities:
         patterns: list[str],
         include_hidden: bool,
         exclude_patterns: list[str],
-    ):
+    ) -> Iterator[Path]:
         """Recursively scan directory while excluding specified patterns."""
         try:
             # Check if current directory should be excluded
@@ -225,7 +225,7 @@ class SimpleFileUtilities:
         if progress_callback:
             progress_callback(f"Scanning directory: {dir_path}")
 
-        source_files = []
+        source_files: list[Path] = []
         exclusion_patterns = self.DEFAULT_EXCLUSION_PATTERNS.copy()
         files_processed = 0
 
@@ -288,14 +288,14 @@ class SimpleFileUtilities:
             ) from e
 
 
-def test_simple_file_utils():
+def test_simple_file_utils() -> None:
     """Test the simplified file utilities."""
     print("Testing SimpleFileUtilities...")
 
     file_utils = SimpleFileUtilities()
     current_dir = Path(".")
 
-    def progress_callback(message):
+    def progress_callback(message: str) -> None:
         print(f"  [INFO] {message}")
 
     print(f"Testing file discovery in: {current_dir.absolute()}")
@@ -310,8 +310,6 @@ def test_simple_file_utils():
         print("  Example files found:")
         for i, file_path in enumerate(source_files[:5]):
             print(f"    {i + 1}. {file_path}")
-
-    return True
 
 
 if __name__ == "__main__":
