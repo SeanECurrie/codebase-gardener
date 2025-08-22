@@ -140,6 +140,21 @@ class ComponentRegistry:
             dependencies=["tree_sitter"],
         )
 
+        # Embedding components
+        self.register(
+            name="nomic_embeddings",
+            module_path="codebase_gardener.data.embeddings",
+            class_name="NomicEmbeddings",
+            dependencies=["sentence_transformers"],
+        )
+
+        self.register(
+            name="embedding_manager",
+            module_path="codebase_gardener.data.embedding_manager",
+            class_name="EmbeddingManager",
+            dependencies=["sentence_transformers", "lancedb"],
+        )
+
     def register(
         self,
         name: str,
@@ -175,7 +190,13 @@ class ComponentRegistry:
         """Check if all dependencies are available."""
         for dep in dependencies:
             try:
-                if dep in ["lancedb", "transformers", "peft", "tree_sitter"]:
+                if dep in [
+                    "lancedb",
+                    "transformers",
+                    "peft",
+                    "tree_sitter",
+                    "sentence_transformers",
+                ]:
                     # Check external dependencies
                     importlib.import_module(dep)
                 elif dep in self._components:
