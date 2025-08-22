@@ -253,8 +253,8 @@ class AdvancedFeaturesController:
     def _check_component_availability(self, feature_name: str) -> bool:
         """Check if components for a feature are available."""
         feature_components = {
-            "rag_retrieval": ["vector_store", "project_vector_store_manager"],
-            "semantic_search": ["vector_store"],
+            "rag_retrieval": ["rag_engine", "vector_store", "embedding_manager"],
+            "semantic_search": ["vector_store", "embedding_manager"],
             "training_pipeline": [
                 "peft_manager",
                 "training_pipeline",
@@ -316,16 +316,28 @@ class AdvancedFeaturesController:
     def _apply_rag_enhancement(self, context: dict[str, Any]) -> dict[str, Any]:
         """Apply RAG-based enhancements to analysis context."""
         try:
-            # Get vector store component (unused for now, placeholder for future implementation)
-            self.registry.get_component("vector_store")
+            # Get RAG engine component
+            rag_engine = self.registry.get_component("rag_engine")
 
-            # This would retrieve relevant context from vector store
-            # For now, just add placeholder enhancement
+            # Perform health check
+            health = rag_engine.health_check()
+
+            # Add RAG capabilities to context
             context["enhanced_rag"] = {
                 "status": "available",
-                "context_retrieved": True,
+                "engine_health": health.get("status", "unknown"),
+                "context_retrieval_enabled": True,
+                "semantic_search_enabled": True,
+                "query_caching_enabled": True,
                 "enhancement_applied": datetime.now().isoformat(),
             }
+
+            # Add performance stats if available
+            try:
+                perf_stats = rag_engine.get_performance_stats()
+                context["enhanced_rag"]["performance"] = perf_stats
+            except Exception:
+                pass  # Performance stats optional
 
             return context
         except Exception as e:
@@ -450,6 +462,84 @@ class AdvancedFeaturesController:
         except Exception as e:
             logger.warning("Project enhancement failed", error=str(e))
             return context
+
+    @graceful_fallback(fallback_value=None)
+    def query_codebase_with_rag(
+        self,
+        query: str,
+        language_filter: str | None = None,
+        chunk_type_filter: str | None = None,
+    ) -> dict[str, Any] | None:
+        """
+        Query codebase using RAG engine for context-aware responses.
+
+        Args:
+            query: User query to search for relevant context
+            language_filter: Optional language filter
+            chunk_type_filter: Optional chunk type filter
+
+        Returns:
+            Dictionary with retrieval results and enhanced context
+        """
+        try:
+            if not self.check_feature_availability("rag_retrieval"):
+                logger.info("RAG retrieval not available")
+                return None
+
+            # Get RAG engine
+            rag_engine = self.registry.get_component("rag_engine")
+
+            # Retrieve context
+            retrieval_result = rag_engine.retrieve_context(
+                query=query,
+                language_filter=language_filter,
+                chunk_type_filter=chunk_type_filter,
+            )
+
+            # Format context
+            enhanced_context = rag_engine.format_context(retrieval_result)
+
+            # Create enhanced prompt
+            enhanced_prompt = rag_engine.enhance_prompt(query, enhanced_context)
+
+            result = {
+                "query": query,
+                "retrieval_result": {
+                    "chunks_found": len(retrieval_result.chunks),
+                    "total_searched": retrieval_result.total_chunks_searched,
+                    "retrieval_time_ms": retrieval_result.retrieval_time_ms,
+                    "cache_hit": retrieval_result.cache_hit,
+                    "average_relevance": retrieval_result.average_relevance,
+                    "top_relevance": retrieval_result.top_relevance,
+                },
+                "enhanced_context": {
+                    "context_id": enhanced_context.context_id,
+                    "chunk_count": enhanced_context.chunk_count,
+                    "total_chars": enhanced_context.total_chars,
+                    "is_high_quality": enhanced_context.is_high_quality,
+                    "relevance_summary": enhanced_context.relevance_summary,
+                },
+                "enhanced_prompt": enhanced_prompt,
+                "filters": {
+                    "language": language_filter,
+                    "chunk_type": chunk_type_filter,
+                },
+                "timestamp": datetime.now().isoformat(),
+            }
+
+            logger.info(
+                "RAG query completed",
+                query_length=len(query),
+                chunks_found=len(retrieval_result.chunks),
+                retrieval_time_ms=retrieval_result.retrieval_time_ms,
+                cache_hit=retrieval_result.cache_hit,
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error("RAG query failed", query=query[:50], error=str(e))
+            return None
 
 
 # Global controller instance
