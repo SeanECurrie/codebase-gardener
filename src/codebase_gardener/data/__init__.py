@@ -6,6 +6,21 @@ for converting source code into structured, embedded representations.
 """
 
 # Tree-sitter parsing
+# Embedding management orchestration
+from .embedding_manager import (
+    EmbeddingJobResult,
+    EmbeddingManager,
+    EmbeddingManagerConfig,
+    create_embedding_manager,
+)
+
+# Embedding generation and management
+from .embeddings import (
+    EmbeddingConfig,
+    EmbeddingResult,
+    NomicEmbeddings,
+    create_embeddings_generator,
+)
 from .parser import (
     CodeElement,
     CodeStructure,
@@ -35,6 +50,14 @@ from .semantic_file_processor import (
     get_file_semantic_chunks,
 )
 
+# Vector storage system
+from .vector_store import (
+    SearchResult,
+    VectorStore,
+    VectorStoreStats,
+    create_vector_store,
+)
+
 __all__ = [
     # Parser exports
     "TreeSitterParser",
@@ -57,4 +80,19 @@ __all__ = [
     "SemanticFileProcessor",
     "analyze_codebase_with_semantics",
     "get_file_semantic_chunks",
+    # Embedding system exports
+    "NomicEmbeddings",
+    "EmbeddingConfig",
+    "EmbeddingResult",
+    "create_embeddings_generator",
+    # Vector store exports
+    "VectorStore",
+    "VectorStoreStats",
+    "SearchResult",
+    "create_vector_store",
+    # Embedding manager exports
+    "EmbeddingManager",
+    "EmbeddingManagerConfig",
+    "EmbeddingJobResult",
+    "create_embedding_manager",
 ]

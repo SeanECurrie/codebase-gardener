@@ -262,7 +262,7 @@ class AdvancedFeaturesController:
             ],
             "project_management": ["project_registry", "project_context_manager"],
             "vector_storage": ["vector_store"],
-            "embedding_generation": ["vector_store", "dynamic_model_loader"],
+            "embedding_generation": ["nomic_embeddings", "embedding_manager"],
             "semantic_analysis": [
                 "tree_sitter_parser",
                 "code_preprocessor",
