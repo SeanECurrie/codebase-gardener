@@ -5,16 +5,27 @@ This module bridges the existing SimpleFileUtilities with the new Tree-sitter pa
 capabilities, providing semantic analysis integration for the CLI.
 """
 
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import structlog
 
-from simple_file_utils import SimpleFileUtilities
+# Add project root to sys.path to import simple_file_utils
+project_root = Path(__file__).parent.parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
-from .parser import TreeSitterParser, get_supported_extensions, is_supported_file
-from .preprocessor import CodeChunk, CodePreprocessor, PreprocessingConfig
+# Import after path modification
+from simple_file_utils import SimpleFileUtilities  # noqa: E402
+
+from .parser import (  # noqa: E402
+    TreeSitterParser,
+    get_supported_extensions,
+    is_supported_file,
+)
+from .preprocessor import CodeChunk, CodePreprocessor, PreprocessingConfig  # noqa: E402
 
 logger = structlog.get_logger(__name__)
 
