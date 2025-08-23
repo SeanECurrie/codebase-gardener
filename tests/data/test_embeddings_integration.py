@@ -414,5 +414,296 @@ class TestEmbeddingIntegration:
             assert "vector_store" in health["components"]
 
 
+class TestVectorStoreBackupRecovery:
+    """Test backup and recovery functionality for Task 9."""
+
+    def test_create_backup(self, temp_vector_store):
+        """Test vector store backup creation."""
+        # Mock LanceDB operations
+        with patch("lancedb.connect") as mock_connect:
+            mock_db = Mock()
+            mock_db.table_names.return_value = ["test_chunks"]
+            mock_table = Mock()
+            mock_db.open_table.return_value = mock_table
+            mock_connect.return_value = mock_db
+
+            # Mock tarfile operations
+            with patch("tarfile.open") as mock_tarfile:
+                mock_tar = Mock()
+                mock_tarfile.return_value.__enter__.return_value = mock_tar
+
+                # Mock backup file stats
+                with patch("pathlib.Path.stat") as mock_stat:
+                    mock_stat.return_value.st_size = 1024000  # 1MB backup
+
+                    temp_vector_store.connect()
+                    backup_path = temp_vector_store.create_backup()
+
+                    assert isinstance(backup_path, Path)
+                    mock_tar.add.assert_called_once()
+                    mock_tarfile.assert_called_once()
+
+    def test_restore_from_backup(self, temp_vector_store):
+        """Test vector store restoration from backup."""
+        # Create a mock backup file
+        backup_path = Path("/tmp/test_backup.tar.gz")
+
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("lancedb.connect") as mock_connect:
+                mock_db = Mock()
+                mock_db.table_names.return_value = ["test_chunks"]
+                mock_table = Mock()
+                mock_db.open_table.return_value = mock_table
+                mock_connect.return_value = mock_db
+
+                # Mock get_stats for health check
+                with patch.object(temp_vector_store, "get_stats") as mock_stats:
+                    mock_stats.return_value = Mock(total_chunks=10)
+
+                    # Mock tarfile extraction
+                    with patch("tarfile.open") as mock_tarfile:
+                        mock_tar = Mock()
+                        mock_tarfile.return_value.__enter__.return_value = mock_tar
+
+                        # Mock shutil operations
+                        with patch("shutil.rmtree"):
+                            temp_vector_store.restore_from_backup(
+                                backup_path, force=True
+                            )
+
+                            mock_tar.extractall.assert_called_once()
+
+    def test_optimize_storage(self, temp_vector_store):
+        """Test vector store optimization."""
+        with patch("lancedb.connect") as mock_connect:
+            mock_db = Mock()
+            mock_db.table_names.return_value = ["test_chunks"]
+            mock_table = Mock()
+            mock_table.optimize = Mock()  # Mock optimization method
+            mock_db.open_table.return_value = mock_table
+            mock_connect.return_value = mock_db
+
+            # Mock stats
+            initial_stats = Mock(total_chunks=100, storage_size_mb=50.0)
+            final_stats = Mock(total_chunks=100, storage_size_mb=45.0)
+
+            with patch.object(
+                temp_vector_store, "get_stats", side_effect=[initial_stats, final_stats]
+            ):
+                # Mock search for duplicate detection
+                with patch.object(mock_table, "search") as mock_search:
+                    mock_search.return_value.limit.return_value.to_list.return_value = [
+                        {"id": "chunk_1"},
+                        {"id": "chunk_2"},
+                    ]
+
+                    temp_vector_store.connect()
+                    result = temp_vector_store.optimize_storage()
+
+                    assert result["status"] == "completed"
+                    assert "table_optimization" in result["actions_taken"]
+                    assert result["space_saved_mb"] == 5.0
+
+    def test_verify_integrity(self, temp_vector_store):
+        """Test vector store integrity verification."""
+        with patch("lancedb.connect") as mock_connect:
+            mock_db = Mock()
+            mock_db.table_names.return_value = ["test_chunks"]
+            mock_table = Mock()
+            mock_db.open_table.return_value = mock_table
+            mock_connect.return_value = mock_db
+
+            # Mock table search with sample data
+            sample_records = [
+                {
+                    "id": "chunk_1",
+                    "content": "test content",
+                    "language": "python",
+                    "embedding": [0.1] * 384,  # Correct dimension
+                    "created_at": "2024-01-01T00:00:00",
+                },
+                {
+                    "id": "chunk_2",
+                    "content": "test content 2",
+                    "language": "python",
+                    "embedding": [0.2] * 256,  # Wrong dimension
+                    "created_at": "2024-01-01T00:00:00",
+                },
+            ]
+
+            with patch.object(mock_table, "search") as mock_search:
+                mock_search.return_value.limit.return_value.to_list.return_value = (
+                    sample_records
+                )
+
+                temp_vector_store.connect()
+                result = temp_vector_store.verify_integrity()
+
+                assert (
+                    result["status"] == "degraded"
+                )  # Due to wrong embedding dimension
+                assert result["total_chunks_verified"] == 2
+                assert len(result["corrupted_chunks"]) == 1
+                assert (
+                    "backup_and_rebuild_corrupted_chunks" in result["recommendations"]
+                )
+
+    def test_health_check_comprehensive(self, temp_vector_store):
+        """Test comprehensive health check functionality."""
+        with patch("lancedb.connect") as mock_connect:
+            mock_db = Mock()
+            mock_db.table_names.return_value = ["test_chunks"]
+            mock_table = Mock()
+            mock_db.open_table.return_value = mock_table
+            mock_connect.return_value = mock_db
+
+            # Mock get_stats
+            with patch.object(temp_vector_store, "get_stats") as mock_stats:
+                mock_stats.return_value = Mock(total_chunks=50, storage_size_mb=25.5)
+
+                # Mock search for table access test
+                with patch.object(mock_table, "search") as mock_search:
+                    mock_search.return_value.limit.return_value.to_list.return_value = []
+
+                    temp_vector_store.connect()
+                    health = temp_vector_store.health_check()
+
+                    assert health["status"] == "healthy"
+                    assert health["connected"]
+                    assert health["table_exists"]
+                    assert health["total_chunks"] == 50
+                    assert health["storage_size_mb"] == 25.5
+
+
+class TestTask9Integration:
+    """Integration tests specifically for Task 9 requirements."""
+
+    @patch("codebase_gardener.data.embeddings.SentenceTransformer")
+    @patch("lancedb.connect")
+    def test_complete_backup_recovery_workflow(
+        self, mock_connect, mock_sentence_transformer, temp_vector_store
+    ):
+        """Test complete backup and recovery workflow."""
+        # Setup mocks
+        mock_db = Mock()
+        mock_db.table_names.return_value = []
+        mock_table = Mock()
+        mock_db.create_table.return_value = mock_table
+        mock_connect.return_value = mock_db
+
+        mock_model = Mock()
+        mock_model.max_seq_length = 2048
+        mock_model.get_sentence_embedding_dimension.return_value = 384
+        mock_embeddings = np.random.rand(1, 384)
+        mock_model.encode.return_value = mock_embeddings
+        mock_sentence_transformer.return_value = mock_model
+
+        # Create sample data
+        chunk = CodeChunk(
+            id="backup_test_chunk",
+            content="def backup_test(): return 'test'",
+            language="python",
+            chunk_type=ChunkType.FUNCTION,
+            file_path=Path("backup_test.py"),
+            start_line=1,
+            end_line=1,
+            start_byte=0,
+            end_byte=32,
+            metadata={},
+            dependencies=[],
+            complexity_score=1.0,
+        )
+
+        # Initialize embedding manager
+        from codebase_gardener.data.embedding_manager import (
+            EmbeddingManager,
+            EmbeddingManagerConfig,
+        )
+
+        config = EmbeddingManagerConfig.for_development()
+        manager = EmbeddingManager(temp_vector_store, config)
+
+        # Process chunks
+        result = manager.process_chunks([chunk])
+        assert result.success_rate == 100.0
+
+        # Create backup
+        with patch("tarfile.open") as mock_tarfile:
+            mock_tar = Mock()
+            mock_tarfile.return_value.__enter__.return_value = mock_tar
+
+            with patch("pathlib.Path.stat") as mock_stat:
+                mock_stat.return_value.st_size = 1024000
+
+                backup_path = temp_vector_store.create_backup()
+                assert isinstance(backup_path, Path)
+
+        # Verify integrity before backup
+        # Mock table availability for integrity check
+        mock_db.table_names.return_value = ["test_chunks"]
+        mock_db.open_table.return_value = mock_table
+
+        with patch.object(mock_table, "search") as mock_search:
+            mock_search.return_value.limit.return_value.to_list.return_value = [
+                {
+                    "id": "backup_test_chunk",
+                    "content": "def backup_test(): return 'test'",
+                    "language": "python",
+                    "embedding": [0.1] * 384,
+                    "created_at": "2024-01-01T00:00:00",
+                }
+            ]
+
+            # Reset connection state for integrity check
+            temp_vector_store._connected = False
+            integrity = temp_vector_store.verify_integrity()
+            assert integrity["status"] == "healthy"
+
+        # Restore from backup
+        with patch("pathlib.Path.exists", return_value=True):
+            with patch("tarfile.open") as mock_tarfile:
+                mock_tar = Mock()
+                mock_tarfile.return_value.__enter__.return_value = mock_tar
+
+                with patch("shutil.rmtree"):
+                    with patch.object(temp_vector_store, "get_stats") as mock_stats:
+                        mock_stats.return_value = Mock(total_chunks=1)
+
+                        temp_vector_store.restore_from_backup(backup_path, force=True)
+
+    def test_optimization_performance_metrics(self, temp_vector_store):
+        """Test optimization performance meets requirements."""
+        with patch("lancedb.connect") as mock_connect:
+            mock_db = Mock()
+            mock_db.table_names.return_value = ["test_chunks"]
+            mock_table = Mock()
+            mock_table.optimize = Mock()
+            mock_db.open_table.return_value = mock_table
+            mock_connect.return_value = mock_db
+
+            # Test optimization timing
+            import time
+
+            initial_stats = Mock(total_chunks=1000, storage_size_mb=100.0)
+            final_stats = Mock(total_chunks=1000, storage_size_mb=85.0)
+
+            with patch.object(
+                temp_vector_store, "get_stats", side_effect=[initial_stats, final_stats]
+            ):
+                with patch.object(mock_table, "search") as mock_search:
+                    mock_search.return_value.limit.return_value.to_list.return_value = []
+
+                    temp_vector_store.connect()
+
+                    start_time = time.time()
+                    result = temp_vector_store.optimize_storage()
+                    optimization_time = time.time() - start_time
+
+                    # Should complete quickly for Mac Mini M4 constraints
+                    assert optimization_time < 5.0
+                    assert result["space_saved_mb"] == 15.0
+                    assert result["status"] == "completed"
+
+
 if __name__ == "__main__":
     pytest.main([__file__])

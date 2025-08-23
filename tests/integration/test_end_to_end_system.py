@@ -234,14 +234,14 @@ This is a sample project for testing the Codebase Gardener system.
             with patch.object(app_context.project_registry, "add_project") as mock_add:
                 mock_project = Mock()
                 mock_project.project_id = project_id
-                mock_project.name = f"Test Project {i+1}"
+                mock_project.name = f"Test Project {i + 1}"
                 mock_project.source_path = sample_project_dir
                 mock_project.training_status = TrainingStatus.COMPLETED
                 mock_project.created_at = datetime.now()
                 mock_add.return_value = mock_project
 
                 project = app_context.project_registry.add_project(
-                    name=f"Test Project {i+1}",
+                    name=f"Test Project {i + 1}",
                     source_path=sample_project_dir,
                     project_id=project_id,
                 )

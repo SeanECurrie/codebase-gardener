@@ -305,6 +305,21 @@ class FileUtilityError(CodebaseGardenerError):
         super().__init__(message, **kwargs)
 
 
+class RAGEngineError(CodebaseGardenerError):
+    """Errors related to RAG engine operations."""
+
+    def __init__(self, message: str, **kwargs):
+        if "suggestions" not in kwargs:
+            kwargs["suggestions"] = [
+                "Check vector store connection and health",
+                "Verify embedding model is loaded and accessible",
+                "Ensure query is not empty and within size limits",
+                "Check project context and chunk availability",
+                "Verify sufficient memory for retrieval operations",
+            ]
+        super().__init__(message, **kwargs)
+
+
 # Retry decorator configurations
 DEFAULT_RETRY_CONFIG = {
     "stop": stop_after_attempt(3),

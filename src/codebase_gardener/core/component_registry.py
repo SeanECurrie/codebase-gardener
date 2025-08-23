@@ -155,6 +155,19 @@ class ComponentRegistry:
             dependencies=["sentence_transformers", "lancedb"],
         )
 
+        # RAG Engine components
+        self.register(
+            name="rag_engine",
+            module_path="codebase_gardener.data.rag_engine",
+            class_name="RAGEngine",
+            dependencies=[
+                "sentence_transformers",
+                "lancedb",
+                "vector_store",
+                "embedding_manager",
+            ],
+        )
+
     def register(
         self,
         name: str,

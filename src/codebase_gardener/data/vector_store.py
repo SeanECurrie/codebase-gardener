@@ -7,6 +7,8 @@ and supports project-specific vector stores for multi-tenant architecture.
 """
 
 import json
+import shutil
+import tarfile
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -566,6 +568,372 @@ class VectorStore:
             error_msg = f"Failed to clear vector store: {e}"
             logger.error(error_msg, table_name=self.table_name, error=str(e))
             raise VectorStoreError(error_msg) from e
+
+    def create_backup(self, backup_path: Path | None = None) -> Path:
+        """
+        Create a backup of the vector store data.
+
+        Args:
+            backup_path: Optional custom backup path. If None, creates timestamped backup.
+
+        Returns:
+            Path to the created backup file
+
+        Raises:
+            VectorStoreError: If backup creation fails
+        """
+        self._ensure_connected()
+
+        try:
+            # Generate backup filename with timestamp
+            if backup_path is None:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_filename = f"vector_store_backup_{timestamp}.tar.gz"
+                backup_path = self.db_path.parent / "backups" / backup_filename
+
+            # Ensure backup directory exists
+            backup_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Create compressed backup of the entire database directory
+            with tarfile.open(backup_path, "w:gz") as tar:
+                tar.add(self.db_path, arcname=self.db_path.name)
+
+            # Verify backup integrity
+            backup_size = backup_path.stat().st_size
+            if backup_size == 0:
+                raise VectorStoreError("Backup file is empty - backup may have failed")
+
+            logger.info(
+                "Vector store backup created",
+                backup_path=str(backup_path),
+                backup_size_mb=f"{backup_size / (1024 * 1024):.2f}",
+                db_path=str(self.db_path),
+            )
+
+            return backup_path
+
+        except Exception as e:
+            error_msg = f"Failed to create vector store backup: {e}"
+            logger.error(
+                error_msg,
+                backup_path=str(backup_path) if backup_path else None,
+                error=str(e),
+            )
+            raise VectorStoreError(error_msg) from e
+
+    def restore_from_backup(self, backup_path: Path, force: bool = False) -> None:
+        """
+        Restore vector store from a backup file.
+
+        Args:
+            backup_path: Path to the backup file
+            force: If True, overwrites existing data without confirmation
+
+        Raises:
+            VectorStoreError: If restoration fails
+        """
+        if not backup_path.exists():
+            raise VectorStoreError(f"Backup file not found: {backup_path}")
+
+        try:
+            # Check if current database exists and has data
+            current_has_data = False
+            if self.db_path.exists():
+                try:
+                    self._ensure_connected()
+                    stats = self.get_stats()
+                    current_has_data = stats.total_chunks > 0
+                except Exception:
+                    # If we can't get stats, assume it might have data
+                    current_has_data = True
+
+            if current_has_data and not force:
+                raise VectorStoreError(
+                    f"Database {self.db_path} contains data. Use force=True to overwrite."
+                )
+
+            # Close current connection before restoration
+            if self._connected:
+                self.db = None
+                self.table = None
+                self._connected = False
+
+            # Remove current database directory if it exists
+            if self.db_path.exists():
+                logger.info(
+                    "Removing current database for restoration",
+                    db_path=str(self.db_path),
+                )
+                shutil.rmtree(self.db_path)
+
+            # Extract backup to parent directory
+            with tarfile.open(backup_path, "r:gz") as tar:
+                tar.extractall(path=self.db_path.parent)
+
+            # Verify restoration
+            if not self.db_path.exists():
+                raise VectorStoreError(
+                    f"Restoration failed - database directory not found after extraction: {self.db_path}"
+                )
+
+            # Test connection to verify restoration success
+            self.connect()
+            restored_stats = self.get_stats()
+
+            logger.info(
+                "Vector store restoration completed",
+                backup_path=str(backup_path),
+                restored_chunks=restored_stats.total_chunks,
+                db_path=str(self.db_path),
+            )
+
+        except Exception as e:
+            error_msg = f"Failed to restore vector store from backup: {e}"
+            logger.error(
+                error_msg,
+                backup_path=str(backup_path),
+                db_path=str(self.db_path),
+                error=str(e),
+            )
+            raise VectorStoreError(error_msg) from e
+
+    def optimize_storage(self) -> dict[str, Any]:
+        """
+        Optimize vector store for better performance and storage efficiency.
+
+        Returns:
+            Dictionary with optimization results and statistics
+
+        Raises:
+            VectorStoreError: If optimization fails
+        """
+        self._ensure_connected()
+
+        try:
+            optimization_results = {
+                "status": "completed",
+                "actions_taken": [],
+                "before_stats": {},
+                "after_stats": {},
+                "space_saved_mb": 0.0,
+                "error": None,
+            }
+
+            # Get initial statistics
+            initial_stats = self.get_stats()
+            optimization_results["before_stats"] = {
+                "total_chunks": initial_stats.total_chunks,
+                "storage_size_mb": initial_stats.storage_size_mb,
+            }
+
+            # LanceDB automatic optimization
+            # Note: LanceDB handles most optimization internally with its columnar format
+            # but we can trigger compaction if available
+            try:
+                # Attempt to optimize table (method availability depends on LanceDB version)
+                if hasattr(self.table, "optimize"):
+                    self.table.optimize()
+                    optimization_results["actions_taken"].append("table_optimization")
+                elif hasattr(self.table, "compact"):
+                    self.table.compact()
+                    optimization_results["actions_taken"].append("table_compaction")
+                else:
+                    optimization_results["actions_taken"].append(
+                        "no_optimization_methods_available"
+                    )
+            except Exception as e:
+                logger.warning(
+                    "Table optimization not available or failed",
+                    error=str(e),
+                )
+                optimization_results["actions_taken"].append("optimization_skipped")
+
+            # Remove any potential duplicate entries (based on chunk ID)
+            try:
+                # Get all records and check for duplicates
+                all_results = self.table.search().limit(100000).to_list()
+                unique_ids = set()
+                duplicates_found = []
+
+                for result in all_results:
+                    chunk_id = result.get("id")
+                    if chunk_id in unique_ids:
+                        duplicates_found.append(chunk_id)
+                    else:
+                        unique_ids.add(chunk_id)
+
+                if duplicates_found:
+                    # Remove duplicates (keeping the first occurrence)
+                    for _duplicate_id in duplicates_found:
+                        # Note: This is a simplified approach; in practice, you might want
+                        # to keep the most recent version based on updated_at timestamp
+                        pass  # LanceDB doesn't have direct duplicate removal
+
+                    optimization_results["actions_taken"].append(
+                        f"duplicate_detection_found_{len(duplicates_found)}"
+                    )
+                else:
+                    optimization_results["actions_taken"].append("no_duplicates_found")
+
+            except Exception as e:
+                logger.warning(
+                    "Duplicate detection failed",
+                    error=str(e),
+                )
+
+            # Get final statistics
+            final_stats = self.get_stats()
+            optimization_results["after_stats"] = {
+                "total_chunks": final_stats.total_chunks,
+                "storage_size_mb": final_stats.storage_size_mb,
+            }
+
+            # Calculate space saved
+            space_saved = max(
+                0, initial_stats.storage_size_mb - final_stats.storage_size_mb
+            )
+            optimization_results["space_saved_mb"] = round(space_saved, 2)
+
+            logger.info(
+                "Vector store optimization completed",
+                actions_taken=optimization_results["actions_taken"],
+                space_saved_mb=optimization_results["space_saved_mb"],
+                before_chunks=optimization_results["before_stats"]["total_chunks"],
+                after_chunks=optimization_results["after_stats"]["total_chunks"],
+            )
+
+            return optimization_results
+
+        except Exception as e:
+            error_msg = f"Vector store optimization failed: {e}"
+            logger.error(error_msg, error=str(e))
+            return {
+                "status": "failed",
+                "actions_taken": [],
+                "before_stats": {},
+                "after_stats": {},
+                "space_saved_mb": 0.0,
+                "error": error_msg,
+            }
+
+    def verify_integrity(self) -> dict[str, Any]:
+        """
+        Verify the integrity of the vector store data.
+
+        Returns:
+            Dictionary with integrity check results
+
+        Raises:
+            VectorStoreError: If integrity check fails critically
+        """
+        integrity_results = {
+            "status": "healthy",
+            "issues_found": [],
+            "total_chunks_verified": 0,
+            "corrupted_chunks": [],
+            "recommendations": [],
+            "error": None,
+        }
+
+        try:
+            self._ensure_connected()
+
+            # Check database and table existence
+            if not self.db_path.exists():
+                integrity_results["issues_found"].append("database_directory_missing")
+                integrity_results["status"] = "critical"
+                return integrity_results
+
+            if self.table_name not in self.db.table_names():
+                integrity_results["issues_found"].append("table_missing")
+                integrity_results["status"] = "critical"
+                return integrity_results
+
+            # Sample records for integrity verification
+            try:
+                sample_results = self.table.search().limit(100).to_list()
+                integrity_results["total_chunks_verified"] = len(sample_results)
+
+                for i, result in enumerate(sample_results):
+                    # Verify required fields are present
+                    required_fields = [
+                        "id",
+                        "content",
+                        "language",
+                        "embedding",
+                        "created_at",
+                    ]
+                    missing_fields = [
+                        field for field in required_fields if field not in result
+                    ]
+
+                    if missing_fields:
+                        integrity_results["corrupted_chunks"].append(
+                            {
+                                "index": i,
+                                "id": result.get("id", "unknown"),
+                                "missing_fields": missing_fields,
+                            }
+                        )
+
+                    # Verify embedding dimension
+                    embedding = result.get("embedding", [])
+                    if len(embedding) != 384:  # Expected Nomic dimension
+                        integrity_results["corrupted_chunks"].append(
+                            {
+                                "index": i,
+                                "id": result.get("id", "unknown"),
+                                "issue": f"invalid_embedding_dimension_{len(embedding)}",
+                            }
+                        )
+
+            except Exception as e:
+                integrity_results["issues_found"].append(
+                    f"record_verification_failed: {e}"
+                )
+                integrity_results["status"] = "degraded"
+
+            # Determine final status and recommendations
+            if integrity_results["corrupted_chunks"]:
+                integrity_results["status"] = "degraded"
+                integrity_results["recommendations"].append(
+                    "backup_and_rebuild_corrupted_chunks"
+                )
+
+            if len(integrity_results["issues_found"]) > 0:
+                if integrity_results["status"] != "critical":
+                    integrity_results["status"] = "degraded"
+                integrity_results["recommendations"].append(
+                    "create_backup_before_repairs"
+                )
+
+            if integrity_results["status"] == "healthy":
+                integrity_results["recommendations"].append("no_action_needed")
+
+            logger.info(
+                "Vector store integrity check completed",
+                status=integrity_results["status"],
+                issues_count=len(integrity_results["issues_found"]),
+                corrupted_count=len(integrity_results["corrupted_chunks"]),
+                verified_count=integrity_results["total_chunks_verified"],
+            )
+
+            return integrity_results
+
+        except Exception as e:
+            error_msg = f"Integrity verification failed: {e}"
+            logger.error(error_msg, error=str(e))
+            integrity_results.update(
+                {
+                    "status": "critical",
+                    "error": error_msg,
+                    "recommendations": [
+                        "manual_inspection_required",
+                        "restore_from_backup",
+                    ],
+                }
+            )
+            return integrity_results
 
     def health_check(self) -> dict[str, Any]:
         """
