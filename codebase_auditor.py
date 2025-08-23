@@ -21,7 +21,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
+import structlog
+
 T = TypeVar("T")
+
+# Configure logging
+logger = structlog.get_logger(__name__)
 
 
 def with_retries(fn: Callable[[], T], attempts: int = 5, base_sleep: float = 0.5) -> T:
@@ -398,38 +403,133 @@ Focus on the big picture rather than detailed code issues."""
         except (ConnectionError, TimeoutError, OSError):
             return False
 
-    def chat(self, question: str) -> str:
+    def chat(self, question: str, use_enhanced_mode: bool = None) -> str:
         """
-        Ask questions about the analyzed codebase with project context.
+        Ask questions about the analyzed codebase with enhanced RAG context.
 
         Args:
             question: User's question about the codebase
+            use_enhanced_mode: Whether to use enhanced RAG mode (auto-detect if None)
 
         Returns:
-            AI response based on the analysis and project context
+            AI response based on analysis, project context, and RAG retrieval
         """
         if not self.analysis_results:
             return "Error: No codebase analysis available. Please run analyze_codebase() first."
 
         try:
-            # Integrate with project context
-            context_info = self._get_project_context_for_chat()
+            # Get enhanced analysis integration
+            enhanced_integration = self._get_enhanced_analysis_integration()
 
-            # Enhanced prompt with project context
-            enhanced_prompt = self._build_enhanced_chat_prompt(question, context_info)
+            # Determine if enhanced mode should be used
+            if use_enhanced_mode is None:
+                context_available = enhanced_integration is not None
+                use_enhanced_mode = (
+                    enhanced_integration
+                    and enhanced_integration.should_use_enhanced_mode(
+                        question, context_available
+                    )
+                )
 
-            response = self.client.generate(
-                model=self.model_name, prompt=enhanced_prompt
-            )
-            answer = response["response"]
+            # Try enhanced mode first if available and requested
+            if use_enhanced_mode and enhanced_integration:
+                enhanced_response = self._chat_with_rag_enhancement(
+                    question, enhanced_integration
+                )
+                if enhanced_response:
+                    return enhanced_response
 
-            # Store chat in project context
-            self._store_chat_in_project_context(question, answer)
+                # Fall back to simple mode if enhancement failed
+                print("⚠️  Enhanced mode failed, falling back to simple chat")
 
-            return answer
+            # Simple mode - original functionality
+            return self._chat_simple_mode(question)
 
         except Exception as e:
             return f"Chat failed: {str(e)}"
+
+    def _chat_with_rag_enhancement(
+        self, question: str, enhanced_integration
+    ) -> str | None:
+        """Chat using RAG-enhanced context retrieval."""
+        try:
+            # Retrieve relevant context using RAG
+            analysis_context = enhanced_integration.retrieve_context_for_query(
+                query=question,
+                project_id=self._current_project_id,
+                language_filter=None,  # Could be inferred from analysis_results
+                chunk_type_filter=None,
+            )
+
+            if analysis_context:
+                # Generate enhanced response using retrieved context
+                enhanced_prompt = enhanced_integration._build_enhanced_prompt(
+                    question, analysis_context
+                )
+
+                # Generate response with ollama
+                response = with_retries(
+                    lambda: self.client.generate(
+                        model=self.model_name, prompt=enhanced_prompt
+                    )
+                )
+                answer = response["response"]
+
+                # Add context information to response
+                context_info = (
+                    f"\n\n📄 *Based on {analysis_context.num_chunks_used} relevant code chunks "
+                    f"(relevance: {analysis_context.relevance_score:.2f}, "
+                    f"retrieved in {analysis_context.retrieval_time_ms:.0f}ms)*"
+                )
+                answer_with_info = answer + context_info
+
+                # Store enhanced chat in project context
+                self._store_chat_in_project_context(
+                    question, answer_with_info, enhanced=True
+                )
+
+                # Record performance metrics
+                enhanced_integration.enhance_chat_response(
+                    query=question,
+                    base_response=answer,
+                    analysis_context=analysis_context,
+                    project_id=self._current_project_id,
+                )
+
+                logger.info(
+                    "Enhanced chat completed",
+                    retrieval_time_ms=analysis_context.retrieval_time_ms,
+                    chunks_used=analysis_context.num_chunks_used,
+                    relevance_score=analysis_context.relevance_score,
+                )
+
+                return answer_with_info
+            else:
+                # No relevant context found, fall back to simple mode
+                logger.debug("No relevant context found, using simple mode")
+                return None
+
+        except Exception as e:
+            logger.warning("Enhanced chat failed", error=str(e))
+            return None
+
+    def _chat_simple_mode(self, question: str) -> str:
+        """Original simple chat functionality."""
+        # Integrate with project context
+        context_info = self._get_project_context_for_chat()
+
+        # Enhanced prompt with project context
+        enhanced_prompt = self._build_enhanced_chat_prompt(question, context_info)
+
+        response = with_retries(
+            lambda: self.client.generate(model=self.model_name, prompt=enhanced_prompt)
+        )
+        answer = response["response"]
+
+        # Store chat in project context
+        self._store_chat_in_project_context(question, answer)
+
+        return answer
 
     def _get_project_context_for_chat(self) -> str:
         """Get project context information for enhanced chat."""
@@ -473,7 +573,9 @@ Focus on the big picture rather than detailed code issues."""
         else:
             return base_prompt
 
-    def _store_chat_in_project_context(self, question: str, answer: str) -> None:
+    def _store_chat_in_project_context(
+        self, question: str, answer: str, enhanced: bool = False
+    ) -> None:
         """Store chat interaction in project context."""
         pm = self._get_project_manager()
         if not pm or not self._current_project_id:
@@ -489,7 +591,7 @@ Focus on the big picture rather than detailed code issues."""
                 role="user",
                 content=question,
                 timestamp=datetime.now(),
-                metadata={"type": "chat_question"},
+                metadata={"type": "chat_question", "enhanced_mode_available": enhanced},
             )
             pm["context_manager"].add_message(
                 self._current_project_id,
@@ -503,7 +605,7 @@ Focus on the big picture rather than detailed code issues."""
                 role="assistant",
                 content=answer,
                 timestamp=datetime.now(),
-                metadata={"type": "chat_response"},
+                metadata={"type": "chat_response", "enhanced_mode_used": enhanced},
             )
             pm["context_manager"].add_message(
                 self._current_project_id,
@@ -529,24 +631,67 @@ Focus on the big picture rather than detailed code issues."""
             "%Y-%m-%d %H:%M:%S"
         )
 
+        # Check for enhanced analysis components
+        has_enhanced_content = any(
+            key.startswith("enhanced_") for key in self.analysis_results.keys()
+        )
+
         markdown_report = f"""# Codebase Analysis Report
 
 **Generated:** {timestamp}
 **Directory:** `{self.analysis_results["directory_path"]}`
 **Files Analyzed:** {self.analysis_results["file_count"]}
+**Analysis Mode:** {"Enhanced RAG Analysis" if has_enhanced_content else "Standard Analysis"}
 
 ---
+
+## Core Analysis
 
 {self.analysis_results["full_analysis"]}
 
----
+"""
+        # Add enhanced RAG insights if available
+        if "enhanced_rag_insights" in self.analysis_results:
+            insights = self.analysis_results["enhanced_rag_insights"]
+            performance = self.analysis_results.get("enhanced_rag_performance", {})
+
+            markdown_report += f"""---
+
+## Enhanced Analysis Insights
+
+*Enhanced with RAG-powered context retrieval ({performance.get('total_queries', 0)} queries, avg {performance.get('avg_retrieval_time_ms', 0):.0f}ms retrieval time)*
+
+"""
+            for insight in insights:
+                markdown_report += f"""### {insight['question']}
+
+{insight['insight']}
+
+*Context: {insight['context_chunks']} code chunks analyzed (relevance: {insight['relevance_score']:.2f}, retrieved in {insight['retrieval_time_ms']:.0f}ms)*
+
+"""
+
+        # Add performance metrics if available
+        if "enhanced_rag_performance" in self.analysis_results:
+            perf = self.analysis_results["enhanced_rag_performance"]
+            markdown_report += f"""---
+
+## Analysis Performance Metrics
+
+- **Total Enhanced Queries:** {perf.get('total_queries', 0)}
+- **Average Retrieval Time:** {perf.get('avg_retrieval_time_ms', 0):.0f}ms
+- **Average Relevance Score:** {perf.get('avg_relevance_score', 0):.2f}
+- **Total Code Chunks Analyzed:** {perf.get('total_chunks_analyzed', 0)}
+
+"""
+
+        markdown_report += f"""---
 
 ## Files Analyzed
 
 The following {self.analysis_results["file_count"]} source files were included in this analysis:
 
 """
-
         # Add file list
         for file_path in sorted(self.analysis_results["file_list"]):
             try:
@@ -561,10 +706,22 @@ The following {self.analysis_results["file_count"]} source files were included i
         markdown_report += """
 ---
 
-*Report generated by Codebase Intelligence Auditor using gpt-oss-20b*
+*Report generated by Codebase Intelligence Auditor with Enhanced RAG Analysis*
 """
 
         return markdown_report
+
+    def _get_enhanced_analysis_integration(self):
+        """Get enhanced analysis integration instance."""
+        try:
+            from codebase_gardener.core.enhanced_analysis_integration import (
+                enhanced_analysis_integration,
+            )
+
+            return enhanced_analysis_integration
+        except ImportError:
+            logger.debug("Enhanced analysis integration not available")
+            return None
 
     def _get_project_manager(self):
         """Get or create project manager instance."""
@@ -953,6 +1110,11 @@ The following {self.analysis_results["file_count"]} source files were included i
                 self.analysis_results
             )
 
+            # Try RAG-based analysis enhancement
+            enhanced_context = self._enhance_analysis_with_rag(
+                enhanced_context, dir_path
+            )
+
             # Update analysis results with enhancements
             if enhanced_context != self.analysis_results:
                 self.analysis_results.update(enhanced_context)
@@ -990,6 +1152,237 @@ The following {self.analysis_results["file_count"]} source files were included i
                 f"⚠️ Advanced feature enhancement failed (continuing with basic analysis): {e}"
             )
 
+    def _enhance_analysis_with_rag(self, current_context: dict, dir_path: Path) -> dict:
+        """Enhance analysis using RAG-based context retrieval."""
+        try:
+            enhanced_integration = self._get_enhanced_analysis_integration()
+            if not enhanced_integration:
+                return current_context
+
+            # Create enhanced analysis questions based on the current analysis
+            analysis_questions = [
+                "What are the main architectural patterns used in this codebase?",
+                "What are the key design decisions and their implications?",
+                "What are potential areas for improvement or refactoring?",
+                "How is error handling implemented across the codebase?",
+                "What are the main data flow patterns?",
+            ]
+
+            enhanced_insights = []
+            performance_metrics = []
+
+            for question in analysis_questions:
+                # Retrieve context for each analysis question
+                analysis_context = enhanced_integration.retrieve_context_for_query(
+                    query=question, project_id=self._current_project_id
+                )
+
+                if analysis_context:
+                    # Generate enhanced insights
+                    enhanced_prompt = enhanced_integration._build_enhanced_prompt(
+                        question, analysis_context
+                    )
+
+                    try:
+                        # Use default parameters to capture loop variables
+                        response = with_retries(
+                            lambda prompt=enhanced_prompt,
+                            model=self.model_name: self.client.generate(
+                                model=model, prompt=prompt
+                            )
+                        )
+
+                        insight = {
+                            "question": question,
+                            "insight": response["response"],
+                            "context_chunks": analysis_context.num_chunks_used,
+                            "relevance_score": analysis_context.relevance_score,
+                            "retrieval_time_ms": analysis_context.retrieval_time_ms,
+                        }
+                        enhanced_insights.append(insight)
+
+                        performance_metrics.append(
+                            {
+                                "retrieval_time_ms": analysis_context.retrieval_time_ms,
+                                "relevance_score": analysis_context.relevance_score,
+                                "chunks_used": analysis_context.num_chunks_used,
+                            }
+                        )
+
+                    except Exception as e:
+                        logger.warning(
+                            "Failed to generate enhanced insight",
+                            question=question,
+                            error=str(e),
+                        )
+
+            # Add enhanced insights to context
+            if enhanced_insights:
+                current_context["enhanced_rag_insights"] = enhanced_insights
+                current_context["enhanced_rag_performance"] = {
+                    "total_queries": len(enhanced_insights),
+                    "avg_retrieval_time_ms": sum(
+                        m["retrieval_time_ms"] for m in performance_metrics
+                    )
+                    / len(performance_metrics),
+                    "avg_relevance_score": sum(
+                        m["relevance_score"] for m in performance_metrics
+                    )
+                    / len(performance_metrics),
+                    "total_chunks_analyzed": sum(
+                        m["chunks_used"] for m in performance_metrics
+                    ),
+                }
+
+                logger.info(
+                    "RAG analysis enhancement completed",
+                    insights_generated=len(enhanced_insights),
+                    avg_retrieval_time=current_context["enhanced_rag_performance"][
+                        "avg_retrieval_time_ms"
+                    ],
+                    avg_relevance=current_context["enhanced_rag_performance"][
+                        "avg_relevance_score"
+                    ],
+                )
+
+        except Exception as e:
+            logger.warning("RAG analysis enhancement failed", error=str(e))
+
+        return current_context
+
+    def _show_performance_metrics(self):
+        """Show performance metrics for enhanced analysis."""
+        try:
+            enhanced_integration = self._get_enhanced_analysis_integration()
+            if not enhanced_integration:
+                print(
+                    "📊 Performance metrics not available - enhanced analysis integration not loaded"
+                )
+                return
+
+            # Get performance summary
+            metrics = enhanced_integration.get_performance_summary()
+
+            print("\n📊 Enhanced Analysis Performance Metrics (Last 24 hours)")
+            print("=" * 60)
+
+            if metrics.total_queries == 0:
+                print("No enhanced queries recorded in the last 24 hours")
+                return
+
+            print(f"🔍 Total Queries: {metrics.total_queries}")
+            print(f"⚡ Average Retrieval Time: {metrics.avg_retrieval_time_ms:.0f}ms")
+            print(f"🎯 Max Retrieval Time: {metrics.max_retrieval_time_ms:.0f}ms")
+            print(f"✅ Retrieval Success Rate: {metrics.retrieval_success_rate:.1%}")
+            print(f"🎭 Context Hit Rate: {metrics.context_hit_rate:.1%}")
+            print(f"🚀 Enhanced Response Rate: {metrics.enhanced_response_rate:.1%}")
+            print(f"⬇️  Fallback Rate: {metrics.fallback_rate:.1%}")
+            print(f"📈 Average Relevance Score: {metrics.avg_relevance_score:.2f}")
+
+            # Show recent performance if available from analysis results
+            if (
+                self.analysis_results
+                and "enhanced_rag_performance" in self.analysis_results
+            ):
+                recent_perf = self.analysis_results["enhanced_rag_performance"]
+                print("\n📋 Recent Analysis Session:")
+                print(f"   Queries: {recent_perf.get('total_queries', 0)}")
+                print(
+                    f"   Avg Retrieval: {recent_perf.get('avg_retrieval_time_ms', 0):.0f}ms"
+                )
+                print(
+                    f"   Avg Relevance: {recent_perf.get('avg_relevance_score', 0):.2f}"
+                )
+                print(f"   Total Chunks: {recent_perf.get('total_chunks_analyzed', 0)}")
+
+        except Exception as e:
+            print(f"❌ Failed to retrieve performance metrics: {e}")
+
+    def _handle_ab_test_command(self, args: list):
+        """Handle A/B testing commands."""
+        try:
+            enhanced_integration = self._get_enhanced_analysis_integration()
+            if not enhanced_integration:
+                print(
+                    "❌ A/B testing not available - enhanced analysis integration not loaded"
+                )
+                return
+
+            if not args:
+                print(
+                    "Usage: ab-test [enable|disable|status|preference <enhanced|simple>]"
+                )
+                return
+
+            command = args[0].lower()
+
+            if command == "enable":
+                enhanced_integration.enable_ab_testing(True)
+                print(
+                    "✅ A/B testing enabled - responses will alternate between enhanced and simple modes"
+                )
+
+            elif command == "disable":
+                enhanced_integration.enable_ab_testing(False)
+                print(
+                    "✅ A/B testing disabled - enhanced mode will be used when available"
+                )
+
+            elif command == "status":
+                is_enabled = enhanced_integration.config.get("enable_ab_testing", False)
+                print(
+                    f"🔬 A/B Testing Status: {'Enabled' if is_enabled else 'Disabled'}"
+                )
+
+                # Show recent A/B test metrics if available
+                if (
+                    hasattr(enhanced_integration, "_ab_test_data")
+                    and enhanced_integration._ab_test_data
+                ):
+                    recent_data = enhanced_integration._ab_test_data[
+                        -10:
+                    ]  # Last 10 preferences
+                    enhanced_prefs = len(
+                        [d for d in recent_data if d["preference"] == "enhanced"]
+                    )
+                    simple_prefs = len(
+                        [d for d in recent_data if d["preference"] == "simple"]
+                    )
+                    no_prefs = len(
+                        [d for d in recent_data if d["preference"] == "no_preference"]
+                    )
+
+                    print(f"📊 Recent Preferences (last {len(recent_data)} responses):")
+                    print(f"   Enhanced: {enhanced_prefs}")
+                    print(f"   Simple: {simple_prefs}")
+                    print(f"   No Preference: {no_prefs}")
+                else:
+                    print("📊 No recent A/B test data available")
+
+            elif command == "preference" and len(args) > 1:
+                preference = args[1].lower()
+                if preference in ["enhanced", "simple", "no_preference"]:
+                    # This would typically be called automatically after showing responses
+                    print(f"✅ Preference '{preference}' recorded for A/B testing")
+                    enhanced_integration.record_user_preference(
+                        query="manual_preference",
+                        enhanced_response="",
+                        simple_response="",
+                        preference=preference,
+                    )
+                else:
+                    print(
+                        "❌ Invalid preference. Use: enhanced, simple, or no_preference"
+                    )
+
+            else:
+                print(
+                    "❌ Unknown A/B test command. Use: enable, disable, status, or preference"
+                )
+
+        except Exception as e:
+            print(f"❌ A/B testing command failed: {e}")
+
 
 def print_welcome():
     """Print welcome message and system info."""
@@ -1019,6 +1412,12 @@ def print_help():
     print("  project switch <id>     - Switch to a different project context")
     print("  project cleanup         - Clean up old project data")
     print("  project health          - Check project health status")
+    print("\n📊 Enhanced Analysis:")
+    print("  performance             - Show RAG retrieval performance metrics")
+    print("  ab-test enable          - Enable A/B testing (enhanced vs simple)")
+    print("  ab-test disable         - Disable A/B testing")
+    print("  ab-test status          - Show A/B testing status and preferences")
+    print("  ab-test preference <enhanced|simple> - Record response preference")
     print("\n🔧 System:")
     print("  help                    - Show this help message")
     print("  quit/exit/q             - Exit the auditor")
@@ -1266,6 +1665,20 @@ def main():
                     print(f"   Size: {len(report):,} characters")
                 except OSError:
                     print("❌ Failed to write report file")
+
+            elif command.lower() == "performance":
+                # Handle performance monitoring command
+                auditor._show_performance_metrics()
+
+            elif command.startswith("ab-test"):
+                # Handle A/B testing commands
+                parts = command.split(" ", 2)
+                if len(parts) > 1:
+                    auditor._handle_ab_test_command(parts[1:])
+                else:
+                    print(
+                        "Usage: ab-test [enable|disable|status|preference <enhanced|simple>]"
+                    )
 
             elif command.lower() == "features":
                 print("\n🔧 Advanced Features Status:")

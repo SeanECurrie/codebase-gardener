@@ -168,6 +168,14 @@ class ComponentRegistry:
             ],
         )
 
+        # Enhanced analysis components
+        self.register(
+            name="enhanced_analysis_integration",
+            module_path="codebase_gardener.core.enhanced_analysis_integration",
+            class_name="EnhancedAnalysisIntegration",
+            dependencies=["component_registry"],
+        )
+
     def register(
         self,
         name: str,
