@@ -207,6 +207,10 @@ class ComponentRegistry:
         # Check dependencies
         return self._check_dependencies(component.dependencies)
 
+    def is_component_available(self, name: str) -> bool:
+        """Alias for is_available to maintain API compatibility."""
+        return self.is_available(name)
+
     def _check_dependencies(self, dependencies: list[str]) -> bool:
         """Check if all dependencies are available."""
         for dep in dependencies:
@@ -275,11 +279,53 @@ class ComponentRegistry:
         module = importlib.import_module(component.module_path)
         component_class = getattr(module, component.class_name)
 
-        # Create instance with settings
-        if "settings" not in kwargs and hasattr(component_class, "__init__"):
-            kwargs["settings"] = self._settings
+        # Provide component-specific parameters
+        init_kwargs = self._get_component_init_params(component.name, **kwargs)
 
-        return component_class(**kwargs)
+        return component_class(**init_kwargs)
+
+    def _get_component_init_params(self, component_name: str, **kwargs) -> dict:
+        """Get component-specific initialization parameters."""
+        # Component-specific parameter handling
+        if component_name == "rag_engine":
+            # RAGEngine needs vector_store, embedding_manager, and config (not settings)
+            return {
+                "vector_store": kwargs.get("vector_store"),
+                "embedding_manager": kwargs.get("embedding_manager"),
+                "config": kwargs.get("config", {}),
+            }
+        elif component_name == "vector_store":
+            # VectorStore needs db_path and optional settings
+            from pathlib import Path
+
+            db_path = (
+                kwargs.get("db_path")
+                or Path(self._settings.data_dir) / "vector_store.db"
+            )
+            params = {"db_path": db_path}
+            if "settings" in kwargs or hasattr(self, "_settings"):
+                params["settings"] = kwargs.get("settings", self._settings)
+            return params
+        elif component_name == "project_registry":
+            # ProjectRegistry expects optional registry_path, not settings
+            from pathlib import Path
+
+            return {
+                "registry_path": kwargs.get("registry_path")
+                or Path(self._settings.data_dir) / "registry.json"
+            }
+        elif component_name == "embedding_manager":
+            # EmbeddingManager needs vector_store
+            return {
+                "vector_store": kwargs.get("vector_store"),
+                "settings": kwargs.get("settings", self._settings),
+            }
+        else:
+            # Default: provide settings if the component expects it
+            default_params = dict(kwargs)
+            if "settings" not in default_params:
+                default_params["settings"] = self._settings
+            return default_params
 
     def _get_fallback(self, component: ComponentInfo) -> Any:
         """Get fallback implementation for a component."""

@@ -155,6 +155,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
         env_file=".env",
         env_file_encoding="utf-8",
+        extra="ignore",  # Allow extra environment variables without failing
     )
 
     @field_validator("log_level")

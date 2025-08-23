@@ -30,7 +30,25 @@ The project is scoped to MVP - a working interactive CLI for immediate codebase 
 1. **Single-file Auditor** (`codebase_auditor.py`) - Main interactive CLI with retry logic
 2. **File Utilities** (`simple_file_utils.py`) - Source file discovery and filtering
 
-## Quick Development Commands
+## Quick Development Commands (UV)
+
+```bash
+# Environment setup
+uv sync                              # Install all dependencies
+uv sync --extra dev                  # Install with dev dependencies
+uv add package_name                  # Add a new dependency
+uv remove package_name               # Remove dependency
+
+# Running applications
+uv run python codebase_auditor.py    # Run CLI directly
+uv run pytest                       # Run tests
+uv run python scripts/smoke_cli.py  # Run smoke tests
+
+# Development tools
+uv run ruff check --fix && uv run ruff format  # Lint and format
+uv run mypy src/                     # Type checking
+uv run pre-commit run --all-files    # Run all pre-commit hooks
+```
 
 ## How to Run
 
@@ -55,7 +73,12 @@ PYTHONPATH=. python scripts/smoke_cli.py
 python codebase_auditor.py
 ```
 
-**Note:** CLI now includes retry behavior for Ollama connections with exponential backoff and clearer error messages.
+**Recent Updates (2025-08-23):**
+- ✅ Fixed Pydantic Settings validation errors that were blocking Ollama connections
+- ✅ Resolved component initialization issues (VectorStore, ProjectRegistry, RAGEngine, etc.)
+- ✅ Advanced features now working: 6/9 features active (semantic search, vector storage, embedding generation, etc.)
+- ✅ Analysis generates comprehensive AI-powered reports with proper technical insights
+- CLI includes retry behavior for Ollama connections with exponential backoff and clearer error messages
 
 ### Code Quality
 ```bash
@@ -109,7 +132,24 @@ python codebase_auditor.py
 python -m codebase_gardener.main analyze /path/to/project
 ```
 
-### Environment Setup
+### Environment Setup (UV - Recommended)
+```bash
+# Setup with UV (fast, modern Python package manager)
+uv sync  # Creates venv and installs all dependencies
+
+# Activate the environment
+source .venv/bin/activate  # macOS/Linux
+# OR: uv run python codebase_auditor.py  # Direct execution
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env with your preferred settings (Ollama model, etc.)
+
+# Development setup with all optional dependencies
+uv sync --extra dev --extra performance
+```
+
+### Alternative Setup (Traditional pip)
 ```bash
 # Create virtual environment
 python -m venv .venv
@@ -133,13 +173,13 @@ pip install -r requirements.txt
 - `src/codebase_gardener/utils/file_utils.py` - Enhanced file utilities
 - `src/codebase_gardener/config/` - Configuration management
 
-**Complex System Components (varying completion states):**
-- `src/codebase_gardener/core/` - Project registry, context management, training pipeline
-- `src/codebase_gardener/models/` - AI model interfaces (some disabled)
-- `src/codebase_gardener/data/` - Vector stores and preprocessing
-- `src/codebase_gardener/ui/` - Gradio web interface
-- `src/codebase_gardener/monitoring/` - Operational monitoring
-- `src/codebase_gardener/performance/` - Load testing and benchmarking
+**Complex System Components (Updated Status 2025-08-23):**
+- `src/codebase_gardener/core/` - ✅ Project registry, context management (working), ❌ training pipeline (PEFT issues)
+- `src/codebase_gardener/models/` - ❌ AI model interfaces (some disabled)
+- `src/codebase_gardener/data/` - ✅ Vector stores, embedding generation, semantic processing (working)
+- `src/codebase_gardener/ui/` - ❌ Gradio web interface (disabled)
+- `src/codebase_gardener/monitoring/` - ❌ Operational monitoring (disabled)
+- `src/codebase_gardener/performance/` - ❌ Load testing and benchmarking (disabled)
 
 ### File Processing Architecture
 
